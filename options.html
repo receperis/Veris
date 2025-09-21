@@ -1,0 +1,185 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <title>Selection Translator — Options</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <link rel="stylesheet" href="options.css" />
+</head>
+
+<body>
+    <main>
+        <h1>Selection Translator — Options</h1>
+
+        <section>
+            <h2>Translation Settings</h2>
+            <label>
+                Target language:
+                <select id="target_lang" title="Select your preferred target language for translations">
+                    <option value="en">English (EN)</option>
+                    <option value="es">Spanish (ES)</option>
+                    <option value="fr">French (FR)</option>
+                    <option value="de">German (DE)</option>
+                    <option value="it">Italian (IT)</option>
+                    <option value="pt">Portuguese (PT)</option>
+                    <option value="zh">Chinese (ZH)</option>
+                    <option value="ja">Japanese (JA)</option>
+                    <option value="ko">Korean (KO)</option>
+                    <option value="ru">Russian (RU)</option>
+                    <option value="ar">Arabic (AR)</option>
+                    <option value="hi">Hindi (HI)</option>
+                    <option value="tr">Turkish (TR)</option>
+                    <option value="nl">Dutch (NL)</option>
+                    <option value="pl">Polish (PL)</option>
+                    <option value="sv">Swedish (SV)</option>
+                    <option value="da">Danish (DA)</option>
+                    <option value="no">Norwegian (NO)</option>
+                    <option value="fi">Finnish (FI)</option>
+                    <option value="cs">Czech (CS)</option>
+                    <option value="sk">Slovak (SK)</option>
+                    <option value="hu">Hungarian (HU)</option>
+                    <option value="ro">Romanian (RO)</option>
+                    <option value="bg">Bulgarian (BG)</option>
+                    <option value="hr">Croatian (HR)</option>
+                    <option value="uk">Ukrainian (UK)</option>
+                    <option value="el">Greek (EL)</option>
+                    <option value="he">Hebrew (HE)</option>
+                    <option value="fa">Persian (FA)</option>
+                    <option value="th">Thai (TH)</option>
+                    <option value="vi">Vietnamese (VI)</option>
+                    <option value="id">Indonesian (ID)</option>
+                    <option value="ms">Malay (MS)</option>
+                    <option value="zh-cn">Chinese Simplified (CN)</option>
+                    <option value="zh-tw">Chinese Traditional (TW)</option>
+                    <option value="sr">Serbian (SR)</option>
+                    <option value="sl">Slovenian (SL)</option>
+                    <option value="et">Estonian (ET)</option>
+                    <option value="lv">Latvian (LV)</option>
+                    <option value="lt">Lithuanian (LT)</option>
+                    <option value="be">Belarusian (BE)</option>
+                    <option value="mk">Macedonian (MK)</option>
+                    <option value="mt">Maltese (MT)</option>
+                    <option value="ca">Catalan (CA)</option>
+                    <option value="eu">Basque (EU)</option>
+                    <option value="gl">Galician (GL)</option>
+                    <option value="is">Icelandic (IS)</option>
+                    <option value="sq">Albanian (SQ)</option>
+                    <option value="ur">Urdu (UR)</option>
+                    <option value="bn">Bengali (BN)</option>
+                    <option value="ta">Tamil (TA)</option>
+                    <option value="te">Telugu (TE)</option>
+                    <option value="ml">Malayalam (ML)</option>
+                    <option value="kn">Kannada (KN)</option>
+                    <option value="gu">Gujarati (GU)</option>
+                    <option value="pa">Punjabi (PA)</option>
+                    <option value="ne">Nepali (NE)</option>
+                    <option value="si">Sinhala (SI)</option>
+                    <option value="my">Myanmar (MY)</option>
+                    <option value="km">Khmer (KM)</option>
+                    <option value="lo">Lao (LO)</option>
+                    <option value="ka">Georgian (KA)</option>
+                    <option value="am">Amharic (AM)</option>
+                    <option value="sw">Swahili (SW)</option>
+                    <option value="af">Afrikaans (AF)</option>
+                </select>
+                <small style="color: #666; margin-top: 4px; display: block;">Most common languages are listed first.
+                    Only languages supported by Chrome's Translation API are included.</small>
+            </label>
+
+            <fieldset style="margin-top:20px; border:1px solid #e5e7eb; padding:12px 16px; border-radius:8px;">
+                <legend style="padding:0 6px; font-weight:600; font-size:14px;">Bubble Trigger Mode</legend>
+                <p style="margin:0 0 10px; font-size:12px; color:#555; line-height:1.4;">Choose how the translation
+                    bubble appears after selecting text.</p>
+                <label style="display:block; margin-bottom:6px; font-size:13px;">
+                    <input type="radio" name="bubble_mode" value="auto" id="bubble_mode_auto" />
+                    Auto: Show bubble immediately on selection.
+                </label>
+                <label style="display:block; margin-bottom:6px; font-size:13px;">
+                    <input type="radio" name="bubble_mode" value="icon" id="bubble_mode_icon" />
+                    Icon Delay: Show a small translate icon after a short delay; click to open bubble.
+                </label>
+                <div style="margin-left:24px; margin-bottom:10px; font-size:12px; color:#666;">
+                    Icon delay (ms): <input type="number" id="bubble_icon_delay" min="100" step="50" value="450"
+                        style="width:90px;" />
+                </div>
+                <label style="display:block; margin-bottom:6px; font-size:13px;">
+                    <input type="radio" name="bubble_mode" value="hotkey" id="bubble_mode_hotkey" />
+                    Hotkey: Press Ctrl + C + C (double copy) or custom chord to show bubble.
+                </label>
+                <div
+                    style="margin-left:24px; font-size:12px; color:#666; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                    Custom hotkey: <input type="text" id="bubble_hotkey" placeholder="Ctrl+Shift+Y"
+                        style="width:130px;" />
+                    <button type="button" id="bubble_record_hotkey"
+                        style="font-size:11px; padding:4px 8px;">Record</button>
+                    <span id="bubble_hotkey_hint" style="color:#888;">Leave blank to use double Ctrl+C.</span>
+                </div>
+            </fieldset>
+        </section>
+
+        <section>
+            <h2>Exercise Settings</h2>
+
+            <label>
+                <input id="exercise_enabled" type="checkbox" />
+                Enable daily vocabulary exercises
+            </label>
+
+            <div id="exercise_options" class="exercise-options">
+                <label>
+                    Exercise time:
+                    <input id="exercise_time" type="time" value="09:00" />
+                </label>
+
+                <label>
+                    Exercise days:
+                    <div class="day-selector">
+                        <label><input type="checkbox" value="1" class="day-checkbox" /> Monday</label>
+                        <label><input type="checkbox" value="2" class="day-checkbox" /> Tuesday</label>
+                        <label><input type="checkbox" value="3" class="day-checkbox" /> Wednesday</label>
+                        <label><input type="checkbox" value="4" class="day-checkbox" /> Thursday</label>
+                        <label><input type="checkbox" value="5" class="day-checkbox" /> Friday</label>
+                        <label><input type="checkbox" value="6" class="day-checkbox" /> Saturday</label>
+                        <label><input type="checkbox" value="0" class="day-checkbox" /> Sunday</label>
+                    </div>
+                </label>
+
+                <label>
+                    Questions per session:
+                    <select id="questions_per_session">
+                        <option value="5">5 questions</option>
+                        <option value="10" selected>10 questions</option>
+                        <option value="15">15 questions</option>
+                        <option value="20">20 questions</option>
+                    </select>
+                </label>
+
+                <label>
+                    Difficulty:
+                    <select id="difficulty">
+                        <option value="easy">Easy (recent words)</option>
+                        <option value="mixed" selected>Mixed (all words)</option>
+                        <option value="hard">Hard (older words)</option>
+                    </select>
+                </label>
+            </div>
+        </section>
+
+
+        <div id="status" class="status"></div>
+
+        <div class="buttons">
+            <button id="saveBtn">Save</button>
+            <button id="resetBtn">Reset to defaults</button>
+        </div>
+
+
+        <p class="note">This extension uses Chrome's built-in language detection capabilities. It will detect the page
+            language and show you selected text with language information. For full page translation, use Chrome's
+            native translate feature.</p>
+    </main>
+    <script src="options.js"></script>
+</body>
+
+</html>

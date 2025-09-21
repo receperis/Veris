@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Chrome Translation API Language Support Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        .result {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+        }
+
+        .supported {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .unsupported {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .testing {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        #testButton {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin: 10px 0;
+        }
+
+        #progress {
+            margin: 10px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Chrome Translation API Language Support Test</h1>
+    <p>This page will test which language codes are actually supported by Chrome's Translation API.</p>
+
+    <button id="testButton">Test Language Support</button>
+    <div id="progress"></div>
+    <div id="results"></div>
+
+    <script>
+        const languagesToTest = [
+            'en', 'es', 'fr', 'de', 'it', 'pt', 'zh', 'ja', 'ko', 'ru', 'ar', 'hi', 'tr', 'nl', 'pl',
+            'sv', 'da', 'no', 'fi', 'cs', 'sk', 'hu', 'ro', 'bg', 'hr', 'uk', 'el', 'he', 'fa',
+            'th', 'vi', 'id', 'ms', 'zh-cn', 'zh-tw', 'sr', 'sl', 'et', 'lv', 'lt', 'be', 'mk',
+            'mt', 'ga', 'cy', 'eu', 'ca', 'gl', 'is', 'fo', 'sq', 'ur', 'bn', 'ta', 'te', 'ml',
+            'kn', 'gu', 'pa', 'or', 'as', 'ne', 'si', 'my', 'km', 'lo', 'ka', 'am', 'sw', 'zu',
+            'af', 'xh', 'st', 'tn', 've', 'ts', 'ss', 'nr', 'nso'
+        ];
+
+        const languageNames = {
+            'en': 'English',
+            'es': 'Spanish',
+            'fr': 'French',
+            'de': 'German',
+            'it': 'Italian',
+            'pt': 'Portuguese',
+            'zh': 'Chinese',
+            'ja': 'Japanese',
+            'ko': 'Korean',
+            'ru': 'Russian',
+            'ar': 'Arabic',
+            'hi': 'Hindi',
+            'tr': 'Turkish',
+            'nl': 'Dutch',
+            'pl': 'Polish',
+            'sv': 'Swedish',
+            'da': 'Danish',
+            'no': 'Norwegian',
+            'fi': 'Finnish',
+            'cs': 'Czech',
+            'sk': 'Slovak',
+            'hu': 'Hungarian',
+            'ro': 'Romanian',
+            'bg': 'Bulgarian',
+            'hr': 'Croatian',
+            'uk': 'Ukrainian',
+            'el': 'Greek',
+            'he': 'Hebrew',
+            'fa': 'Persian',
+            'th': 'Thai',
+            'vi': 'Vietnamese',
+            'id': 'Indonesian',
+            'ms': 'Malay',
+            'zh-cn': 'Chinese Simplified',
+            'zh-tw': 'Chinese Traditional',
+            'sr': 'Serbian',
+            'sl': 'Slovenian',
+            'et': 'Estonian',
+            'lv': 'Latvian',
+            'lt': 'Lithuanian',
+            'be': 'Belarusian',
+            'mk': 'Macedonian',
+            'mt': 'Maltese',
+            'ga': 'Irish',
+            'cy': 'Welsh',
+            'eu': 'Basque',
+            'ca': 'Catalan',
+            'gl': 'Galician',
+            'is': 'Icelandic',
+            'fo': 'Faroese',
+            'sq': 'Albanian',
+            'ur': 'Urdu',
+            'bn': 'Bengali',
+            'ta': 'Tamil',
+            'te': 'Telugu',
+            'ml': 'Malayalam',
+            'kn': 'Kannada',
+            'gu': 'Gujarati',
+            'pa': 'Punjabi',
+            'or': 'Odia',
+            'as': 'Assamese',
+            'ne': 'Nepali',
+            'si': 'Sinhala',
+            'my': 'Myanmar',
+            'km': 'Khmer',
+            'lo': 'Lao',
+            'ka': 'Georgian',
+            'am': 'Amharic',
+            'sw': 'Swahili',
+            'zu': 'Zulu',
+            'af': 'Afrikaans',
+            'xh': 'Xhosa',
+            'st': 'Sesotho',
+            'tn': 'Setswana',
+            've': 'Venda',
+            'ts': 'Tsonga',
+            'ss': 'Swati',
+            'nr': 'Ndebele',
+            'nso': 'Northern Sotho'
+        };
+
+        async function testLanguageSupport() {
+            const button = document.getElementById('testButton');
+            const progress = document.getElementById('progress');
+            const results = document.getElementById('results');
+
+            button.disabled = true;
+            button.textContent = 'Testing...';
+            results.innerHTML = '';
+
+            const supported = [];
+            const unsupported = [];
+
+            for (let i = 0; i < languagesToTest.length; i++) {
+                const lang = languagesToTest[i];
+                const langName = languageNames[lang] || lang;
+
+                progress.textContent = `Testing ${i + 1}/${languagesToTest.length}: ${langName} (${lang})`;
+
+                try {
+                    if ('Translator' in self || 'ai' in self) {
+                        // Try Chrome's Translation API
+                        let translator;
+                        if ('Translator' in self) {
+                            translator = await Translator.create({
+                                sourceLanguage: 'auto',
+                                targetLanguage: lang
+                            });
+                        } else if ('ai' in self && 'translator' in self.ai) {
+                            translator = await self.ai.translator.create({
+                                sourceLanguage: 'auto',
+                                targetLanguage: lang
+                            });
+                        }
+
+                        if (translator) {
+                            // Test with a simple phrase
+                            await translator.translate('Hello world');
+                            supported.push({ code: lang, name: langName });
+
+                            const div = document.createElement('div');
+                            div.className = 'result supported';
+                            div.textContent = `✅ ${langName} (${lang}) - SUPPORTED`;
+                            results.appendChild(div);
+                        } else {
+                            throw new Error('Translator creation failed');
+                        }
+                    } else {
+                        throw new Error('Translation API not available');
+                    }
+                } catch (error) {
+                    unsupported.push({ code: lang, name: langName, error: error.message });
+
+                    const div = document.createElement('div');
+                    div.className = 'result unsupported';
+                    div.textContent = `❌ ${langName} (${lang}) - NOT SUPPORTED (${error.message})`;
+                    results.appendChild(div);
+                }
+
+                // Small delay to avoid overwhelming the API
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+
+            progress.innerHTML = `
+                <strong>Testing Complete!</strong><br>
+                Supported: ${supported.length}<br>
+                Unsupported: ${unsupported.length}<br><br>
+                <strong>Supported Languages:</strong><br>
+                ${supported.map(l => `${l.name} (${l.code})`).join(', ')}<br><br>
+                <strong>Copy this list for the options dropdown:</strong><br>
+                <textarea readonly style="width: 100%; height: 200px;">
+${supported.map(l => `<option value="${l.code}">${l.name} (${l.code.toUpperCase()})</option>`).join('\n')}
+                </textarea>
+            `;
+
+            button.disabled = false;
+            button.textContent = 'Test Language Support';
+        }
+
+        document.getElementById('testButton').addEventListener('click', testLanguageSupport);
+    </script>
+</body>
+
+</html>
