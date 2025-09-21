@@ -14,19 +14,19 @@ class VocabularyExercise {
         this.incorrectWords = [];
         this.pendingAdvance = null;
         this.hintUsedCurrent = false;
-    this.answeredMap = new Map(); // questionIndex -> { selected, correct, skipped }
+        this.answeredMap = new Map(); // questionIndex -> { selected, correct, skipped }
         this.choiceMap = new Map();   // questionIndex -> array of choices in order
-    this.selectedLanguage = '';
-    this.targetLanguage = null; // current target language override
-    this.isTranslatingBulk = false;
-        
+        this.selectedLanguage = '';
+        this.targetLanguage = null; // current target language override
+        this.isTranslatingBulk = false;
+
         this.init();
     }
 
     async init() {
         // Setup event listeners
         this.setupEventListeners();
-        
+
         // Load words from database via background service worker
         await this.loadWords();
     }
@@ -78,17 +78,18 @@ class VocabularyExercise {
             `;
             document.querySelector('.exercise-screen')?.appendChild(nav);
         }
-        nav.querySelector('.prev-question-btn')?.addEventListener('click', ()=>this.goToQuestion(this.currentQuestionIndex - 1));
-        nav.querySelector('.next-question-btn')?.addEventListener('click', ()=>this.goToQuestion(this.currentQuestionIndex + 1));
+        nav.querySelector('.prev-question-btn')?.addEventListener('click', () => this.goToQuestion(this.currentQuestionIndex - 1));
+        nav.querySelector('.next-question-btn')?.addEventListener('click', () => this.goToQuestion(this.currentQuestionIndex + 1));
 
-                // Back to difficulty (welcome) mid-session
-                document.querySelector('.back-to-welcome-btn')?.addEventListener('click', () => {
-                        this.returnToWelcome();
-                });
+        // Back to difficulty (welcome) mid-session
+        document.querySelector('.back-to-welcome-btn')?.addEventListener('click', () => {
+            this.returnToWelcome();
+        });
 
         // Results actions
         document.querySelector('.retry-btn')?.addEventListener('click', () => {
-            this.resetExercise();
+            // this.resetExercise();
+            this.returnToWelcome();
         });
 
         document.querySelector('.close-results-btn')?.addEventListener('click', () => {
@@ -145,9 +146,9 @@ class VocabularyExercise {
         const select = document.querySelector('.language-filter');
         if (!select) return;
         const NAME_MAP = {
-            'en':'English','es':'Spanish','de':'German','fr':'French','it':'Italian','pt':'Portuguese','ru':'Russian','zh':'Chinese','ja':'Japanese','ko':'Korean','sv':'Swedish','tr':'Turkish','ar':'Arabic','nl':'Dutch','pl':'Polish','cs':'Czech','da':'Danish','fi':'Finnish','el':'Greek','he':'Hebrew','hi':'Hindi','no':'Norwegian','ro':'Romanian','uk':'Ukrainian','hu':'Hungarian'
+            'en': 'English', 'es': 'Spanish', 'de': 'German', 'fr': 'French', 'it': 'Italian', 'pt': 'Portuguese', 'ru': 'Russian', 'zh': 'Chinese', 'ja': 'Japanese', 'ko': 'Korean', 'sv': 'Swedish', 'tr': 'Turkish', 'ar': 'Arabic', 'nl': 'Dutch', 'pl': 'Polish', 'cs': 'Czech', 'da': 'Danish', 'fi': 'Finnish', 'el': 'Greek', 'he': 'Hebrew', 'hi': 'Hindi', 'no': 'Norwegian', 'ro': 'Romanian', 'uk': 'Ukrainian', 'hu': 'Hungarian'
         };
-        const langs = [...new Set(this.allWords.map(w => (w.sourceLanguage||'').toLowerCase()))]
+        const langs = [...new Set(this.allWords.map(w => (w.sourceLanguage || '').toLowerCase()))]
             .filter(l => !!l)
             .sort();
         // Clear existing except first option
@@ -166,7 +167,7 @@ class VocabularyExercise {
 
     applyLanguageFilter() {
         if (this.selectedLanguage) {
-            this.words = this.allWords.filter(w => (w.sourceLanguage||'').toLowerCase() === this.selectedLanguage);
+            this.words = this.allWords.filter(w => (w.sourceLanguage || '').toLowerCase() === this.selectedLanguage);
         } else {
             this.words = [...this.allWords];
         }
@@ -181,7 +182,7 @@ class VocabularyExercise {
         if (info) {
             if (this.selectedLanguage) {
                 const NAME_MAP = {
-                    'en':'English','es':'Spanish','de':'German','fr':'French','it':'Italian','pt':'Portuguese','ru':'Russian','zh':'Chinese','ja':'Japanese','ko':'Korean','sv':'Swedish','tr':'Turkish','ar':'Arabic','nl':'Dutch','pl':'Polish','cs':'Czech','da':'Danish','fi':'Finnish','el':'Greek','he':'Hebrew','hi':'Hindi','no':'Norwegian','ro':'Romanian','uk':'Ukrainian','hu':'Hungarian'
+                    'en': 'English', 'es': 'Spanish', 'de': 'German', 'fr': 'French', 'it': 'Italian', 'pt': 'Portuguese', 'ru': 'Russian', 'zh': 'Chinese', 'ja': 'Japanese', 'ko': 'Korean', 'sv': 'Swedish', 'tr': 'Turkish', 'ar': 'Arabic', 'nl': 'Dutch', 'pl': 'Polish', 'cs': 'Czech', 'da': 'Danish', 'fi': 'Finnish', 'el': 'Greek', 'he': 'Hebrew', 'hi': 'Hindi', 'no': 'Norwegian', 'ro': 'Romanian', 'uk': 'Ukrainian', 'hu': 'Hungarian'
                 };
                 const pretty = NAME_MAP[this.selectedLanguage] || this.selectedLanguage.toUpperCase();
                 info.textContent = `Filtered: ${this.words.length} words in ${pretty}`;
@@ -199,7 +200,7 @@ class VocabularyExercise {
     showError(message) {
         document.querySelector('.loading-screen').style.display = 'none';
         document.querySelector('.error-screen').style.display = 'block';
-        
+
         const errorContent = document.querySelector('.error-content p');
         if (errorContent) {
             errorContent.textContent = message;
@@ -212,7 +213,7 @@ class VocabularyExercise {
         // Shuffle words and select subset for exercise
         this.shuffleArray(this.words);
         this.words = this.words.slice(0, this.questionsPerExercise);
-        
+
         // Reset counters
         this.currentQuestionIndex = 0;
         this.score = 0;
@@ -220,19 +221,19 @@ class VocabularyExercise {
         this.incorrectAnswers = 0;
         this.skippedAnswers = 0;
         this.incorrectWords = [];
-    this.answeredMap.clear();
-    this.choiceMap.clear();
-        
+        this.answeredMap.clear();
+        this.choiceMap.clear();
+
         // Update UI
         document.querySelector('.total-questions').textContent = this.words.length;
-        
+
         // Show exercise screen
         document.querySelector('.welcome-screen').style.display = 'none';
         document.querySelector('.exercise-screen').style.display = 'block';
-    // Show mid-session back button
-    const midActions = document.querySelector('.mid-exercise-actions');
-    if (midActions) midActions.style.display = 'block';
-        
+        // Show mid-session back button
+        const midActions = document.querySelector('.mid-exercise-actions');
+        if (midActions) midActions.style.display = 'block';
+
         // Load first question
         this.loadQuestion();
     }
@@ -251,20 +252,20 @@ class VocabularyExercise {
         this.hintUsedCurrent = false;
 
         const currentWord = this.words[this.currentQuestionIndex];
-        
+
         // Update progress
         document.querySelector('.current-question').textContent = this.currentQuestionIndex + 1;
         document.querySelector('.current-score').textContent = this.score;
-        
+
         const progressPercent = ((this.currentQuestionIndex) / this.words.length) * 100;
         document.querySelector('.progress-fill').style.width = `${progressPercent}%`;
-        
+
         // Update word display
         document.querySelector('.word-display').textContent = currentWord.original;
         document.querySelector('.context-text').textContent = currentWord.context || 'No context available';
         document.querySelector('.source-language').textContent = currentWord.sourceLanguage.toUpperCase();
-    document.querySelector('.target-language').textContent = (this.targetLanguage || currentWord.targetLanguage || 'EN').toUpperCase();
-        
+        document.querySelector('.target-language').textContent = (this.targetLanguage || currentWord.targetLanguage || 'EN').toUpperCase();
+
         // Generate or restore answer choices
         this.generateAnswerChoices(currentWord);
         // If question previously answered, restore state
@@ -284,22 +285,22 @@ class VocabularyExercise {
             return;
         }
         const choices = [currentWord.translation]; // Correct answer
-        
+
         // Get other words for wrong choices
         const otherWords = this.words
             .filter(w => w.translation.toLowerCase() !== currentWord.translation.toLowerCase())
             .map(w => w.translation);
-        
+
         // Add random wrong choices
         while (choices.length < choicesCount && otherWords.length > 0) {
             const randomIndex = Math.floor(Math.random() * otherWords.length);
             const wrongChoice = otherWords.splice(randomIndex, 1)[0];
-            
+
             if (!choices.includes(wrongChoice)) {
                 choices.push(wrongChoice);
             }
         }
-        
+
         // If we don't have enough choices from our vocabulary, add some generic ones
         if (choices.length < choicesCount) {
             const genericChoices = ['example', 'sample', 'test', 'word', 'translation'];
@@ -310,7 +311,7 @@ class VocabularyExercise {
                 }
             }
         }
-        
+
         // Shuffle choices and persist order
         this.shuffleArray(choices);
         this.choiceMap.set(this.currentQuestionIndex, [...choices]);
@@ -342,18 +343,18 @@ class VocabularyExercise {
         // Guard: if already answered, ignore
         if (this.answeredMap.has(this.currentQuestionIndex)) return;
         const isCorrect = selectedAnswer.toLowerCase() === correctAnswer.toLowerCase();
-        
+
         // Disable all buttons
         document.querySelectorAll('.answer-btn').forEach(btn => {
             btn.classList.add('disabled');
-            
+
             if (btn.textContent.toLowerCase() === correctAnswer.toLowerCase()) {
                 btn.classList.add('correct');
             } else if (btn.textContent === selectedAnswer && !isCorrect) {
                 btn.classList.add('incorrect');
             }
         });
-        
+
         // Update counters
         if (isCorrect) {
             this.correctAnswers++;
@@ -368,7 +369,7 @@ class VocabularyExercise {
         }
 
         // Persist answered state
-        this.answeredMap.set(this.currentQuestionIndex, { selected: selectedAnswer, correct: isCorrect, skipped:false });
+        this.answeredMap.set(this.currentQuestionIndex, { selected: selectedAnswer, correct: isCorrect, skipped: false });
 
         // Show simple notification toast
         if (isCorrect) {
@@ -390,10 +391,10 @@ class VocabularyExercise {
                 }
             });
         } catch (e) { console.warn('Failed to send WORD_RESULT', e); }
-        
+
         // Auto advance after short delay (no inline feedback bar)
         clearTimeout(this.pendingAdvance);
-        this.pendingAdvance = setTimeout(()=>{ this.nextQuestion(); }, isCorrect ? 900 : 1400);
+        this.pendingAdvance = setTimeout(() => { this.nextQuestion(); }, isCorrect ? 900 : 1400);
         this.updateNavButtons();
     }
 
@@ -405,18 +406,18 @@ class VocabularyExercise {
         const currentWord = this.words[this.currentQuestionIndex];
         const firstLetter = currentWord.translation.charAt(0);
         const hint = `The translation starts with "${firstLetter}" and has ${currentWord.translation.length} letters.`;
-        
+
         // Show hint in feedback modal
         const modal = document.querySelector('.feedback-modal');
         const icon = document.querySelector('.feedback-icon');
         const message = document.querySelector('.feedback-message');
         const details = document.querySelector('.feedback-details');
-        
+
         icon.textContent = '💡';
         message.textContent = 'Hint';
         details.textContent = hint;
         message.style.color = '#4f46e5';
-        
+
         modal.style.display = 'flex';
         this.hintUsedCurrent = true;
     }
@@ -437,18 +438,18 @@ class VocabularyExercise {
                 data: { id: current.id, correct: false, usedHint: false, skipped: true }
             });
         } catch (e) { console.warn('Failed to send skip WORD_RESULT', e); }
-        this.answeredMap.set(this.currentQuestionIndex, { selected: null, correct:false, skipped:true });
+        this.answeredMap.set(this.currentQuestionIndex, { selected: null, correct: false, skipped: true });
         // Show skipped toast
         this.showAnswerNotification(`Skipped. Correct: ${this.words[this.currentQuestionIndex].translation}`, 'skipped');
         // Inline feedback removed; rely on button styling only
         clearTimeout(this.pendingAdvance);
-        this.pendingAdvance = setTimeout(()=>{ this.nextQuestion(); }, 1000);
+        this.pendingAdvance = setTimeout(() => { this.nextQuestion(); }, 1000);
         this.updateNavButtons();
     }
 
     nextQuestion() {
         this.currentQuestionIndex++;
-        
+
         if (this.currentQuestionIndex >= this.words.length) {
             this.showResults();
         } else {
@@ -510,17 +511,17 @@ class VocabularyExercise {
     showResults() {
         // Calculate percentage
         const percentage = Math.round((this.correctAnswers / this.words.length) * 100);
-        
+
         // Update progress to 100%
         document.querySelector('.progress-fill').style.width = '100%';
-        
+
         // Update results display
         document.querySelector('.score-percentage').textContent = `${percentage}%`;
         document.querySelector('.score-fraction').textContent = `${this.correctAnswers}/${this.words.length}`;
         document.querySelector('.correct-count').textContent = this.correctAnswers;
         document.querySelector('.incorrect-count').textContent = this.incorrectAnswers;
         document.querySelector('.skipped-count').textContent = this.skippedAnswers;
-        
+
         // Update score circle color based on performance
         const scoreCircle = document.querySelector('.score-circle');
         if (percentage >= 80) {
@@ -530,12 +531,12 @@ class VocabularyExercise {
         } else {
             scoreCircle.style.background = 'linear-gradient(135deg, #ef4444 0%, #f87171 100%)';
         }
-        
+
         // Show words to review if there are any incorrect
         if (this.incorrectWords.length > 0) {
             const reviewSection = document.querySelector('.words-to-review');
             const reviewList = document.querySelector('.review-words-list');
-            
+
             reviewList.innerHTML = '';
             this.incorrectWords.forEach(word => {
                 const item = document.createElement('div');
@@ -546,17 +547,17 @@ class VocabularyExercise {
                 `;
                 reviewList.appendChild(item);
             });
-            
+
             reviewSection.style.display = 'block';
         }
-        
+
         // Show results screen
         document.querySelector('.exercise-screen').style.display = 'none';
         document.querySelector('.results-screen').style.display = 'block';
-    // Hide mid-session back button while on results
-    const midActions = document.querySelector('.mid-exercise-actions');
-    if (midActions) midActions.style.display = 'none';
-        
+        // Hide mid-session back button while on results
+        const midActions = document.querySelector('.mid-exercise-actions');
+        if (midActions) midActions.style.display = 'none';
+
         // Save exercise statistics
         this.saveExerciseStats();
     }
@@ -577,7 +578,7 @@ class VocabularyExercise {
                 duration: Date.now() - this.startTime,
                 incorrectWords: this.incorrectWords
             };
-            
+
             // Save exercise completion to background service worker
             try {
                 const response = await chrome.runtime.sendMessage({
@@ -600,7 +601,7 @@ class VocabularyExercise {
     resetExercise() {
         // Shuffle words again for variety
         this.shuffleArray(this.words);
-        
+
         // Reset all counters
         this.currentQuestionIndex = 0;
         this.score = 0;
@@ -608,13 +609,13 @@ class VocabularyExercise {
         this.incorrectAnswers = 0;
         this.skippedAnswers = 0;
         this.incorrectWords = [];
-        
+
         // Hide results and show exercise
         document.querySelector('.results-screen').style.display = 'none';
         document.querySelector('.exercise-screen').style.display = 'block';
-    const midActions = document.querySelector('.mid-exercise-actions');
-    if (midActions) midActions.style.display = 'block';
-        
+        const midActions = document.querySelector('.mid-exercise-actions');
+        if (midActions) midActions.style.display = 'block';
+
         // Start fresh
         this.startTime = Date.now();
         this.loadQuestion();
@@ -662,27 +663,27 @@ class VocabularyExercise {
         if (midActions) midActions.style.display = 'none';
     }
 
-    showTargetLanguageMenu(anchorEl){
+    showTargetLanguageMenu(anchorEl) {
         if (this.isTranslatingBulk) return; // do not open while translating
         // Remove existing
         document.querySelector('.target-lang-menu')?.remove();
         const menu = document.createElement('div');
         menu.className = 'target-lang-menu';
         const LANGS = [
-            'en','es','fr','de','it','pt','ru','ja','ko','zh','tr','nl','sv','da','no','fi','pl','cs','hu','ro'
+            'en', 'es', 'fr', 'de', 'it', 'pt', 'ru', 'ja', 'ko', 'zh', 'tr', 'nl', 'sv', 'da', 'no', 'fi', 'pl', 'cs', 'hu', 'ro'
         ];
         menu.innerHTML = '<div class="tlm-header">Change target language</div>' +
-            LANGS.map(c=>`<button data-lang="${c}">${this.languageName(c)}</button>`).join('') +
+            LANGS.map(c => `<button data-lang="${c}">${this.languageName(c)}</button>`).join('') +
             '<button class="tlm-cancel" data-cancel="1">Cancel</button>';
         document.body.appendChild(menu);
         // position near anchor
         const rect = anchorEl.getBoundingClientRect();
         menu.style.top = (window.scrollY + rect.bottom + 6) + 'px';
         menu.style.left = (window.scrollX + rect.left) + 'px';
-        const clickHandler = (ev)=>{
-            if (ev.target.closest('.target-lang-menu')){
+        const clickHandler = (ev) => {
+            if (ev.target.closest('.target-lang-menu')) {
                 const btn = ev.target.closest('button[data-lang]');
-                if (btn){
+                if (btn) {
                     const lang = btn.dataset.lang;
                     document.removeEventListener('click', outsideHandler, true);
                     this.applyNewTargetLanguage(lang);
@@ -692,23 +693,23 @@ class VocabularyExercise {
                 }
             }
         };
-        const outsideHandler = (ev)=>{
-            if (!ev.target.closest('.target-lang-menu') && !ev.target.closest('.target-language')){
+        const outsideHandler = (ev) => {
+            if (!ev.target.closest('.target-lang-menu') && !ev.target.closest('.target-language')) {
                 menu.remove();
                 document.removeEventListener('click', outsideHandler, true);
             }
         };
         menu.addEventListener('click', clickHandler);
-        setTimeout(()=>document.addEventListener('click', outsideHandler, true),0);
+        setTimeout(() => document.addEventListener('click', outsideHandler, true), 0);
     }
 
-    languageName(code){
-        const MAP={
-            en:'English',es:'Spanish',fr:'French',de:'German',it:'Italian',pt:'Portuguese',ru:'Russian',ja:'Japanese',ko:'Korean',zh:'Chinese',tr:'Turkish',nl:'Dutch',sv:'Swedish',da:'Danish',no:'Norwegian',fi:'Finnish',pl:'Polish',cs:'Czech',hu:'Hungarian',ro:'Romanian'
-        }; return MAP[code]||code.toUpperCase();
+    languageName(code) {
+        const MAP = {
+            en: 'English', es: 'Spanish', fr: 'French', de: 'German', it: 'Italian', pt: 'Portuguese', ru: 'Russian', ja: 'Japanese', ko: 'Korean', zh: 'Chinese', tr: 'Turkish', nl: 'Dutch', sv: 'Swedish', da: 'Danish', no: 'Norwegian', fi: 'Finnish', pl: 'Polish', cs: 'Czech', hu: 'Hungarian', ro: 'Romanian'
+        }; return MAP[code] || code.toUpperCase();
     }
 
-    async applyNewTargetLanguage(lang){
+    async applyNewTargetLanguage(lang) {
         if (this.isTranslatingBulk) return;
         this.isTranslatingBulk = true;
         document.querySelector('.target-lang-menu')?.remove();
@@ -719,29 +720,29 @@ class VocabularyExercise {
             this.targetLanguage = lang;
             // Reset exercise state for fairness
             this.currentQuestionIndex = 0;
-            this.score = 0; this.correctAnswers=0; this.incorrectAnswers=0; this.skippedAnswers=0; this.incorrectWords=[];
+            this.score = 0; this.correctAnswers = 0; this.incorrectAnswers = 0; this.skippedAnswers = 0; this.incorrectWords = [];
             this.answeredMap.clear(); this.choiceMap.clear();
             this.loadQuestion();
-        } catch (e){
+        } catch (e) {
             console.error('Bulk translate failed', e);
             this.showAnswerNotification('Translation failed', 'incorrect');
         } finally {
             this.isTranslatingBulk = false;
-            setTimeout(()=>{
+            setTimeout(() => {
                 const toast = document.querySelector('.answer-toast');
                 if (toast && /Translating/.test(toast.textContent)) toast.remove();
             }, 1200);
         }
     }
 
-    async bulkTranslateWords(targetLang){
+    async bulkTranslateWords(targetLang) {
         // Attempt to reuse one translator instance if available
         if (!('Translator' in window)) throw new Error('Translation API not available in this context');
         const translatorCache = new Map(); // sourceLang -> translator
-        for (const w of this.words){
-            const src = (w.sourceLanguage||'auto');
+        for (const w of this.words) {
+            const src = (w.sourceLanguage || 'auto');
             let translator = translatorCache.get(src);
-            if (!translator){
+            if (!translator) {
                 translator = await Translator.create({ sourceLanguage: src, targetLanguage: targetLang });
                 translatorCache.set(src, translator);
             }
@@ -749,7 +750,7 @@ class VocabularyExercise {
                 const result = await translator.translate(w.original);
                 w.translation = result;
                 w.targetLanguage = targetLang;
-            } catch (e){
+            } catch (e) {
                 console.warn('Translation failed for', w.original, e);
             }
         }

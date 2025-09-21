@@ -1,1 +1,2 @@
 - change the icons
+- check edit translate context
