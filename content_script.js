@@ -227,8 +227,8 @@
     <div class="word-breakdown">
       <div class="word-breakdown-title">Click words for individual translations:</div>
       <div class="combination-controls">
-        <button class="combination-btn" title="Enter combination mode for multiple words">🔗</button>
         <div class="combination-status"></div>
+        <button class="combination-btn" title="Enter combination mode for multiple words">🔗</button>
       </div>
       <div class="word-pills"></div>
       <div class="word-translation"></div>
@@ -932,8 +932,7 @@
         clearPendingState();
         return;
       }
-      // Avoid repeat only in auto mode (users might want to re-trigger with icon/hotkey)
-      if (text === lastSelection && settings?.bubbleMode === 'auto') { return; }
+
       lastSelection = text;
       let range; try { range = sel.getRangeAt(0); } catch { return; }
       const rects = range.getClientRects();
