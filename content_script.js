@@ -11,6 +11,10 @@ let selectionContextElement = null; // Block-level ancestor for sentence context
 let tempTargetLang = null; // ephemeral target language for current bubble
 let bubbleLangMenuEl = null; // reference to open language menu
 
+// Combination mode state
+let combinationMode = false; // Whether we're in combination mode
+let selectedWordsForCombination = new Set(); // Words selected for combination
+
 // Trigger mode related state
 let triggerIconEl = null; // small icon shown in icon mode
 let triggerIconTimer = null; // timer id
@@ -188,7 +192,7 @@ function triggerTranslationFromPending(){
 
 // Create translation bubble at the given rectangle
 function createBubbleAtRect(rect, sourceText, translatedText, isLoading = false, languageInfo = null) {
-  removeBubble(); // remove any existing bubble
+  removeBubble('create bubble at'); // remove any existing bubble
   
   const bubble = document.createElement('div');
   bubble.className = '__translator_bubble' + (isLoading ? ' __translator_loading' : '');
@@ -214,6 +218,10 @@ function createBubbleAtRect(rect, sourceText, translatedText, isLoading = false,
     <div class="translated-text">${escapeHtml(translatedText)}</div>
     <div class="word-breakdown">
       <div class="word-breakdown-title">Click words for individual translations:</div>
+      <div class="combination-controls">
+        <button class="combination-btn" title="Enter combination mode for multiple words">🔗</button>
+        <div class="combination-status"></div>
+      </div>
       <div class="word-pills"></div>
       <div class="word-translation"></div>
     </div>
@@ -245,7 +253,7 @@ function createBubbleAtRect(rect, sourceText, translatedText, isLoading = false,
   const closeBtn = bubble.querySelector('.close-btn');
   closeBtn.addEventListener('click', (e) => {
     e.stopPropagation(); // Prevent any unwanted bubbling
-    removeBubble();
+    removeBubble('create buble at 2');
   });
   
   // Add save button functionality
@@ -253,6 +261,13 @@ function createBubbleAtRect(rect, sourceText, translatedText, isLoading = false,
   saveBtn.addEventListener('click', (e) => {
     e.stopPropagation(); // Prevent bubble removal
     handleSaveWords();
+  });
+  
+  // Add combination button functionality
+  const combinationBtn = bubble.querySelector('.combination-btn');
+  combinationBtn.addEventListener('click', (e) => {
+    e.stopPropagation(); // Prevent bubble removal
+    toggleCombinationMode();
   });
   
   // Create word pills if not loading
@@ -265,12 +280,16 @@ function createBubbleAtRect(rect, sourceText, translatedText, isLoading = false,
 }
 
 // Remove the translation bubble
-function removeBubble() {
+function removeBubble(source = null) {
+  console.log('here the ' + source)
   if (bubbleEl) {
     bubbleEl.remove();
     bubbleEl = null;
     // Clear selected words when bubble is removed
     selectedWords.clear();
+    // Reset combination mode state
+    combinationMode = false;
+    selectedWordsForCombination.clear();
   }
 }
 
@@ -493,6 +512,12 @@ function createWordPills(text) {
 // Handle individual word translation
 async function handlePillClick(word, pillElement) {
   if (!bubbleEl) return;
+  
+  // If in combination mode, handle word selection for combination
+  if (combinationMode) {
+    toggleWordForCombination(word, pillElement);
+    return;
+  }
   
   // Toggle active state for clicked pill (don't remove from others)
   const isCurrentlyActive = pillElement.classList.contains('active');
@@ -894,7 +919,7 @@ async function onSelection(event){
       if (bubbleEl && active && bubbleEl.contains(active) && (active.classList.contains('translation-edit-input') || active.tagName === 'INPUT')) {
         return; // keep bubble open during inline editing
       }
-      removeBubble();
+      // removeBubble('on selection'); //TODO: not sure what to do here if remove this or not
       clearPendingState();
       return;
     }
@@ -1064,7 +1089,7 @@ document.addEventListener('keyup', (e) => {
 
 // Clean up when navigating single-page apps: remove bubble
 window.addEventListener('scroll', () => {
-  if (bubbleEl) removeBubble();
+  if (bubbleEl) removeBubble('scroll');
   if (pendingSelection) clearTriggerIcon();
 }, { passive: true });
 
@@ -1072,12 +1097,10 @@ window.addEventListener('scroll', () => {
 document.addEventListener('click', (e) => {
   if (bubbleEl) {
     const isInsideBubble = bubbleEl.contains(e.target);
-    const isWordPill = e.target.classList.contains('word-pill');
-    const isSaveButton = e.target.classList.contains('save-button-translate');
-    const inLangMenu = e.currentTarget.closest?.('.__translator_lang_menu');
-    // Close only if click is outside bubble AND not on language menu
-    if (!isInsideBubble && !isWordPill && !isSaveButton && !inLangMenu) {
-      removeBubble();
+    const inLangMenu = e.target.closest?.('.__translator_lang_menu');
+    // Close only if click is outside bubble AND not in language menu
+    if (!isInsideBubble && !inLangMenu) {
+      removeBubble('click');
       clearPendingState();
     }
   }
@@ -1102,6 +1125,290 @@ if (!existingStyle){
   document.head.appendChild(style);
 }
 
+// Combination mode functions
+function toggleCombinationMode() {
+  combinationMode = !combinationMode;
+  selectedWordsForCombination.clear();
+  
+  const combinationBtn = bubbleEl?.querySelector('.combination-btn');
+  const combinationStatus = bubbleEl?.querySelector('.combination-status');
+  const wordPills = bubbleEl?.querySelectorAll('.word-pill');
+  
+  if (!combinationBtn || !combinationStatus) return;
+  
+  if (combinationMode) {
+    // Enable combination mode
+    combinationBtn.classList.add('active');
+    combinationBtn.innerHTML = `🔓`;
+    combinationBtn.title = 'Exit combination mode';
+    combinationStatus.innerHTML = `
+      <div class="combination-info">
+        <span>Select words for combined translation</span>
+      </div>
+    `;
+    combinationStatus.classList.add('show');
+    
+    // Clear existing individual word selections but keep their translations
+    wordPills.forEach(pill => {
+      pill.classList.remove('active', 'selected');
+    });
+    selectedWords.clear();
+    
+  } else {
+    // Disable combination mode
+    combinationBtn.classList.remove('active');
+    combinationBtn.innerHTML = `🔗`;
+    combinationBtn.title = 'Enter combination mode for multiple words';
+    combinationStatus.innerHTML = '';
+    combinationStatus.classList.remove('show');
+    
+    // Clear combination selections but preserve word translation area
+    wordPills.forEach(pill => {
+      pill.classList.remove('combination-selected');
+    });
+    
+    // Remove any instant combination translation
+    removeInstantCombinedTranslation();
+    
+    // Clear combination selection set
+    selectedWordsForCombination.clear();
+  }
+}
+
+function toggleWordForCombination(word, pillElement) {
+  if (!combinationMode || !bubbleEl) return;
+  
+  const isSelected = selectedWordsForCombination.has(word);
+  const combinationStatus = bubbleEl.querySelector('.combination-status');
+  
+  if (isSelected) {
+    // Remove from combination selection
+    selectedWordsForCombination.delete(word);
+    pillElement.classList.remove('combination-selected');
+  } else {
+    // Add to combination selection
+    selectedWordsForCombination.add(word);
+    pillElement.classList.add('combination-selected');
+  }
+  
+  // Update status text and handle instant translation
+  const infoSpan = combinationStatus?.querySelector('.combination-info span');
+  if (infoSpan) {
+    if (selectedWordsForCombination.size >= 2) {
+      infoSpan.textContent = `${selectedWordsForCombination.size} words selected for combination`;
+      // Instantly show combined translation when 2+ words are selected
+      showInstantCombinedTranslation();
+    } else {
+      infoSpan.textContent = 'Select words to combine for multiple words';
+      // Remove combined translation if less than 2 words selected
+      removeInstantCombinedTranslation();
+    }
+  }
+}
+
+// Handle saving combination as a single entry
+async function handleSaveCombination(combinedPhrase, translation) {
+  if (!bubbleEl) {
+    console.warn('Cannot save combination: bubble element is null');
+    return;
+  }
+  
+  const saveCombinationBtn = bubbleEl.querySelector('.save-combination-btn');
+  if (saveCombinationBtn) {
+    saveCombinationBtn.innerHTML = '💾 Saving...';
+    saveCombinationBtn.disabled = true;
+  }
+  
+  try {
+    // Get detected source language from settings or storage
+    let detectedSourceLanguage = '';
+    try {
+      const storageResult = await chrome.storage.sync.get(['sourceLanguage']);
+      if (storageResult.sourceLanguage) {
+        detectedSourceLanguage = storageResult.sourceLanguage;
+      }
+    } catch (err) {
+      console.warn('Could not get detected source language:', err);
+    }
+    
+    // Create the combination entry
+    const combinationEntry = {
+      timestamp: new Date().toISOString(),
+      originalWord: combinedPhrase,
+      translatedWord: translation,
+      context: lastSelection, // Use the full original selection as context
+      targetLanguage: settings?.target_lang || 'en',
+      sourceLanguage: detectedSourceLanguage,
+      url: window.location.href,
+      domain: window.location.hostname,
+      isCombination: true, // Flag to identify this as a word combination
+      combinedWords: Array.from(selectedWordsForCombination) // Store the individual words
+    };
+    
+    // Save via background service worker
+    const response = await chrome.runtime.sendMessage({
+      type: 'SAVE_VOCABULARY',
+      data: combinationEntry
+    });
+    
+    if (response && response.success) {
+      // Show success feedback
+      if (saveCombinationBtn) {
+        saveCombinationBtn.innerHTML = '✅ Saved!';
+        
+        setTimeout(() => {
+          if (saveCombinationBtn) {
+            saveCombinationBtn.innerHTML = '💾 Save Combination';
+            saveCombinationBtn.disabled = false;
+          }
+        }, 2000);
+      }
+      
+      // Show global toast notification
+      showSaveToast(`Combination "${combinedPhrase}" saved!`);
+      
+    } else {
+      throw new Error(response ? response.error : 'No response from save service');
+    }
+    
+  } catch (error) {
+    console.error('Failed to save combination:', error);
+    
+    if (saveCombinationBtn) {
+      saveCombinationBtn.innerHTML = '❌ Save Failed';
+      setTimeout(() => {
+        if (saveCombinationBtn) {
+          saveCombinationBtn.innerHTML = '💾 Save Combination';
+          saveCombinationBtn.disabled = false;
+        }
+      }, 2000);
+    }
+  }
+}
+
+// Show instant combined translation in the word translation area
+async function showInstantCombinedTranslation() {
+  if (!bubbleEl || selectedWordsForCombination.size < 2) return;
+  
+  // Get the original order of words from the text
+  const allPills = Array.from(bubbleEl.querySelectorAll('.word-pill'));
+  const selectedPillsInOrder = allPills.filter(pill => 
+    selectedWordsForCombination.has(pill.dataset.word)
+  );
+  
+  if (selectedPillsInOrder.length === 0) return;
+  
+  // Create the combined phrase in the original word order
+  const combinedPhrase = selectedPillsInOrder.map(pill => pill.dataset.word).join(' ');
+  
+  const wordTranslationDiv = bubbleEl.querySelector('.word-translation');
+  if (!wordTranslationDiv) return;
+  
+  // Ensure the translation area is visible
+  wordTranslationDiv.classList.add('show');
+  
+  // Check if combination translation already exists
+  let combinationElement = wordTranslationDiv.querySelector('.instant-combination-translation');
+  
+  if (!combinationElement) {
+    // Create new combination translation element
+    combinationElement = document.createElement('div');
+    combinationElement.className = 'word-translation-item instant-combination-translation';
+    combinationElement.dataset.combinationPhrase = combinedPhrase;
+    
+    // Insert at the top of the word translation area
+    wordTranslationDiv.insertBefore(combinationElement, wordTranslationDiv.firstChild);
+  }
+  
+  // Show loading state
+  combinationElement.innerHTML = `
+    <div class="word-translation-content combination-instant loading">
+      <span class="combination-label">🔗 Combined:</span>
+      <span class="word-original">"${escapeHtml(combinedPhrase)}"</span>
+      <span class="word-translated">Translating...</span>
+    </div>
+  `;
+  
+  try {
+    // Get current settings
+    const currentSettings = await getSettings();
+    
+    // Get source language from storage
+    let sourceLanguage = 'auto';
+    try {
+      const storageResult = await chrome.storage.sync.get(['sourceLanguage']);
+      if (storageResult.sourceLanguage) {
+        sourceLanguage = storageResult.sourceLanguage;
+      }
+    } catch (err) {
+      console.warn('Could not get source language for instant combination translation:', err);
+    }
+    
+    // Translate the combined phrase
+    const combinationTranslation = await translateTextWithAPI(
+      combinedPhrase, 
+      currentSettings.target_lang, 
+      sourceLanguage
+    );
+    
+    // Update with actual translation
+    combinationElement.innerHTML = `
+      <div class="word-translation-content combination-instant">
+        <span class="combination-label">🔗 Combined:</span>
+        <span class="word-original">"${escapeHtml(combinedPhrase)}"</span>
+        <span class="word-translated">${escapeHtml(combinationTranslation)}</span>
+        <button class="add-word-btn combination-add" data-phrase="${escapeHtml(combinedPhrase)}" data-translation="${escapeHtml(combinationTranslation)}">
+          Save Combination
+        </button>
+      </div>
+    `;
+    
+    // Add event listener to prevent bubble closing when clicking on combination area
+    combinationElement.addEventListener('click', (e) => {
+      e.stopPropagation();
+    });
+    
+    // Add event listener to the add combination button
+    const addCombinationButton = combinationElement.querySelector('.combination-add');
+    addCombinationButton?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      handleSaveCombination(combinedPhrase, combinationTranslation);
+    });
+    
+  } catch (err) {
+    console.error('Instant combination translation failed:', err);
+    
+    // Show error state
+    combinationElement.innerHTML = `
+      <div class="word-translation-content combination-instant error">
+        <span class="combination-label">🔗 Combined:</span>
+        <span class="word-original">"${escapeHtml(combinedPhrase)}"</span>
+        <span class="word-translated error">Translation failed</span>
+      </div>
+    `;
+  }
+}
+
+// Remove instant combined translation from display
+function removeInstantCombinedTranslation() {
+  if (!bubbleEl) return;
+  
+  const wordTranslationDiv = bubbleEl.querySelector('.word-translation');
+  if (!wordTranslationDiv) return;
+  
+  const combinationElement = wordTranslationDiv.querySelector('.instant-combination-translation');
+  if (combinationElement) {
+    combinationElement.remove();
+  }
+  
+  // Hide the translation area if no other words are being displayed
+  const remainingWords = wordTranslationDiv.querySelectorAll('.word-translation-item');
+  if (remainingWords.length === 0) {
+    wordTranslationDiv.classList.remove('show');
+  }
+
+}
+
 // Initialize extension when content script loads
 (async () => {
   try {
@@ -1111,4 +1418,4 @@ if (!existingStyle){
   }
 })();
 
-})();
+})(); // End IIFE wrapper
