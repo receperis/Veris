@@ -46,6 +46,19 @@
             gap: 8px;
         }
 
+        /* Small toggle variant shown at top of popup */
+        .small-toggle {
+            width: auto;
+            padding: 6px 8px;
+            font-size: 12px;
+            border-radius: 6px;
+            gap: 6px;
+            align-self: flex-start;
+            display: inline-flex;
+            min-width: 72px;
+            justify-content: center;
+        }
+
         .exercise-btn {
             background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
             color: white;
@@ -327,6 +340,15 @@
 </head>
 
 <body>
+    <div style="display:flex;align-items:center;justify-content:flex-end;padding:10px 20px 0 20px;">
+        <div class="extension-toggle">
+            <button id="extension-toggle-btn" class="action-button small-toggle options-btn"
+                title="Toggle extension on/off" style="display:flex;align-items:center;justify-content:center;gap:6px;">
+                <span id="extension-toggle-icon">🔛</span>
+                <span style="font-weight:600;"> <strong id="extension-status">On</strong></span>
+            </button>
+        </div>
+    </div>
     <div class="popup-header">
         <h1>🌍 Selection Translator</h1>
         <p>Browse and manage your vocabulary</p>
@@ -354,6 +376,8 @@
             <div class="loading">Loading vocabulary...</div>
         </div>
     </div>
+
+    <!-- extension toggle moved to top of popup -->
 
     <div class="quick-actions">
         <button class="quick-action-btn" id="start-exercise">

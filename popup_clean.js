@@ -3,18 +3,20 @@
 document.addEventListener('DOMContentLoaded', async () => {
     // Initialize the vocabulary browser
     await initializeVocabularyBrowser();
-    
+
     // Set up event listeners
     setupEventListeners();
-    
+    // Initialize extension toggle UI and behavior
+    await initExtensionToggle();
+
     // Check if it's exercise time
     await checkExerciseTime();
-    
+
     // Focus the search input so user can immediately type
     const searchEl = document.getElementById('search-input');
     if (searchEl) {
         // slight delay allows rendering & potential async population
-        setTimeout(()=> searchEl.focus(), 0);
+        setTimeout(() => searchEl.focus(), 0);
     }
 });
 
@@ -26,24 +28,24 @@ async function initializeVocabularyBrowser() {
     try {
         // Show loading state
         document.getElementById('vocabulary-list').innerHTML = '<div class="loading">Loading vocabulary...</div>';
-        
+
         // Get all vocabulary from background service worker
         const response = await chrome.runtime.sendMessage({ type: 'GET_ALL_VOCABULARY' });
-        
+
         if (response && response.success && response.data) {
             allVocabulary = response.data;
-            
+
             if (allVocabulary.length === 0) {
                 showNoResults('No vocabulary saved yet. Start translating text to build your vocabulary!');
                 return;
             }
-            
+
             // Extract unique source languages
             sourceLanguages = [...new Set(allVocabulary.map(item => item.sourceLanguage))].filter(lang => lang);
-            
+
             // Populate language dropdown
             populateLanguageDropdown();
-            
+
             // Initial display of all vocabulary
             filteredVocabulary = [...allVocabulary];
             renderVocabularyList();
@@ -51,7 +53,7 @@ async function initializeVocabularyBrowser() {
             console.error('Failed to load vocabulary:', response);
             showNoResults('Failed to load vocabulary. Please check browser console for details.');
         }
-        
+
     } catch (error) {
         console.error('Error loading vocabulary:', error);
         showNoResults(`Error loading vocabulary: ${error.message}`);
@@ -61,7 +63,7 @@ async function initializeVocabularyBrowser() {
 function populateLanguageDropdown() {
     const dropdown = document.getElementById('source-language');
     dropdown.innerHTML = '<option value="all">All Languages</option>';
-    
+
     sourceLanguages.forEach(lang => {
         const option = document.createElement('option');
         option.value = lang;
@@ -107,7 +109,7 @@ function getLanguageDisplayName(langCode) {
         'ms': 'Malay',
         'auto': 'Auto-detected'
     };
-    
+
     return languageNames[langCode] || langCode.toUpperCase();
 }
 
@@ -176,19 +178,60 @@ async function checkExerciseTime() {
 function setupEventListeners() {
     // Language filter dropdown
     document.getElementById('source-language').addEventListener('change', filterVocabulary);
-    
+
     // Search input
     document.getElementById('search-input').addEventListener('input', filterVocabulary);
-    
+
     // Exercise button
     document.getElementById('start-exercise').addEventListener('click', () => {
         chrome.tabs.create({ url: chrome.runtime.getURL('exercise/exercise.html') });
         window.close();
     });
-    
+
     // Options button
     document.getElementById('open-options').addEventListener('click', () => {
         chrome.runtime.openOptionsPage();
         window.close();
     });
+}
+
+// Extension enable/disable toggle
+async function initExtensionToggle() {
+    const btn = document.getElementById('extension-toggle-btn');
+    const status = document.getElementById('extension-status');
+    const icon = document.getElementById('extension-toggle-icon');
+    if (!btn || !status) return;
+
+    // Read stored value (default true)
+    const stored = await chrome.storage.sync.get({ extensionEnabled: true });
+    updateToggleUI(stored.extensionEnabled);
+
+    // Listen to changes in storage to reflect external updates
+    chrome.storage.onChanged.addListener((changes, area) => {
+        if (area === 'sync' && changes.extensionEnabled) {
+            updateToggleUI(changes.extensionEnabled.newValue);
+        }
+    });
+
+    btn.addEventListener('click', async () => {
+        // Toggle value
+        const current = (await chrome.storage.sync.get({ extensionEnabled: true })).extensionEnabled;
+        const next = !current;
+        await chrome.storage.sync.set({ extensionEnabled: next });
+        updateToggleUI(next);
+    });
+
+    function updateToggleUI(enabled) {
+        if (enabled) {
+            status.textContent = 'On';
+            if (icon) icon.textContent = '🔛';
+            btn.classList.remove('options-btn');
+            btn.classList.add('exercise-btn');
+        } else {
+            status.textContent = 'Off';
+            if (icon) icon.textContent = '⛔';
+            btn.classList.remove('exercise-btn');
+            btn.classList.add('options-btn');
+        }
+    }
 }
