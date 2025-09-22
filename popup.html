@@ -59,6 +59,28 @@
             justify-content: center;
         }
 
+        /* Minimal pill-style toggle (text-only, subtle) */
+        .minimal-toggle {
+            background: transparent;
+            border: 1px solid transparent;
+            color: #374151;
+            padding: 4px 8px;
+            border-radius: 999px;
+            font-weight: 600;
+        }
+
+        .minimal-toggle.on {
+            background: #eef2ff;
+            color: #4f46e5;
+            border-color: rgba(79, 70, 229, 0.12);
+        }
+
+        .minimal-toggle.off {
+            background: transparent;
+            color: #9ca3af;
+            border-color: transparent;
+        }
+
         .exercise-btn {
             background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
             color: white;
@@ -342,10 +364,11 @@
 <body>
     <div style="display:flex;align-items:center;justify-content:flex-end;padding:10px 20px 0 20px;">
         <div class="extension-toggle">
-            <button id="extension-toggle-btn" class="action-button small-toggle options-btn"
-                title="Toggle extension on/off" style="display:flex;align-items:center;justify-content:center;gap:6px;">
-                <span id="extension-toggle-icon">🔛</span>
-                <span style="font-weight:600;"> <strong id="extension-status">On</strong></span>
+            <button id="extension-toggle-btn" class="action-button small-toggle minimal-toggle on"
+                title="Toggle extension on/off" aria-pressed="true" aria-label="Enable or disable selection translator"
+                style="display:flex;align-items:center;justify-content:center;gap:6px;">
+                <span id="extension-toggle-icon">●</span>
+                <span id="extension-status" style="font-weight:600;">Enable</span>
             </button>
         </div>
     </div>

@@ -223,15 +223,21 @@ async function initExtensionToggle() {
 
     function updateToggleUI(enabled) {
         if (enabled) {
-            status.textContent = 'On';
-            if (icon) icon.textContent = '🔛';
+            status.textContent = 'Enabled';
+            if (icon) icon.textContent = '●';
             btn.classList.remove('options-btn');
-            btn.classList.add('exercise-btn');
+            btn.classList.remove('off');
+            btn.classList.add('on');
+            btn.setAttribute('aria-pressed', 'true');
+            // apply minimal visual variant
+            btn.classList.add('minimal-toggle');
         } else {
-            status.textContent = 'Off';
-            if (icon) icon.textContent = '⛔';
-            btn.classList.remove('exercise-btn');
-            btn.classList.add('options-btn');
+            status.textContent = 'Disabled';
+            if (icon) icon.textContent = '○';
+            btn.classList.remove('on');
+            btn.classList.add('off');
+            btn.setAttribute('aria-pressed', 'false');
+            btn.classList.add('minimal-toggle');
         }
     }
 }
