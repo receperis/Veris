@@ -225,9 +225,13 @@
     <div class="source-text">${escapeHtml(sourceText)}</div>
     <div class="translated-text">${escapeHtml(translatedText)}</div>
     <div class="word-breakdown">
-      <div class="word-breakdown-title">Click words for individual translations:</div>
+
       <div class="combination-controls">
-        <div class="combination-status"></div>
+        <div class="combination-status show">
+           <div class="combination-info">
+              <span>Click words for individual translations</span>
+          </div>
+        </div>
         <button class="combination-btn" title="Enter combination mode for multiple words">🔗</button>
       </div>
       <div class="word-pills"></div>
@@ -288,8 +292,7 @@
   }
 
   // Remove the translation bubble
-  function removeBubble(source = null) {
-    console.log('here the ' + source)
+  function removeBubble() {
     if (bubbleEl) {
       bubbleEl.remove();
       bubbleEl = null;
@@ -519,6 +522,7 @@
 
   // Handle individual word translation
   async function handlePillClick(word, pillElement) {
+    console.log('handle pill click')
     if (!bubbleEl) return;
 
     // If in combination mode, handle word selection for combination
@@ -536,6 +540,8 @@
       pillElement.classList.remove('selected');
       removeWordTranslationFromDisplay(word);
       selectedWords.delete(word);
+      // Ensure save button and count reflect the removed selection
+      updateSaveButton();
       return;
     }
 
@@ -590,6 +596,7 @@
 
   // Add or update a word translation in the display
   function addWordTranslationToDisplay(word, translation, isLoading = false) {
+    console.log('add word to translation display')
     const wordTranslationDiv = bubbleEl.querySelector('.word-translation');
     if (!wordTranslationDiv) return;
 
@@ -647,6 +654,7 @@
 
   // Remove a word translation from the display
   function removeWordTranslationFromDisplay(word) {
+    console.log('remove word from translation display')
     const wordTranslationDiv = bubbleEl.querySelector('.word-translation');
     if (!wordTranslationDiv) return;
 
@@ -1170,14 +1178,20 @@
         pill.classList.remove('active', 'selected');
       });
       selectedWords.clear();
+      // Update save UI since we cleared any individual selections
+      updateSaveButton();
 
     } else {
       // Disable combination mode
       combinationBtn.classList.remove('active');
       combinationBtn.innerHTML = `🔗`;
       combinationBtn.title = 'Enter combination mode for multiple words';
-      combinationStatus.innerHTML = '';
-      combinationStatus.classList.remove('show');
+      combinationStatus.innerHTML = `
+      <div class="combination-info">
+        <span>Click words for individual translations</span>
+      </div>
+    `;
+      // combinationStatus.classList.remove('show');
 
       // Clear combination selections but preserve word translation area
       wordPills.forEach(pill => {
