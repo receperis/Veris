@@ -509,56 +509,269 @@ async function initExtensionToggle() {
 function ensurePopupStyles() {
     if (document.getElementById('__popup_edit_styles')) return;
     const css = `
-    .vocabulary-item { padding: 8px 10px; border-bottom: 1px solid #f3f4f6; }
+    /* Enhanced vocabulary item styling */
+    .vocabulary-item { 
+        padding: 14px 16px; 
+        border-bottom: 1px solid #f1f5f9; 
+        transition: all 0.2s ease;
+        border-radius: 0;
+    }
+    .vocabulary-item:hover {
+        background: linear-gradient(135deg, #fafbff 0%, #f8fafc 100%);
+        border-color: #e2e8f0;
+    }
     .vocabulary-content { display:block; }
-    .vocabulary-item.editing { background: #fff; }
-    .vocabulary-item .source-text { font-weight:600; color:#111827; margin-bottom:4px; }
-    .vocabulary-item .translation { color:#6b7280; font-size:13px; }
-    /* Inline edit inputs: minimal underline style */
+    .vocabulary-item.editing { 
+        background: linear-gradient(135deg, #fefeff 0%, #f9fafb 100%);
+        border: 1px solid #e0e7ff;
+        border-radius: 12px;
+        margin: 4px 0;
+        padding: 18px;
+        box-shadow: 0 4px 16px rgba(79, 70, 229, 0.08);
+    }
+    
+    /* Typography improvements */
+    .vocabulary-item .source-text { 
+        font-weight: 600; 
+        color: #1e293b; 
+        margin-bottom: 6px;
+        font-size: 15px;
+        line-height: 1.4;
+    }
+    .vocabulary-item .translation { 
+        color: #64748b; 
+        font-size: 14px;
+        line-height: 1.3;
+        font-weight: 400;
+    }
+    
+    /* Elegant inline edit inputs */
     .vocabulary-item input.edit-original,
     .vocabulary-item input.edit-translation {
-        width:100%;
+        width: 100%;
         border: none;
-        border-bottom: 1px solid #e6e9ee;
-        padding: 6px 4px;
+        border-bottom: 2px solid #e2e8f0;
+        padding: 10px 6px 8px 6px;
         outline: none;
-        font-size: 14px;
-        background: transparent;
-        color: #111827;
+        font-size: 15px;
+        background: rgba(255, 255, 255, 0.6);
+        color: #1e293b;
+        margin-bottom: 12px;
+        border-radius: 4px 4px 0 0;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        font-weight: 500;
+    }
+    .vocabulary-item input.edit-original {
+        font-weight: 600;
     }
     .vocabulary-item input.edit-original:focus,
     .vocabulary-item input.edit-translation:focus {
-        border-bottom-color: #4f46e5;
-        box-shadow: 0 2px 0 rgba(79,70,229,0.06);
+        border-bottom-color: #6366f1;
+        background: rgba(255, 255, 255, 0.95);
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
+        transform: translateY(-1px);
     }
-    /* Compact action buttons */
-    .vocabulary-item .quick-action-btn { padding:6px 10px; border-radius:8px; font-size:13px; }
-    .vocabulary-item .cancel-edit { background:transparent;border:1px solid #e5e7eb;color:#374151; }
-    .vocabulary-item .save-word { background:#4f46e5;color:#fff;border:none; }
-    .vocabulary-item .delete-word { background:transparent;border:1px solid #fee2e2;color:#991b1b; }
-    /* Icon buttons subtle hover */
-    .icon-btn { transition: color .15s ease, transform .08s ease; }
-    .icon-btn:hover { color: #374151; transform: translateY(-1px); }
-    .icon-btn:focus { outline: 2px solid rgba(79,70,229,0.18); outline-offset: 2px; }
-    /* Mini confirm modal */
+    .vocabulary-item input.edit-original::placeholder,
+    .vocabulary-item input.edit-translation::placeholder {
+        color: #94a3b8;
+        font-style: italic;
+    }
+    
+    /* Modern action buttons */
+    .vocabulary-item .quick-action-btn { 
+        padding: 8px 16px; 
+        border-radius: 10px; 
+        font-size: 13px;
+        font-weight: 600;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    .vocabulary-item .quick-action-btn:before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+        transition: left 0.6s;
+    }
+    .vocabulary-item .quick-action-btn:hover:before {
+        left: 100%;
+    }
+    
+    .vocabulary-item .cancel-edit { 
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        color: #475569;
+    }
+    .vocabulary-item .cancel-edit:hover {
+        background: #f1f5f9;
+        border-color: #cbd5e1;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    .vocabulary-item .save-word { 
+        background: #6366f1;
+        color: #ffffff;
+        border: none;
+    }
+    .vocabulary-item .save-word:hover {
+        background: #5b5bd6;
+        transform: translateY(-1px);
+        box-shadow: 0 6px 20px rgba(99, 102, 241, 0.35);
+    }
+    
+    .vocabulary-item .delete-word { 
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        color: #dc2626;
+    }
+    .vocabulary-item .delete-word:hover {
+        background: #fee2e2;
+        border-color: #fca5a5;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2);
+    }
+    
+    /* Enhanced icon buttons */
+    .icon-btn { 
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        border-radius: 8px;
+        padding: 8px;
+    }
+    .icon-btn:hover { 
+        color: #4f46e5; 
+        transform: translateY(-2px) scale(1.05);
+        background: rgba(79, 70, 229, 0.08);
+    }
+    .icon-btn:focus { 
+        outline: 2px solid rgba(79, 70, 229, 0.25); 
+        outline-offset: 2px;
+        background: rgba(79, 70, 229, 0.05);
+    }
+    /* Enhanced confirmation modal */
     .mini-confirm-overlay {
-        position: fixed; inset: 0; background: rgba(0,0,0,0.35); display:flex;align-items:center;justify-content:center; z-index:2147483646;
+        position: fixed; 
+        inset: 0; 
+        background: rgba(15, 23, 42, 0.4); 
+        backdrop-filter: blur(4px);
+        display: flex;
+        align-items: center;
+        justify-content: center; 
+        z-index: 2147483646;
+        opacity: 0;
+        animation: fadeIn 0.2s ease-out forwards;
+    }
+    @keyframes fadeIn {
+        to { opacity: 1; }
     }
     .mini-confirm {
-        background: #fff; border-radius:12px; padding:18px; max-width:360px; width:92%; box-shadow:0 12px 40px rgba(2,6,23,0.2); font-family:inherit;
+        background: #ffffff; 
+        border-radius: 16px; 
+        padding: 24px; 
+        max-width: 380px; 
+        width: 94%; 
+        box-shadow: 0 20px 60px rgba(15, 23, 42, 0.25), 0 8px 24px rgba(15, 23, 42, 0.1);
+        font-family: inherit;
+        border: 1px solid rgba(226, 232, 240, 0.8);
+        transform: scale(0.95);
+        animation: slideIn 0.2s ease-out forwards;
     }
-    .mini-confirm p { color:#111827; margin-bottom:14px; }
-    .mini-confirm .actions { display:flex; gap:8px; justify-content:flex-end; }
-    .mini-confirm .btn { padding:8px 12px; border-radius:8px; font-weight:600; cursor:pointer; border:1px solid #e5e7eb; }
-    .mini-confirm .btn.confirm { background:#ef4444;color:#fff;border:none; }
-    .mini-confirm .btn.cancel { background:transparent;color:#374151; }
+    @keyframes slideIn {
+        to { transform: scale(1); }
+    }
+    .mini-confirm p { 
+        color: #1e293b; 
+        margin-bottom: 20px;
+        font-size: 15px;
+        line-height: 1.5;
+    }
+    .mini-confirm .actions { 
+        display: flex; 
+        gap: 10px; 
+        justify-content: flex-end; 
+        margin-top: 24px;
+    }
+    .mini-confirm .btn { 
+        padding: 10px 20px; 
+        border-radius: 10px; 
+        font-weight: 600; 
+        cursor: pointer; 
+        border: 1px solid transparent;
+        font-size: 14px;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+    .mini-confirm .btn:focus {
+        outline: 2px solid rgba(99, 102, 241, 0.3);
+        outline-offset: 2px;
+    }
+    .mini-confirm .btn.confirm { 
+        background: #dc2626;
+        color: #ffffff;
+        border-color: #dc2626;
+    }
+    .mini-confirm .btn.confirm:hover {
+        background: #b91c1c;
+        border-color: #b91c1c;
+        transform: translateY(-1px);
+        box-shadow: 0 8px 20px rgba(220, 38, 38, 0.3);
+    }
+    .mini-confirm .btn.cancel { 
+        background: #f8fafc;
+        color: #475569;
+        border-color: #e2e8f0;
+    }
+    .mini-confirm .btn.cancel:hover {
+        background: #f1f5f9;
+        border-color: #cbd5e1;
+        color: #334155;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(71, 85, 105, 0.15);
+    }
 
-    /* Mini toast notice */
-    .mini-toast { position: fixed; right: 16px; bottom: 16px; background: #111827; color: #fff; padding:10px 14px; border-radius:10px; box-shadow:0 8px 24px rgba(2,6,23,0.2); z-index:2147483647; opacity:0; transform: translateY(8px); transition: opacity .18s ease, transform .18s ease; }
-    .mini-toast.show { opacity:1; transform: translateY(0); }
-    .mini-toast.info { background: #111827; }
-    .mini-toast.success { background: linear-gradient(90deg,#10b981,#34d399); }
-    .mini-toast.error { background: linear-gradient(90deg,#ef4444,#f87171); }
+    /* Refined toast notifications */
+    .mini-toast { 
+        position: fixed; 
+        right: 16px; 
+        bottom: 16px; 
+        background: #1e293b; 
+        color: #f8fafc; 
+        padding: 12px 16px; 
+        border-radius: 12px; 
+        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.3), 0 4px 12px rgba(15, 23, 42, 0.2);
+        z-index: 2147483647; 
+        opacity: 0; 
+        transform: translateY(12px); 
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        font-weight: 500;
+        font-size: 14px;
+        border: 1px solid rgba(226, 232, 240, 0.1);
+    }
+    .mini-toast.show { 
+        opacity: 1; 
+        transform: translateY(0); 
+    }
+    .mini-toast.info { 
+        background: #1e293b;
+        border-color: rgba(148, 163, 184, 0.2);
+    }
+    .mini-toast.success { 
+        background: #065f46;
+        border-color: rgba(16, 185, 129, 0.3);
+        color: #d1fae5;
+    }
+    .mini-toast.error { 
+        background: #7f1d1d;
+        border-color: rgba(239, 68, 68, 0.3);
+        color: #fee2e2;
+    }
     `;
     const style = document.createElement('style');
     style.id = '__popup_edit_styles';
