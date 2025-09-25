@@ -6,6 +6,8 @@ import * as words from './src/content/words.js';
 import { translateTextWithAPI } from './src/content/api.js';
 import { showSaveToast } from './src/content/toast.js';
 
+import './content_script.css';
+
 // Initialize extensionEnabled flag at startup
 chrome.storage.sync.get({ extensionEnabled: true }, (res) => {
   state.extensionEnabled = res.extensionEnabled === undefined ? true : !!res.extensionEnabled;

@@ -18,7 +18,7 @@ try {
 // Install event
 chrome.runtime.onInstalled.addListener(async () => {
     console.log('Chrome extension installed');
-    
+
     // Initialize IndexedDB
     try {
         await DatabaseService.init();
@@ -26,7 +26,7 @@ chrome.runtime.onInstalled.addListener(async () => {
     } catch (error) {
         console.error('Failed to initialize database:', error);
     }
-    
+
     // Set default exercise settings
     chrome.storage.sync.set({
         exerciseSettings: {
@@ -37,7 +37,7 @@ chrome.runtime.onInstalled.addListener(async () => {
             questionsPerSession: 10
         }
     });
-    
+
     // Setup daily alarm
     ExerciseService.setupDailyAlarm();
 });
@@ -45,14 +45,14 @@ chrome.runtime.onInstalled.addListener(async () => {
 // Startup event
 chrome.runtime.onStartup.addListener(async () => {
     console.log('Chrome browser started');
-    
+
     try {
         await DatabaseService.init();
         console.log('Database service initialized on startup');
     } catch (error) {
         console.error('Failed to initialize database on startup:', error);
     }
-    
+
     ExerciseService.setupDailyAlarm();
 });
 
