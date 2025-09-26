@@ -15,7 +15,7 @@ const ExerciseService = (() => {
   function error(...args) { console.error(LOG_PREFIX, ...args); }
 
   function defaultSettings() {
-    return { enabled: true, time: '09:00', days: [1,2,3,4,5], difficulty: 'mixed', questionsPerSession: 10 };
+    return { enabled: true, time: '09:00', days: [1, 2, 3, 4, 5], difficulty: 'mixed', questionsPerSession: 10 };
   }
 
   function validateSettings(raw) {
@@ -24,17 +24,17 @@ const ExerciseService = (() => {
     const s = { ...base, ...raw };
     if (!/^\d{2}:\d{2}$/.test(s.time)) s.time = base.time;
     if (!Array.isArray(s.days) || !s.days.length) s.days = base.days;
-    s.days = [...new Set(s.days.filter(d => Number.isInteger(d) && d>=0 && d<=6))].sort();
+    s.days = [...new Set(s.days.filter(d => Number.isInteger(d) && d >= 0 && d <= 6))].sort();
     if (!s.days.length) s.days = base.days;
     return s;
   }
 
   function computeNextOccurrence(timeStr, days) {
-    const [h,m] = timeStr.split(':').map(Number);
+    const [h, m] = timeStr.split(':').map(Number);
     const now = new Date();
-    for (let offset=0; offset<14; offset++) { // look ahead max 2 weeks safety
+    for (let offset = 0; offset < 14; offset++) { // look ahead max 2 weeks safety
       const d = new Date(now);
-      d.setDate(now.getDate()+offset);
+      d.setDate(now.getDate() + offset);
       d.setHours(h, m, 0, 0);
       if (d <= now) continue;
       if (days.includes(d.getDay())) return d;
@@ -118,10 +118,10 @@ const ExerciseService = (() => {
   async function handleExerciseCompleted(exerciseData) {
     try {
       const { vocabularyStats } = await chrome.storage.local.get(['vocabularyStats']);
-      const stats = vocabularyStats || { totalWords:0, uniqueWords:0, lastExercise:null, exercisesCompleted:0, averageScore:0, totalScore:0 };
+      const stats = vocabularyStats || { totalWords: 0, uniqueWords: 0, lastExercise: null, exercisesCompleted: 0, averageScore: 0, totalScore: 0 };
       stats.lastExercise = new Date().toISOString();
-      stats.exercisesCompleted = (stats.exercisesCompleted||0)+1;
-      stats.totalScore = (stats.totalScore||0) + (exerciseData?.score || 0);
+      stats.exercisesCompleted = (stats.exercisesCompleted || 0) + 1;
+      stats.totalScore = (stats.totalScore || 0) + (exerciseData?.score || 0);
       stats.averageScore = stats.exercisesCompleted ? Math.round(stats.totalScore / stats.exercisesCompleted) : 0;
       await chrome.storage.local.set({ vocabularyStats: stats });
       log('Updated stats after exercise', stats);
@@ -136,13 +136,13 @@ const ExerciseService = (() => {
       await chrome.alarms.create('test-exercise', { when });
       log(`Test alarm scheduled in ${seconds}s at`, new Date(when).toString());
       return { success: true, when };
-    } catch (e) { error('setupTestAlarm', e); return { success:false, error:e.message }; }
+    } catch (e) { error('setupTestAlarm', e); return { success: false, error: e.message }; }
   }
 
   // --- Leitner Helpers (moved inside closure for access to MAX_BOX etc.) ---
-  function ensureLeitnerMeta(word){
+  function ensureLeitnerMeta(word) {
     if (!word.srs || typeof word.srs !== 'object') {
-      word.srs = { boxIndex:0, dueAt:null, totalCorrect:0, totalWrong:0, streak:0, lastResult:null, lastReviewedAt:null, createdAt:new Date().toISOString() };
+      word.srs = { boxIndex: 0, dueAt: null, totalCorrect: 0, totalWrong: 0, streak: 0, lastResult: null, lastReviewedAt: null, createdAt: new Date().toISOString() };
     } else {
       if (word.srs.boxIndex == null || word.srs.boxIndex < 0) word.srs.boxIndex = 0;
       if (word.srs.boxIndex > MAX_BOX) word.srs.boxIndex = MAX_BOX;
@@ -150,12 +150,12 @@ const ExerciseService = (() => {
     return word;
   }
 
-  function updateLeitnerMeta(word, wasCorrect){
+  function updateLeitnerMeta(word, wasCorrect) {
     const now = Date.now();
     const meta = word.srs;
-    if (wasCorrect){
+    if (wasCorrect) {
       meta.totalCorrect++;
-      meta.streak = (meta.streak||0)+1;
+      meta.streak = (meta.streak || 0) + 1;
       meta.boxIndex = Math.min(meta.boxIndex + 1, MAX_BOX);
       meta.lastResult = 'correct';
     } else {
@@ -172,43 +172,43 @@ const ExerciseService = (() => {
     return meta;
   }
 
-  function selectLeitnerSession(words, limit){
+  function selectLeitnerSession(words, limit) {
     const now = Date.now();
-    const due=[]; const fresh=[]; const nearDue=[];
-    for (const w of words){
+    const due = []; const fresh = []; const nearDue = [];
+    for (const w of words) {
       ensureLeitnerMeta(w);
-      if (!w.srs.dueAt){ fresh.push(w); continue; }
+      if (!w.srs.dueAt) { fresh.push(w); continue; }
       const dueAt = Date.parse(w.srs.dueAt);
-      if (dueAt <= now) due.push(w); else if (dueAt - now < 2*86400000) nearDue.push(w);
+      if (dueAt <= now) due.push(w); else if (dueAt - now < 2 * 86400000) nearDue.push(w);
     }
-    due.sort((a,b)=>Date.parse(a.srs.dueAt)-Date.parse(b.srs.dueAt));
-    const selected=[];
-    for (const list of [due, fresh, nearDue]){
-      for (const w of list){ if (selected.length>=limit) break; selected.push(w);} if (selected.length>=limit) break;
+    due.sort((a, b) => Date.parse(a.srs.dueAt) - Date.parse(b.srs.dueAt));
+    const selected = [];
+    for (const list of [due, fresh, nearDue]) {
+      for (const w of list) { if (selected.length >= limit) break; selected.push(w); } if (selected.length >= limit) break;
     }
-    if (selected.length < limit){
-      const pool = words.filter(w=>!selected.includes(w));
+    if (selected.length < limit) {
+      const pool = words.filter(w => !selected.includes(w));
       shuffle(pool);
-      for (const w of pool){ if (selected.length>=limit) break; selected.push(w); }
+      for (const w of pool) { if (selected.length >= limit) break; selected.push(w); }
     }
     return selected;
   }
 
-  function countDue(words){
+  function countDue(words) {
     const now = Date.now();
-    let c=0; for (const w of words){ if (w.srs && w.srs.dueAt && Date.parse(w.srs.dueAt)<=now) c++; }
+    let c = 0; for (const w of words) { if (w.srs && w.srs.dueAt && Date.parse(w.srs.dueAt) <= now) c++; }
     return c;
   }
 
-  function leitnerCounts(words){
-    const counts = { total: words.length, due:0 };
-    for (let i=0;i<=MAX_BOX;i++) counts['box'+i]=0;
-    const now=Date.now();
-    for (const w of words){ ensureLeitnerMeta(w); counts['box'+w.srs.boxIndex]++; if (w.srs.dueAt && Date.parse(w.srs.dueAt)<=now) counts.due++; }
+  function leitnerCounts(words) {
+    const counts = { total: words.length, due: 0 };
+    for (let i = 0; i <= MAX_BOX; i++) counts['box' + i] = 0;
+    const now = Date.now();
+    for (const w of words) { ensureLeitnerMeta(w); counts['box' + w.srs.boxIndex]++; if (w.srs.dueAt && Date.parse(w.srs.dueAt) <= now) counts.due++; }
     return counts;
   }
 
-  function shuffle(arr){ for (let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()* (i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; } return arr; }
+  function shuffle(arr) { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1));[arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; }
 
   return {
     setupDailyAlarm,
@@ -222,32 +222,59 @@ const ExerciseService = (() => {
         const enriched = words.map(w => ensureLeitnerMeta(w));
         const selection = selectLeitnerSession(enriched, limit);
         // Strip heavy fields if any
-        return { success: true, words: selection.map(w => ({
-          id: w.id,
+        return {
+          success: true, words: selection.map(w => ({
+            id: w.id,
             originalWord: w.originalWord,
             translatedWord: w.translatedWord,
             sourceLanguage: w.sourceLanguage,
             targetLanguage: w.targetLanguage,
             context: w.context || w.sentence || '',
             srs: { boxIndex: w.srs.boxIndex, dueAt: w.srs.dueAt }
-        })), counts: leitnerCounts(enriched) };
-      } catch (e) { error('prepareLeitnerSession', e); return { success:false, error:e.message }; }
+          })), counts: leitnerCounts(enriched)
+        };
+      } catch (e) { error('prepareLeitnerSession', e); return { success: false, error: e.message }; }
     },
     recordLeitnerResult: async ({ id, correct, usedHint, skipped }) => {
       try {
         const all = await DatabaseService.getAllVocabulary();
         const target = all.find(w => w.id === id);
-        if (!target) return { success:false, error:'word_not_found' };
+        if (!target) return { success: false, error: 'word_not_found' };
         ensureLeitnerMeta(target);
         // Determine correctness policy (hint or skip counts as wrong)
         const wasCorrect = correct && !usedHint && !skipped;
         updateLeitnerMeta(target, wasCorrect);
         await DatabaseService.updateVocabulary(target.id, { srs: target.srs });
-        return { success:true, srs: target.srs };
-      } catch (e) { error('recordLeitnerResult', e); return { success:false, error:e.message }; }
+        return { success: true, srs: target.srs };
+      } catch (e) { error('recordLeitnerResult', e); return { success: false, error: e.message }; }
     },
     getDueCount: async () => {
       try { const all = await DatabaseService.getAllVocabulary(); return countDue(all); } catch { return 0; }
+    },
+    isExerciseTime: async () => {
+      try {
+        const settings = await getSettings();
+        if (!settings.enabled) return false;
+
+        const now = new Date();
+        const today = now.getDay();
+
+        // Check if today is an exercise day
+        if (!settings.days.includes(today)) return false;
+
+        // Check if it's the right time (within 1 hour window)
+        const [h, m] = settings.time.split(':').map(Number);
+        const exerciseTime = new Date();
+        exerciseTime.setHours(h, m, 0, 0);
+
+        const timeDiff = Math.abs(now - exerciseTime);
+        const oneHour = 60 * 60 * 1000;
+
+        return timeDiff <= oneHour;
+      } catch (e) {
+        error('isExerciseTime', e);
+        return false;
+      }
     },
     // Expose for potential external debugging
     _internal: { computeNextOccurrence, validateSettings }

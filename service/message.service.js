@@ -78,6 +78,18 @@ const MessageService = {
         return true;
       }
 
+      if (request.type === 'GET_DETAILED_STATS') {
+        const stats = await StatsService.getDetailedStats();
+        sendResponse({ success: true, data: stats });
+        return true;
+      }
+
+      if (request.type === 'CHECK_EXERCISE_TIME') {
+        const isExerciseTime = await ExerciseService.isExerciseTime();
+        sendResponse({ isExerciseTime });
+        return true;
+      }
+
       // Handle exercise operations
       if (request.type === 'EXERCISE_COMPLETED') {
         await ExerciseService.handleExerciseCompleted(request.data);

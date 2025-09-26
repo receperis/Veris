@@ -456,6 +456,15 @@ function setupEventListeners() {
             toggleEditMode(!editMode);
         });
     }
+
+    // Stats button
+    const statsBtn = document.getElementById('view-stats');
+    if (statsBtn) {
+        statsBtn.addEventListener('click', () => {
+            try { chrome.tabs.create({ url: chrome.runtime.getURL('stats/stats.html') }); } catch (e) { console.warn('Could not open stats page', e); }
+            try { window.close(); } catch (e) { /* ignore */ }
+        });
+    }
 }
 
 // Extension enable/disable toggle
