@@ -1,5 +1,7 @@
 /* Vocabulary Exercise Logic */
 
+import './exercise.css';
+
 class VocabularyExercise {
     constructor() {
         this.words = [];
@@ -488,13 +490,40 @@ class VocabularyExercise {
         // Remove existing if present
         const existing = document.querySelector('.answer-toast');
         if (existing) existing.remove();
-        const container = document.querySelector('.exercise-screen');
+        const container = document.body; // place toast in viewport so it cannot go off-screen
         if (!container) return;
+
         const toast = document.createElement('div');
         toast.className = `answer-toast ${type}`;
-        toast.textContent = message;
-        // Insert at top (before flashcard) for visibility
+        toast.setAttribute('role', 'status');
+        toast.setAttribute('aria-live', 'polite');
+        toast.setAttribute('aria-atomic', 'true');
+
+        const icon = document.createElement('span');
+        icon.className = 'icon';
+        if (type === 'correct') icon.textContent = '✓';
+        else if (type === 'incorrect') icon.textContent = '✕';
+        else icon.textContent = 'ℹ';
+
+        const msg = document.createElement('div');
+        msg.className = 'message';
+        msg.textContent = message;
+
+        toast.appendChild(icon);
+        toast.appendChild(msg);
+
+        // Insert into body so fixed positioning keeps it inside viewport
         container.prepend(toast);
+
+        // Force reflow then show
+        requestAnimationFrame(() => { toast.classList.add('show'); });
+
+        // Auto-remove after 2.2s, but keep a slightly longer for incorrect messages
+        const timeout = type === 'incorrect' ? 2600 : 2000;
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => { toast.remove(); }, 240);
+        }, timeout);
     }
 
     updateNavButtons() {

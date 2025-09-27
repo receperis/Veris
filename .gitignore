@@ -1,0 +1,70 @@
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+.pnpm-debug.log*
+
+# Build output
+dist/
+build/
+.cache/
+
+# Environment
+.env
+.env.*
+
+# Logs
+logs/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Mac
+.AppleDouble
+.LSOverride
+
+# Windows
+Desktop.ini
+$RECYCLE.BIN/
+
+# Temporary
+*.tmp
+*.temp
+
+# Webpack
+.cache/
+*.local
+
+# Chrome extension specific
+# ignore packed extension builds
+*.crx
+
+# Misc
+coverage/
+coverage-final.json
+
+# Lockfiles for optional package managers
+pnpm-lock.yaml
+
+# Tests
+/coverage
+
+# Other
+*.tgz
+
+# Keep this file tracked
+!.gitignore

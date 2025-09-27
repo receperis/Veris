@@ -1,4 +1,7 @@
 // options.js — save and restore settings
+
+import './options.css';
+
 const defaultSettings = {
   target_lang: 'en',
   bubbleMode: 'auto', // 'auto' | 'icon' | 'hotkey'
@@ -15,7 +18,7 @@ const defaultSettings = {
 
 function qs(id) { return document.getElementById(id); }
 
-function saveStatus(msg, success=true) {
+function saveStatus(msg, success = true) {
   const status = qs('status');
   status.textContent = msg;
   status.style.color = success ? '#0a0' : '#a00';
@@ -27,7 +30,7 @@ async function saveOptions() {
   const bubbleMode = document.querySelector('input[name="bubble_mode"]:checked')?.value || 'auto';
   const bubbleIconDelay = parseInt(qs('bubble_icon_delay').value) || 450;
   const bubbleHotkey = qs('bubble_hotkey').value.trim();
-  
+
   if (!target_lang) {
     saveStatus('Please select a target language', false);
     return;
@@ -45,7 +48,7 @@ async function saveOptions() {
     saveStatus('Please select at least one exercise day', false);
     return;
   }
-  
+
   try {
     await chrome.storage.sync.set({
       target_lang,
@@ -60,10 +63,10 @@ async function saveOptions() {
         questionsPerSession: questionsPerSession
       }
     });
-    
+
     // Notify background script to update alarms
     chrome.runtime.sendMessage({ type: 'UPDATE_EXERCISE_SETTINGS' });
-    
+
     saveStatus('Settings saved successfully!');
   } catch (err) {
     console.error('Error saving settings:', err);
@@ -74,32 +77,32 @@ async function saveOptions() {
 async function restoreOptions() {
   try {
     const settings = await chrome.storage.sync.get(defaultSettings);
-    
+
     // Restore translation settings
     qs('target_lang').value = settings.target_lang;
-  // Bubble trigger
-  const mode = settings.bubbleMode || defaultSettings.bubbleMode;
-  const radio = document.querySelector(`input[name="bubble_mode"][value="${mode}"]`);
-  if (radio) radio.checked = true; else qs('bubble_mode_auto').checked = true;
-  qs('bubble_icon_delay').value = (settings.bubbleIconDelay ?? defaultSettings.bubbleIconDelay).toString();
-  qs('bubble_hotkey').value = settings.bubbleHotkey || '';
-    
+    // Bubble trigger
+    const mode = settings.bubbleMode || defaultSettings.bubbleMode;
+    const radio = document.querySelector(`input[name="bubble_mode"][value="${mode}"]`);
+    if (radio) radio.checked = true; else qs('bubble_mode_auto').checked = true;
+    qs('bubble_icon_delay').value = (settings.bubbleIconDelay ?? defaultSettings.bubbleIconDelay).toString();
+    qs('bubble_hotkey').value = settings.bubbleHotkey || '';
+
     // Restore exercise settings
     const exerciseSettings = settings.exerciseSettings || defaultSettings.exerciseSettings;
-    
+
     qs('exercise_enabled').checked = exerciseSettings.enabled;
     qs('exercise_time').value = exerciseSettings.time;
     qs('difficulty').value = exerciseSettings.difficulty;
     qs('questions_per_session').value = exerciseSettings.questionsPerSession.toString();
-    
+
     // Restore exercise days
     document.querySelectorAll('.day-checkbox').forEach(cb => {
       cb.checked = exerciseSettings.days.includes(parseInt(cb.value));
     });
-    
+
     // Update UI state
     updateExerciseOptionsVisibility();
-    
+
   } catch (err) {
     console.error('Error loading settings:', err);
     // Use defaults if loading fails
@@ -110,16 +113,16 @@ async function restoreOptions() {
 
 function restoreExerciseDefaults() {
   const exerciseSettings = defaultSettings.exerciseSettings;
-  
+
   qs('exercise_enabled').checked = exerciseSettings.enabled;
   qs('exercise_time').value = exerciseSettings.time;
   qs('difficulty').value = exerciseSettings.difficulty;
   qs('questions_per_session').value = exerciseSettings.questionsPerSession.toString();
-  
+
   document.querySelectorAll('.day-checkbox').forEach(cb => {
     cb.checked = exerciseSettings.days.includes(parseInt(cb.value));
   });
-  
+
   updateExerciseOptionsVisibility();
 }
 
@@ -135,7 +138,7 @@ function resetToDefaults() {
 function updateExerciseOptionsVisibility() {
   const exerciseOptions = qs('exercise_options');
   const exerciseEnabled = qs('exercise_enabled').checked;
-  
+
   if (exerciseEnabled) {
     exerciseOptions.classList.remove('disabled');
   } else {
@@ -160,14 +163,14 @@ const recordBtn = document.getElementById('bubble_record_hotkey');
 const hotkeyInput = document.getElementById('bubble_hotkey');
 const hotkeyHint = document.getElementById('bubble_hotkey_hint');
 
-function resetSequenceTimer(){
-  if (sequenceTimer){ clearTimeout(sequenceTimer); }
-  sequenceTimer = setTimeout(()=> finishSequenceCapture(), sequenceTimeout);
+function resetSequenceTimer() {
+  if (sequenceTimer) { clearTimeout(sequenceTimer); }
+  sequenceTimer = setTimeout(() => finishSequenceCapture(), sequenceTimeout);
 }
 
-function finishSequenceCapture(){
+function finishSequenceCapture() {
   if (!isRecordingHotkey) return;
-  if (sequenceKeys.length){
+  if (sequenceKeys.length) {
     const combo = sequenceKeys.join('+');
     hotkeyInput.value = combo;
     hotkeyHint.textContent = 'Captured: ' + combo + ' (Click Save to apply)';
@@ -177,29 +180,29 @@ function finishSequenceCapture(){
   isRecordingHotkey = false;
   recordBtn.textContent = 'Record';
   sequenceKeys = [];
-  setTimeout(()=>{ if (!isRecordingHotkey) hotkeyHint.textContent = 'Leave blank to use double Ctrl+C.'; }, 3500);
+  setTimeout(() => { if (!isRecordingHotkey) hotkeyHint.textContent = 'Leave blank to use double Ctrl+C.'; }, 3500);
 }
 
-function formatKey(e){
+function formatKey(e) {
   let key = e.key;
   if (!key) return null;
   if (key === ' ') key = 'Space';
   if (key === 'Meta') return null; // ignore solo meta
   if (key === 'Dead') return null;
-  if (key.startsWith('Arrow')) key = key.replace('Arrow','');
+  if (key.startsWith('Arrow')) key = key.replace('Arrow', '');
   if (key.length === 1) key = key.toLowerCase();
   return key.toLowerCase();
 }
 
-function buildDisplay(parts){
+function buildDisplay(parts) {
   // Distinguish modifiers (only apply to first real key or whole sequence uniformly)
-  return parts.map(p=> (p.length===1? p.toUpperCase(): (/^(ctrl|shift|alt|meta)$/i.test(p)? p[0].toUpperCase()+p.slice(1).toLowerCase(): p))).join('+');
+  return parts.map(p => (p.length === 1 ? p.toUpperCase() : (/^(ctrl|shift|alt|meta)$/i.test(p) ? p[0].toUpperCase() + p.slice(1).toLowerCase() : p))).join('+');
 }
 
-function startHotkeyRecording(){
-  if (isRecordingHotkey){
-    isRecordingHotkey = false; sequenceKeys=[]; recordBtn.textContent='Record'; hotkeyHint.textContent='Recording cancelled.';
-    setTimeout(()=>{ if (!isRecordingHotkey) hotkeyHint.textContent='Leave blank to use double Ctrl+C.'; },1500);
+function startHotkeyRecording() {
+  if (isRecordingHotkey) {
+    isRecordingHotkey = false; sequenceKeys = []; recordBtn.textContent = 'Record'; hotkeyHint.textContent = 'Recording cancelled.';
+    setTimeout(() => { if (!isRecordingHotkey) hotkeyHint.textContent = 'Leave blank to use double Ctrl+C.'; }, 1500);
     return;
   }
   isRecordingHotkey = true;
@@ -212,15 +215,15 @@ function startHotkeyRecording(){
 
 recordBtn.addEventListener('click', startHotkeyRecording);
 
-document.addEventListener('keydown', (e)=>{
-  if (isRecordingHotkey){
+document.addEventListener('keydown', (e) => {
+  if (isRecordingHotkey) {
     e.preventDefault(); e.stopPropagation();
-    if (e.key === 'Escape') { isRecordingHotkey=false; sequenceKeys=[]; recordBtn.textContent='Record'; hotkeyHint.textContent='Recording cancelled.'; setTimeout(()=>{ if(!isRecordingHotkey) hotkeyHint.textContent='Leave blank to use double Ctrl+C.'; },1500); return; }
-    if (e.key === 'Enter'){ finishSequenceCapture(); return; }
+    if (e.key === 'Escape') { isRecordingHotkey = false; sequenceKeys = []; recordBtn.textContent = 'Record'; hotkeyHint.textContent = 'Recording cancelled.'; setTimeout(() => { if (!isRecordingHotkey) hotkeyHint.textContent = 'Leave blank to use double Ctrl+C.'; }, 1500); return; }
+    if (e.key === 'Enter') { finishSequenceCapture(); return; }
     // Build current modifier prefix once (only applied to sequence if first key)
-    if (sequenceKeys.length===0){
-      const mods=[]; if(e.ctrlKey) mods.push('ctrl'); if(e.shiftKey) mods.push('shift'); if(e.altKey) mods.push('alt'); if(e.metaKey) mods.push('meta');
-      mods.forEach(m=>sequenceKeys.push(m));
+    if (sequenceKeys.length === 0) {
+      const mods = []; if (e.ctrlKey) mods.push('ctrl'); if (e.shiftKey) mods.push('shift'); if (e.altKey) mods.push('alt'); if (e.metaKey) mods.push('meta');
+      mods.forEach(m => sequenceKeys.push(m));
     }
     const k = formatKey(e);
     if (!k) return; // ignore pure modifiers

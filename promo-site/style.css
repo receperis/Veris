@@ -1,0 +1,245 @@
+/* General Styles */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+    background-color: #f9f9f9;
+    color: #333;
+}
+
+.container {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+h1, h2, h3 {
+    font-weight: 600;
+}
+
+/* Header */
+header {
+    background: #fff;
+    border-bottom: 1px solid #e0e0e0;
+    padding: 1rem 0;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+header nav .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+header nav .container div {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+header h1 {
+    font-size: 1.5rem;
+    margin: 0;
+}
+
+.nav-link {
+    color: #333;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+.nav-link:hover {
+    color: #007aff;
+}
+
+.cta-button {
+    background-color: #007aff;
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 5px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: background-color 0.3s ease;
+}
+
+.cta-button:hover {
+    background-color: #005bb5;
+}
+
+/* Main Content */
+main {
+    padding: 2rem 0;
+}
+
+section {
+    padding: 4rem 0;
+    text-align: center;
+}
+
+/* Hero Section */
+#hero h2 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+}
+
+#hero p {
+    font-size: 1.2rem;
+    color: #666;
+    max-width: 600px;
+    margin: 0 auto 2rem;
+}
+
+.hero-image {
+    max-width: 100%;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    margin-top: 2rem;
+}
+
+/* Features Section */
+#features {
+    background-color: #fff;
+}
+
+.feature-list {
+    display: flex;
+    justify-content: space-around;
+    gap: 2rem;
+    margin-top: 3rem;
+    text-align: left;
+}
+
+.feature-item {
+    flex: 1;
+    padding: 1.5rem;
+    text-align: center;
+}
+
+.feature-item h3 {
+    font-size: 1.25rem;
+    margin-bottom: 0.5rem;
+}
+
+.feature-icon {
+    background-color: #eef5ff;
+    color: #007aff;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+}
+
+.feature-icon svg {
+    width: 28px;
+    height: 28px;
+}
+
+/* How It Works Section */
+#how-it-works {
+    background-color: #fff;
+}
+
+.step-by-step {
+    max-width: 800px;
+    margin: 3rem auto 0;
+}
+
+.step {
+    display: flex;
+    align-items: flex-start;
+    text-align: left;
+    margin-bottom: 2.5rem;
+}
+
+.step-number {
+    font-size: 2rem;
+    font-weight: 600;
+    line-height: 1;
+    color: #007aff;
+    margin-right: 1.5rem;
+    min-width: 30px;
+}
+
+.step-content h3 {
+    font-size: 1.25rem;
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+}
+
+.step-content p {
+    color: #666;
+    margin: 0;
+}
+
+/* Install Section */
+#install h2 {
+    font-size: 2rem;
+}
+
+#install .cta-button {
+    font-size: 1.2rem;
+    padding: 15px 30px;
+    margin-top: 1rem;
+    display: inline-block;
+}
+
+/* Documentation Page */
+#documentation {
+    padding: 2rem 0 4rem;
+    text-align: left;
+}
+
+#documentation h2 {
+    text-align: center;
+    font-size: 2.5rem;
+}
+
+#documentation .subtitle {
+    text-align: center;
+    font-size: 1.2rem;
+    color: #666;
+    margin-bottom: 4rem;
+}
+
+.doc-section {
+    margin-bottom: 3rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.doc-section:last-child {
+    border-bottom: none;
+}
+
+.doc-section h3 {
+    font-size: 1.75rem;
+    margin-bottom: 1rem;
+}
+
+.doc-section p {
+    font-size: 1.1rem;
+    line-height: 1.7;
+    max-width: 800px;
+}
+
+.doc-image {
+    max-width: 100%;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    margin-top: 1.5rem;
+}
+
+/* Footer */
+footer {
+    background: #333;
+    color: #fff;
+    text-align: center;
+    padding: 2rem 0;
+}
