@@ -151,7 +151,10 @@ function handleSequenceKey(spec, e) {
 document.addEventListener('mouseup', (e) => { setTimeout(() => onSelection(e), 10); });
 document.addEventListener('keyup', (e) => { setTimeout(() => onSelection(e), 10); });
 
-window.addEventListener('scroll', () => { if (state.bubbleEl) ui.removeBubble(); if (state.pendingSelection) ui.clearTriggerIcon(); }, { passive: true });
+window.addEventListener('scroll', () => { 
+  // if (state.bubbleEl) ui.removeBubble(); //TODO: maybe put a setting for this in future
+  if (state.pendingSelection) ui.clearTriggerIcon();
+}, { passive: true });
 
 document.addEventListener('click', (e) => {
   if (state.bubbleEl) {
