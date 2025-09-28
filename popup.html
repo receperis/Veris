@@ -22,6 +22,38 @@
             font-size: 18px;
             color: #374151;
             margin: 0 0 5px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .popup-header h1 .header-icon {
+            display: inline-block;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            font-size: 14px;
+            font-weight: 900;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% {
+                box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+                transform: scale(1);
+            }
+            50% {
+                box-shadow: 0 4px 16px rgba(16, 185, 129, 0.5);
+                transform: scale(1.02);
+            }
         }
 
         .popup-header p {
@@ -379,7 +411,7 @@
 
 <body>
     <div class="popup-header">
-        <h1>🌍 Veris</h1>
+        <h1><span class="header-icon">✓</span> Veris</h1>
         <div class="popup-subrow">
             <p class="subtitle">Browse and manage your vocabulary</p>
             <div class="extension-toggle">
