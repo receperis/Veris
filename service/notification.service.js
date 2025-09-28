@@ -6,7 +6,6 @@ const NotificationService = (() => {
   const DAILY_ID = 'daily-exercise';
   const TEST_ID = 'test-notification';
   // Fallback icon must be a packaged resource (data URIs are not supported by Chrome notifications)
-  // const FALLBACK_ICON = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAKdSURBVFhH7ZdLSFRRGMdnxkfmI1NLTc1MM1vYwo2htVGhRYs2bVy0aBFBBBG0aOOmRdCmRQu3LVpECy2CoBYRC4IWQVBBtCiCaBG0CIKghZsvtKn/d+45zp2599x7Z8aFP/zde873/c93vnPPnXsGg8FgMBgMBoPBYDAYDAaDwWAwGAwGg8FgMBgMBoPBYDAYDAaDwWAwGAwGg8FgMBgMBoPBYDAYDAaDwWAwGAwGg8FgMBgMBoPBYDAYDAaDwWAwGAwGg8FgMBgMBoPBYDAYDAaDwWAwGAwGg8FgMBgMBoPBYDAYDAaDwWAwGAwGg8FgMBgMBoPBYDAYDAaD/x4+B/gN4L9gqAo8h/gd4P8A';
   const FALLBACK_ICON = 'icons/icon128.png';
 
   let initialized = false;
