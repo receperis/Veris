@@ -4,10 +4,10 @@ import { escapeHtml, getLanguageName, getFullLanguageName, buildLanguageList } f
 // Note: some functions reference other modules; import cycles are avoided by keeping DOM-only helpers here.
 
 export function ensureTriggerStyles() {
-    if (document.getElementById('__translator_trigger_icon_style')) return;
+    if (document.getElementById('__veris_trigger_icon_style')) return;
     const style = document.createElement('style');
-    style.id = '__translator_trigger_icon_style';
-    style.textContent = `.__translator_trigger_icon{background:#16a34a;color:#fff;font-size:14px;line-height:1;display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.2);transition:transform .15s ease,background .2s;}.__translator_trigger_icon:hover{background:#15803d;transform:scale(1.05);}.__translator_trigger_icon:active{background:#166534;transform:scale(.95);} `;
+    style.id = '__veris_trigger_icon_style';
+    style.textContent = `.__veris_trigger_icon{background:linear-gradient(135deg,#16a34a,#059669);color:#fff;font-size:16px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;line-height:1;display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;cursor:pointer;box-shadow:0 6px 16px rgba(22,163,74,.3),inset 0 1px 0 rgba(255,255,255,.2);transition:all .2s cubic-bezier(.4,0,.2,1);border:2px solid rgba(255,255,255,.1);text-shadow:0 1px 2px rgba(0,0,0,.3);}.__veris_trigger_icon:hover{background:linear-gradient(135deg,#15803d,#047857);transform:scale(1.08) translateY(-1px);box-shadow:0 8px 20px rgba(22,163,74,.4),inset 0 1px 0 rgba(255,255,255,.25);}.__veris_trigger_icon:active{background:linear-gradient(135deg,#166534,#065f46);transform:scale(.95);box-shadow:0 4px 8px rgba(22,163,74,.2);} `;
     document.head.appendChild(style);
 }
 
@@ -15,9 +15,9 @@ export function showTriggerIcon(rect, triggerClickHandler) {
     if (!state.extensionEnabled) return;
     clearTriggerIcon();
     const icon = document.createElement('div');
-    icon.className = '__translator_trigger_icon';
+    icon.className = '__veris_trigger_icon';
     icon.title = 'Translate selection';
-    icon.textContent = '🌐';
+    icon.textContent = 'V';
     const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
     const scrollY = window.pageYOffset || document.documentElement.scrollTop;
     icon.style.position = 'absolute';
