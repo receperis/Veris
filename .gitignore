@@ -53,6 +53,11 @@ $RECYCLE.BIN/
 # ignore packed extension builds
 *.crx
 
+# Private keys and security files
+private-key.pem
+public-key.pem
+generate-key.js
+
 # Misc
 coverage/
 coverage-final.json
