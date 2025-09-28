@@ -1,4 +1,4 @@
-# Selection Translator Chrome Extension
+# Veris Chrome Extension
 
 A Chrome extension that provides instant text translation with vocabulary learning features using the browser's built-in Translation API. Select text on any webpage to see an inline translation popup with word-level breakdown and vocabulary saving.
 

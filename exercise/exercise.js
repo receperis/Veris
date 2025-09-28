@@ -375,9 +375,9 @@ class VocabularyExercise {
 
         // Show simple notification toast
         if (isCorrect) {
-            this.showAnswerNotification('Correct ✓', 'correct');
+            this.showAnswerNotification('Correct ', 'correct');
         } else {
-            this.showAnswerNotification(`Incorrect. Correct: ${correctAnswer}`, 'incorrect');
+            this.showAnswerNotification(`Incorrect. Answer: ${correctAnswer}`, 'incorrect');
         }
 
         // Report result to background (Leitner)
