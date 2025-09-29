@@ -406,6 +406,179 @@
         .vocabulary-list::-webkit-scrollbar-thumb:hover {
             background: #a1a1a1;
         }
+
+        /* Context toggle and panel styles */
+        .vocabulary-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+        
+        .main-translation {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        .context-toggle {
+            background: transparent;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            color: #6b7280;
+            opacity: 0.7;
+            min-width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .context-toggle:hover {
+            background: rgba(99, 102, 241, 0.1);
+            color: #4f46e5;
+            opacity: 1;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(79, 70, 229, 0.15);
+        }
+        
+        .context-toggle:focus {
+            outline: 2px solid rgba(99, 102, 241, 0.3);
+            outline-offset: 2px;
+            background: rgba(99, 102, 241, 0.05);
+        }
+        
+        .context-toggle.active {
+            background: rgba(99, 102, 241, 0.1);
+            color: #4f46e5;
+            opacity: 1;
+        }
+        
+        .context-panel {
+            margin-top: 12px;
+            padding: 16px;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            transform-origin: top;
+            overflow: hidden;
+        }
+
+        .context-panel.expanding {
+            animation: expandContext 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .context-panel[style*="display: none"] {
+            display: none !important;
+        }
+        
+        @keyframes expandContext {
+            from {
+                opacity: 0;
+                transform: scaleY(0.8) translateY(-8px);
+                max-height: 0;
+                padding-top: 0;
+                padding-bottom: 0;
+            }
+            to {
+                opacity: 1;
+                transform: scaleY(1) translateY(0);
+                max-height: 200px;
+                padding-top: 16px;
+                padding-bottom: 16px;
+            }
+        }
+        
+        .context-original,
+        .context-translation {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        
+        .context-original:last-child,
+        .context-translation:last-child {
+            margin-bottom: 0;
+        }
+
+        /* Add a subtle header to the context panel */
+        .context-panel::before {
+            content: "Context";
+            display: block;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #64748b;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(226, 232, 240, 0.6);
+        }
+        
+        .context-label {
+            font-size: 12px;
+            font-weight: 700;
+            color: #475569;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .context-text {
+            font-size: 13px;
+            line-height: 1.5;
+            color: #1e293b;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            font-style: italic;
+            position: relative;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+        
+        .context-original .context-text {
+            border-left: 4px solid #f59e0b;
+            background: linear-gradient(135deg, rgba(251, 191, 36, 0.08) 0%, rgba(255, 255, 255, 0.9) 100%);
+        }
+        
+        .context-translation .context-text {
+            border-left: 4px solid #10b981;
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(255, 255, 255, 0.9) 100%);
+        }
+
+        .context-translation {
+            position: relative;
+        }
+
+        .context-translation::before {
+            content: '';
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #e2e8f0, transparent);
+            position: absolute;
+            top: -6px;
+            left: 0;
+            right: 0;
+        }
+        
+        /* Enhance vocabulary item hover when it has context */
+        .vocabulary-item:has(.context-toggle) .vocabulary-content:hover {
+            background: linear-gradient(135deg, rgba(248, 250, 252, 0.8) 0%, rgba(241, 245, 249, 0.6) 100%);
+            border-radius: 8px;
+            padding: 4px 8px;
+            margin: -4px -8px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
     </style>
 </head>
 

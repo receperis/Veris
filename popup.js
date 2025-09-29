@@ -127,14 +127,30 @@ function renderVocabularyList() {
     // Render different markup depending on edit mode
     vocabularyList.innerHTML = filteredVocabulary.map(item => {
         const id = item.id || '';
-        // Normal view: plain display without icons
+        const hasContext = (item.context && item.context.trim()) || (item.contextTranslation && item.contextTranslation.trim());
+        
+        // Normal view: plain display with context toggle
         if (!editMode) {
             return `
         <div class="vocabulary-item" data-id="${id}">
             <div class="vocabulary-content">
-                <div class="source-text">${escapeHtml(item.originalWord || '')}</div>
-                <div class="translation">${escapeHtml(item.translatedWord || '')}</div>
+                <div class="main-translation">
+                    <div class="source-text">${escapeHtml(item.originalWord || '')}</div>
+                    <div class="translation">${escapeHtml(item.translatedWord || '')}</div>
+                </div>
+                ${hasContext ? `<button class="context-toggle" title="Show context" data-id="${id}">📖</button>` : ''}
             </div>
+            ${hasContext ? `
+            <div class="context-panel" data-id="${id}" style="display: none;">
+                ${item.context && item.context.trim() ? `
+                <div class="context-original">
+                    <span class="context-text">${escapeHtml(item.context)}</span>
+                </div>` : ''}
+                ${item.contextTranslation && item.contextTranslation.trim() ? `
+                <div class="context-translation">
+                    <span class="context-text">${escapeHtml(item.contextTranslation)}</span>
+                </div>` : ''}
+            </div>` : ''}
         </div>`;
         }
 
@@ -148,6 +164,7 @@ function renderVocabularyList() {
                         <div class="translation">${escapeHtml(item.translatedWord || '')}</div>
                     </div>
                     <div style="display:flex;gap:6px;align-items:center;">
+                        ${hasContext ? `<button class="context-toggle" title="Show context" data-id="${id}">📖</button>` : ''}
                         <button class="icon-btn icon-edit" title="Edit" data-id="${id}" style="background:transparent;border:none;cursor:pointer;font-size:16px;color:#6b7280;padding:6px;">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                                 <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z" fill="currentColor"></path>
@@ -157,6 +174,17 @@ function renderVocabularyList() {
                     </div>
                 </div>
             </div>
+            ${hasContext ? `
+            <div class="context-panel" data-id="${id}" style="display: none;">
+                ${item.context && item.context.trim() ? `
+                <div class="context-original">
+                    <span class="context-text">${escapeHtml(item.context)}</span>
+                </div>` : ''}
+                ${item.contextTranslation && item.contextTranslation.trim() ? `
+                <div class="context-translation">
+                    <span class="context-text">${escapeHtml(item.contextTranslation)}</span>
+                </div>` : ''}
+            </div>` : ''}
         </div>`;
     }).join('');
 }
@@ -242,6 +270,13 @@ function attachEditModeListeners() {
         const deleteBtn = e.target.closest('.delete-word');
         const editIcon = e.target.closest('.icon-edit');
         const cancelBtn = e.target.closest('.cancel-edit');
+        const contextToggle = e.target.closest('.context-toggle');
+
+        if (contextToggle) {
+            e.stopPropagation();
+            toggleContextPanel(contextToggle.getAttribute('data-id'));
+            return;
+        }
 
         if (saveBtn) {
             const id = saveBtn.getAttribute('data-id');
@@ -411,6 +446,39 @@ function normalizeId(id) {
     return id;
 }
 
+// Toggle context panel visibility
+function toggleContextPanel(id) {
+    const contextPanel = document.querySelector(`.context-panel[data-id="${id}"]`);
+    const contextToggle = document.querySelector(`.context-toggle[data-id="${id}"]`);
+    
+    if (!contextPanel || !contextToggle) return;
+    
+    const isVisible = contextPanel.style.display !== 'none';
+    
+    if (isVisible) {
+        // Hide panel
+        contextPanel.classList.remove('expanding');
+        contextPanel.style.display = 'none';
+        contextToggle.classList.remove('active');
+        contextToggle.setAttribute('title', 'Show context');
+    } else {
+        // Show panel with animation
+        contextPanel.style.display = 'block';
+        contextToggle.classList.add('active');
+        contextToggle.setAttribute('title', 'Hide context');
+        
+        // Trigger animation after a brief delay to ensure display: block is applied
+        requestAnimationFrame(() => {
+            contextPanel.classList.add('expanding');
+        });
+        
+        // Remove expanding class after animation completes
+        setTimeout(() => {
+            contextPanel.classList.remove('expanding');
+        }, 300);
+    }
+}
+
 async function checkExerciseTime() {
     try {
         const response = await chrome.runtime.sendMessage({ type: 'CHECK_EXERCISE_TIME' });
@@ -463,6 +531,18 @@ function setupEventListeners() {
         statsBtn.addEventListener('click', () => {
             try { chrome.tabs.create({ url: chrome.runtime.getURL('stats/stats.html') }); } catch (e) { console.warn('Could not open stats page', e); }
             try { window.close(); } catch (e) { /* ignore */ }
+        });
+    }
+
+    // Context toggle event delegation
+    const vocabularyList = document.getElementById('vocabulary-list');
+    if (vocabularyList) {
+        vocabularyList.addEventListener('click', (e) => {
+            const contextToggle = e.target.closest('.context-toggle');
+            if (contextToggle) {
+                e.stopPropagation();
+                toggleContextPanel(contextToggle.getAttribute('data-id'));
+            }
         });
     }
 }
