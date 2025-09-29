@@ -125,22 +125,11 @@ function renderVocabularyList() {
     }
 
     // Render different markup depending on edit mode
-    vocabularyList.innerHTML = filteredVocabulary.map(item => {
-        const id = item.id || '';
+    // Helper to render the optional context panel (keeps markup consistent)
+    const renderContextPanel = (item, id) => {
         const hasContext = (item.context && item.context.trim()) || (item.contextTranslation && item.contextTranslation.trim());
-        
-        // Normal view: plain display with context toggle
-        if (!editMode) {
-            return `
-        <div class="vocabulary-item" data-id="${id}">
-            <div class="vocabulary-content">
-                <div class="main-translation">
-                    <div class="source-text">${escapeHtml(item.originalWord || '')}</div>
-                    <div class="translation">${escapeHtml(item.translatedWord || '')}</div>
-                </div>
-                ${hasContext ? `<button class="context-toggle" title="Show context" data-id="${id}">📖</button>` : ''}
-            </div>
-            ${hasContext ? `
+        if (!hasContext) return '';
+        return `
             <div class="context-panel" data-id="${id}" style="display: none;">
                 ${item.context && item.context.trim() ? `
                 <div class="context-original">
@@ -150,42 +139,40 @@ function renderVocabularyList() {
                 <div class="context-translation">
                     <span class="context-text">${escapeHtml(item.contextTranslation)}</span>
                 </div>` : ''}
-            </div>` : ''}
-        </div>`;
-        }
+            </div>`;
+    };
 
-        // Edit mode: show pen and delete icons next to each item; clicking pen triggers inline edit
-        return `
+    // Helper to render the shared left/main column (keeps typography & spacing identical)
+    const renderMainColumn = (item) => `
+        <div style="flex:1;">
+            <div class="source-text">${escapeHtml(item.originalWord || '')}</div>
+            <div class="translation">${escapeHtml(item.translatedWord || '')}</div>
+        </div>`;
+
+    // Helper to render the edit-mode display (pen icon + optional context toggle)
+    const renderItem = (item, id, hasContext) => `
         <div class="vocabulary-item" data-id="${id}">
             <div class="vocabulary-content">
                 <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
-                    <div style="flex:1;">
-                        <div class="source-text">${escapeHtml(item.originalWord || '')}</div>
-                        <div class="translation">${escapeHtml(item.translatedWord || '')}</div>
-                    </div>
+                    ${renderMainColumn(item)}
                     <div style="display:flex;gap:6px;align-items:center;">
+                        ${editMode ? `<button class="icon-btn icon-edit" title="Edit" data-id="${id}" style="background:transparent;border:none;cursor:pointer;font-size:16px;color:#6b7280;padding:6px;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                            <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z" fill="currentColor"></path>
+                            <path d="M20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" fill="currentColor"></path>
+                        </svg>
+                        </button>` : ''}
                         ${hasContext ? `<button class="context-toggle" title="Show context" data-id="${id}">📖</button>` : ''}
-                        <button class="icon-btn icon-edit" title="Edit" data-id="${id}" style="background:transparent;border:none;cursor:pointer;font-size:16px;color:#6b7280;padding:6px;">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                                <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z" fill="currentColor"></path>
-                                <path d="M20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" fill="currentColor"></path>
-                            </svg>
-                        </button>
                     </div>
                 </div>
             </div>
-            ${hasContext ? `
-            <div class="context-panel" data-id="${id}" style="display: none;">
-                ${item.context && item.context.trim() ? `
-                <div class="context-original">
-                    <span class="context-text">${escapeHtml(item.context)}</span>
-                </div>` : ''}
-                ${item.contextTranslation && item.contextTranslation.trim() ? `
-                <div class="context-translation">
-                    <span class="context-text">${escapeHtml(item.contextTranslation)}</span>
-                </div>` : ''}
-            </div>` : ''}
+            ${renderContextPanel(item, id)}
         </div>`;
+
+    vocabularyList.innerHTML = filteredVocabulary.map(item => {
+        const id = item.id || '';
+        const hasContext = (item.context && item.context.trim()) || (item.contextTranslation && item.contextTranslation.trim());
+        return renderItem(item, id, hasContext);
     }).join('');
 }
 
@@ -609,7 +596,7 @@ function ensurePopupStyles() {
         background: linear-gradient(135deg, #fafbff 0%, #f8fafc 100%);
         border-color: #e2e8f0;
     }
-    .vocabulary-content { display:block; }
+  
     .vocabulary-item.editing { 
         background: linear-gradient(135deg, #fefeff 0%, #f9fafb 100%);
         border: 1px solid #e0e7ff;
