@@ -2,7 +2,7 @@ import { state } from './state.js';
 import { escapeHtml, computeContextSentence, getLanguageName } from './utils.js';
 import { showSaveToast } from './toast.js';
 import { translateTextWithAPI } from './api.js';
-import { openLanguageMenu } from './ui.js';
+import { clearTriggerIcon, openLanguageMenu } from './ui.js';
 
 export function createWordPills(text) {
     if (!state.bubbleEl) return;
@@ -107,10 +107,13 @@ export async function handleSaveWords() {
             const context = computeContextSentence(word, translation);
             let contextTranslation = '';
             
-            // Translate the context if it exists and is different from the word
+            // Translate the context to target language if it exists and is different from the word
+
             if (context && context.trim() !== word.trim()) {
+                console.log('Translating context for word:', word, 'Context:', context);
                 try {
-                    contextTranslation = await translateTextWithAPI(context, detectedSourceLanguage, state.settings?.target_lang || 'en');
+                    contextTranslation = await translateTextWithAPI(context, state.settings?.target_lang || 'en', detectedSourceLanguage);
+                    console.log('Context translation:', contextTranslation);
                 } catch (error) {
                     console.warn('Failed to translate context for word:', word, error);
                 }
@@ -173,10 +176,10 @@ export async function handleSaveCombination(combinedPhrase, translation) {
         const context = state.lastSelection;
         let contextTranslation = '';
         
-        // Translate the context if it exists and is different from the combined phrase
+        // Translate the context to target language if it exists and is different from the combined phrase
         if (context && context.trim() !== combinedPhrase.trim()) {
             try {
-                contextTranslation = await translateTextWithAPI(context, detectedSourceLanguage, state.settings?.target_lang || 'en');
+                contextTranslation = await translateTextWithAPI(context, state.settings?.target_lang || 'en', detectedSourceLanguage);
             } catch (error) {
                 console.warn('Failed to translate context for combination:', combinedPhrase, error);
             }
