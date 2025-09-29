@@ -2,7 +2,7 @@
 
 // IndexedDB Configuration
 const DB_NAME = 'VocabularyExtension';
-const DB_VERSION = 1;
+const DB_VERSION = 2; // Incremented for new context and contextTranslation indexes
 const STORE_NAME = 'vocabulary';
 
 class VocabularyDB {
@@ -47,23 +47,39 @@ class VocabularyDB {
 
       request.onupgradeneeded = (event) => {
         const db = event.target.result;
+        const transaction = event.target.transaction;
+
+        let store;
 
         // Create vocabulary store if it doesn't exist
         if (!db.objectStoreNames.contains(STORE_NAME)) {
-          const store = db.createObjectStore(STORE_NAME, {
+          store = db.createObjectStore(STORE_NAME, {
             keyPath: 'id',
             autoIncrement: true
           });
+        } else {
+          store = transaction.objectStore(STORE_NAME);
+        }
 
-          // Create indexes for efficient querying
-          store.createIndex('timestamp', 'timestamp', { unique: false });
-          store.createIndex('sourceLanguage', 'sourceLanguage', { unique: false });
-          store.createIndex('targetLanguage', 'targetLanguage', { unique: false });
-          store.createIndex('originalText', 'originalText', { unique: false });
-          store.createIndex('originalWord', 'originalWord', { unique: false });
-          store.createIndex('translatedWord', 'translatedWord', { unique: false });
-          store.createIndex('sessionId', 'sessionId', { unique: false });
-          store.createIndex('domain', 'domain', { unique: false });
+        // Create or update indexes for efficient querying
+        const requiredIndexes = {
+          'timestamp': 'timestamp',
+          'sourceLanguage': 'sourceLanguage',
+          'targetLanguage': 'targetLanguage',
+          'originalText': 'originalText',
+          'originalWord': 'originalWord',
+          'translatedWord': 'translatedWord',
+          'context': 'context',
+          'contextTranslation': 'contextTranslation',
+          'sessionId': 'sessionId',
+          'domain': 'domain'
+        };
+
+        // Add missing indexes
+        for (const [indexName, keyPath] of Object.entries(requiredIndexes)) {
+          if (!store.indexNames.contains(indexName)) {
+            store.createIndex(indexName, keyPath, { unique: false });
+          }
         }
       };
     });

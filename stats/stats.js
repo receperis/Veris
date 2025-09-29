@@ -596,6 +596,15 @@ function validateImportData(data) {
         if (!entry.sourceLanguage || !entry.targetLanguage) {
             return { isValid: false, error: 'Vocabulary entries must have source and target languages' };
         }
+
+        // Validate optional fields have correct types if present
+        if (entry.context !== undefined && typeof entry.context !== 'string') {
+            return { isValid: false, error: 'Vocabulary entry context must be a string' };
+        }
+
+        if (entry.contextTranslation !== undefined && typeof entry.contextTranslation !== 'string') {
+            return { isValid: false, error: 'Vocabulary entry contextTranslation must be a string' };
+        }
     }
 
     return { isValid: true };

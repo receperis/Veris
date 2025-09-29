@@ -104,7 +104,19 @@ export async function handleSaveWords() {
         const saveData = { timestamp: new Date().toISOString(), originalText: state.lastSelection, targetLanguage: state.settings?.target_lang || 'en', sourceLanguage: detectedSourceLanguage, words: Array.from(state.selectedWords.entries()).map(([word, translation]) => ({ original: word, translation, context: computeContextSentence(word, translation) })), totalWords: state.selectedWords.size, url: window.location.href, domain: window.location.hostname };
         const savedIds = [];
         for (const [word, translation] of state.selectedWords.entries()) {
-            const wordEntry = { timestamp: new Date().toISOString(), originalWord: word, translatedWord: translation, context: computeContextSentence(word, translation), targetLanguage: state.settings?.target_lang || 'en', sourceLanguage: detectedSourceLanguage, url: window.location.href, domain: window.location.hostname, sessionId: saveData.timestamp };
+            const context = computeContextSentence(word, translation);
+            let contextTranslation = '';
+            
+            // Translate the context if it exists and is different from the word
+            if (context && context.trim() !== word.trim()) {
+                try {
+                    contextTranslation = await translateTextWithAPI(context, detectedSourceLanguage, state.settings?.target_lang || 'en');
+                } catch (error) {
+                    console.warn('Failed to translate context for word:', word, error);
+                }
+            }
+            
+            const wordEntry = { timestamp: new Date().toISOString(), originalWord: word, translatedWord: translation, context: context, contextTranslation: contextTranslation, targetLanguage: state.settings?.target_lang || 'en', sourceLanguage: detectedSourceLanguage, url: window.location.href, domain: window.location.hostname, sessionId: saveData.timestamp };
             try {
                 const response = await chrome.runtime.sendMessage({ type: 'SAVE_VOCABULARY', data: wordEntry });
                 if (response && response.success) savedIds.push(response.id); else console.error('Failed to save word via service worker:', response ? response.error : 'No response');
@@ -157,7 +169,20 @@ export async function handleSaveCombination(combinedPhrase, translation) {
     try {
         let detectedSourceLanguage = '';
         try { const storageResult = await chrome.storage.sync.get(['sourceLanguage']); if (storageResult.sourceLanguage) detectedSourceLanguage = storageResult.sourceLanguage; } catch (err) { console.warn('Could not get detected source language:', err); }
-        const combinationEntry = { timestamp: new Date().toISOString(), originalWord: combinedPhrase, translatedWord: translation, context: state.lastSelection, targetLanguage: state.settings?.target_lang || 'en', sourceLanguage: detectedSourceLanguage, url: window.location.href, domain: window.location.hostname, isCombination: true, combinedWords: Array.from(state.selectedWordsForCombination) };
+        
+        const context = state.lastSelection;
+        let contextTranslation = '';
+        
+        // Translate the context if it exists and is different from the combined phrase
+        if (context && context.trim() !== combinedPhrase.trim()) {
+            try {
+                contextTranslation = await translateTextWithAPI(context, detectedSourceLanguage, state.settings?.target_lang || 'en');
+            } catch (error) {
+                console.warn('Failed to translate context for combination:', combinedPhrase, error);
+            }
+        }
+        
+        const combinationEntry = { timestamp: new Date().toISOString(), originalWord: combinedPhrase, translatedWord: translation, context: context, contextTranslation: contextTranslation, targetLanguage: state.settings?.target_lang || 'en', sourceLanguage: detectedSourceLanguage, url: window.location.href, domain: window.location.hostname, isCombination: true, combinedWords: Array.from(state.selectedWordsForCombination) };
         const response = await chrome.runtime.sendMessage({ type: 'SAVE_VOCABULARY', data: combinationEntry });
         if (response && response.success) {
             if (saveCombinationBtn) { saveCombinationBtn.innerHTML = '✅ Saved!'; setTimeout(() => { if (saveCombinationBtn) { saveCombinationBtn.innerHTML = '💾 Save Combination'; saveCombinationBtn.disabled = false; } }, 2000); }
