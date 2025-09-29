@@ -413,6 +413,17 @@ function setupEventListeners() {
     if (exportBtn) {
         exportBtn.addEventListener('click', exportData);
     }
+
+    // Import data button
+    const importBtn = document.getElementById('import-data-btn');
+    const fileInput = document.getElementById('import-file-input');
+    if (importBtn && fileInput) {
+        importBtn.addEventListener('click', () => {
+            fileInput.click();
+        });
+        
+        fileInput.addEventListener('change', handleFileImport);
+    }
 }
 
 async function exportData() {
@@ -431,7 +442,7 @@ async function exportData() {
 
             const a = document.createElement('a');
             a.href = url;
-            a.download = `selection-translator-data-${new Date().toISOString().split('T')[0]}.json`;
+            a.download = `veris-translator-data-${new Date().toISOString().split('T')[0]}.json`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
@@ -442,4 +453,255 @@ async function exportData() {
         console.error('Error exporting data:', error);
         alert('Failed to export data. Please try again.');
     }
+}
+
+async function handleFileImport(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Reset file input for future use
+    event.target.value = '';
+
+    try {
+        showImportProgress('Reading file...');
+        
+        const fileContent = await readFileAsText(file);
+        let importData;
+
+        try {
+            importData = JSON.parse(fileContent);
+        } catch (parseError) {
+            hideImportProgress();
+            showImportError('Invalid JSON file. Please select a valid vocabulary data file.');
+            return;
+        }
+
+        // Validate imported data structure
+        const validationResult = validateImportData(importData);
+        if (!validationResult.isValid) {
+            hideImportProgress();
+            showImportError(`Invalid data format: ${validationResult.error}`);
+            return;
+        }
+
+        // Ask for user confirmation
+        const vocabularyCount = importData.vocabulary ? importData.vocabulary.length : 0;
+        const confirmMessage = `This will import ${vocabularyCount} vocabulary entries. This action cannot be undone. Do you want to continue?`;
+        
+        if (!confirm(confirmMessage)) {
+            hideImportProgress();
+            return;
+        }
+
+        // Import the data
+        showImportProgress('Importing vocabulary data...');
+        const result = await importVocabularyData(importData);
+
+        if (result.success) {
+            hideImportProgress();
+            showImportSuccess(`Successfully imported ${result.importedCount} vocabulary entries!`);
+            
+            // Refresh the stats page after a short delay
+            setTimeout(() => {
+                location.reload();
+            }, 2000);
+        } else {
+            hideImportProgress();
+            showImportError(`Import failed: ${result.error}`);
+        }
+
+    } catch (error) {
+        hideImportProgress();
+        console.error('Error importing data:', error);
+        showImportError('Failed to import data. Please try again.');
+    }
+}
+
+function readFileAsText(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target.result);
+        reader.onerror = (e) => reject(new Error('Failed to read file'));
+        reader.readAsText(file);
+    });
+}
+
+function validateImportData(data) {
+    // Check basic structure
+    if (!data || typeof data !== 'object') {
+        return { isValid: false, error: 'Data is not a valid object' };
+    }
+
+    // Check if it has vocabulary array
+    if (!data.vocabulary || !Array.isArray(data.vocabulary)) {
+        return { isValid: false, error: 'Missing or invalid vocabulary array' };
+    }
+
+    // Validate vocabulary entries
+    for (let i = 0; i < Math.min(data.vocabulary.length, 10); i++) {
+        const entry = data.vocabulary[i];
+        
+        if (!entry.originalWord || !entry.translatedWord) {
+            return { isValid: false, error: 'Vocabulary entries must have originalWord and translatedWord' };
+        }
+        
+        if (!entry.sourceLanguage || !entry.targetLanguage) {
+            return { isValid: false, error: 'Vocabulary entries must have source and target languages' };
+        }
+    }
+
+    return { isValid: true };
+}
+
+async function importVocabularyData(importData) {
+    try {
+        let importedCount = 0;
+        let errors = [];
+
+        for (const entry of importData.vocabulary) {
+            try {
+                // Prepare vocabulary entry for import
+                const vocabularyEntry = {
+                    originalWord: entry.originalWord,
+                    translatedWord: entry.translatedWord,
+                    originalText: entry.originalText || entry.originalWord,
+                    translatedText: entry.translatedText || entry.translatedWord,
+                    sourceLanguage: entry.sourceLanguage,
+                    targetLanguage: entry.targetLanguage,
+                    timestamp: entry.timestamp || new Date().toISOString(),
+                    dateAdded: entry.dateAdded || new Date().toISOString(),
+                    sessionId: entry.sessionId || `import_${Date.now()}`,
+                    domain: entry.domain || 'imported',
+                    confidence: entry.confidence || 0.9
+                };
+
+                // Send message to background script to save the entry
+                const response = await chrome.runtime.sendMessage({
+                    type: 'SAVE_VOCABULARY',
+                    data: vocabularyEntry
+                });
+
+                if (response && response.success) {
+                    importedCount++;
+                } else {
+                    errors.push(`Failed to import: ${entry.originalWord}`);
+                }
+
+            } catch (entryError) {
+                console.error('Error importing entry:', entryError);
+                errors.push(`Error importing: ${entry.originalWord || 'unknown'}`);
+            }
+
+            // Show progress for large imports
+            if (importedCount % 10 === 0) {
+                showImportProgress(`Imported ${importedCount}/${importData.vocabulary.length} entries...`);
+                
+                // Allow UI to update
+                await new Promise(resolve => setTimeout(resolve, 10));
+            }
+        }
+
+        // Update vocabulary statistics
+        await chrome.runtime.sendMessage({ type: 'UPDATE_STATS' });
+
+        return {
+            success: true,
+            importedCount,
+            errors: errors.length > 0 ? errors : null
+        };
+
+    } catch (error) {
+        console.error('Import process error:', error);
+        return {
+            success: false,
+            error: error.message || 'Unknown error during import'
+        };
+    }
+}
+
+function showImportProgress(message) {
+    // Create or update progress overlay
+    let progressOverlay = document.getElementById('import-progress-overlay');
+    
+    if (!progressOverlay) {
+        progressOverlay = document.createElement('div');
+        progressOverlay.id = 'import-progress-overlay';
+        progressOverlay.className = 'loading-overlay';
+        progressOverlay.innerHTML = `
+            <div class="loading-spinner"></div>
+            <p id="import-progress-message">${message}</p>
+        `;
+        document.body.appendChild(progressOverlay);
+    } else {
+        const messageElement = document.getElementById('import-progress-message');
+        if (messageElement) {
+            messageElement.textContent = message;
+        }
+        progressOverlay.classList.remove('hidden');
+    }
+}
+
+function hideImportProgress() {
+    const progressOverlay = document.getElementById('import-progress-overlay');
+    if (progressOverlay) {
+        progressOverlay.classList.add('hidden');
+        setTimeout(() => {
+            if (progressOverlay.parentNode) {
+                progressOverlay.parentNode.removeChild(progressOverlay);
+            }
+        }, 300);
+    }
+}
+
+function showImportSuccess(message) {
+    // Create success notification
+    const notification = document.createElement('div');
+    notification.className = 'import-notification success';
+    notification.innerHTML = `
+        <div class="notification-content">
+            <div class="notification-icon">✅</div>
+            <p>${message}</p>
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.classList.add('fade-out');
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 300);
+        }
+    }, 5000);
+}
+
+function showImportError(message) {
+    // Create error notification
+    const notification = document.createElement('div');
+    notification.className = 'import-notification error';
+    notification.innerHTML = `
+        <div class="notification-content">
+            <div class="notification-icon">❌</div>
+            <p>${message}</p>
+            <button onclick="this.parentElement.parentElement.remove()" class="close-btn">×</button>
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Auto-remove after 8 seconds
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.classList.add('fade-out');
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 300);
+        }
+    }, 8000);
 }

@@ -72,9 +72,9 @@ const MessageService = {
       }
 
       // Handle stats updates
-      if (request.type === 'UPDATE_VOCABULARY_STATS') {
+      if (request.type === 'UPDATE_VOCABULARY_STATS' || request.type === 'UPDATE_STATS') {
         const stats = await StatsService.updateVocabularyStats();
-        sendResponse({ stats });
+        sendResponse({ success: true, stats });
         return true;
       }
 
