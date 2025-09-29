@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Selection Translator",
+  "name": "Veris",
   "version": "1.0",
   "description": "Select text on any page to see an inline translation popup.",
   "icons": {
@@ -11,7 +11,7 @@
   },
   "permissions": ["storage", "tabs", "notifications", "alarms"],
   "action": {
-    "default_title": "Selection Translator",
+    "default_title": "Veris",
     "default_popup": "popup.html"
   },
   "options_page": "options.html",
