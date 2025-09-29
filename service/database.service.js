@@ -213,6 +213,26 @@ class VocabularyDB {
     });
   }
 
+  async deleteAllVocabulary() {
+    if (!this.db) {
+      await this.init();
+    }
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db.transaction([STORE_NAME], 'readwrite');
+      const store = transaction.objectStore(STORE_NAME);
+      const request = store.clear();
+
+      request.onsuccess = () => {
+        resolve(request.result);
+      };
+
+      request.onerror = () => {
+        reject(request.error);
+      };
+    });
+  }
+
   async updateVocabularyEntry(id, updatedData) {
     if (!this.db) {
       await this.init();
@@ -451,6 +471,7 @@ if (typeof self !== 'undefined') {
     getStats: () => self.vocabularyDB.getStats(),
     getRandomWords: (count, difficulty) => self.vocabularyDB.getRandomWords(count, difficulty),
     deleteVocabulary: (id) => self.vocabularyDB.deleteVocabularyEntry(id),
+    deleteAllVocabulary: () => self.vocabularyDB.deleteAllVocabulary(),
     updateVocabulary: (id, updates) => self.vocabularyDB.updateVocabularyEntry(id, updates),
     getWordsByLanguage: (sourceLanguage, targetLanguage) => self.vocabularyDB.getVocabularyByLanguagePair(sourceLanguage, targetLanguage),
     getWordsByDomain: (domain) => self.vocabularyDB.getWordsByDomain(domain),

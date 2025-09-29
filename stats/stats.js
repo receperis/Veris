@@ -370,7 +370,7 @@ function hideLoadingWithError(message) {
         <div style="text-align: center; color: #e53e3e;">
             <div style="font-size: 3rem; margin-bottom: 20px;">⚠️</div>
             <p>${message}</p>
-            <button onclick="location.reload()" style="
+            <button id="retry-btn" style="
                 margin-top: 20px;
                 padding: 10px 20px;
                 background: #4f46e5;
@@ -381,6 +381,16 @@ function hideLoadingWithError(message) {
             ">Retry</button>
         </div>
     `;
+    
+    // Add event listener for retry button
+    setTimeout(() => {
+        const retryBtn = document.getElementById('retry-btn');
+        if (retryBtn) {
+            retryBtn.addEventListener('click', () => {
+                location.reload();
+            });
+        }
+    }, 100);
 }
 
 function setupEventListeners() {
@@ -424,6 +434,58 @@ function setupEventListeners() {
         
         fileInput.addEventListener('change', handleFileImport);
     }
+
+    // Modal event listeners
+    const modalCloseBtn = document.getElementById('modal-close-btn');
+    const modalCancelBtn = document.getElementById('modal-cancel-btn');
+    const modalConfirmBtn = document.getElementById('modal-confirm-btn');
+    
+    if (modalCloseBtn) {
+        modalCloseBtn.addEventListener('click', closeImportModal);
+    }
+    
+    if (modalCancelBtn) {
+        modalCancelBtn.addEventListener('click', closeImportModal);
+    }
+    
+    if (modalConfirmBtn) {
+        modalConfirmBtn.addEventListener('click', confirmImport);
+    }
+
+    // Click outside modal to close
+    const modalOverlay = document.getElementById('import-modal');
+    if (modalOverlay) {
+        modalOverlay.addEventListener('click', (e) => {
+            if (e.target === modalOverlay) {
+                closeImportModal();
+            }
+        });
+    }
+
+    // Handle notification close buttons using event delegation
+    document.addEventListener('click', (e) => {
+        if (e.target.hasAttribute('data-action') && e.target.getAttribute('data-action') === 'close-notification') {
+            const notification = e.target.closest('.import-notification');
+            if (notification) {
+                notification.classList.add('fade-out');
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 300);
+            }
+        }
+    });
+
+    // Handle ESC key to close modal
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            const modal = document.getElementById('import-modal');
+            if (modal && modal.style.display === 'flex') {
+                closeImportModal();
+            }
+        }
+    });
 }
 
 async function exportData() {
@@ -455,9 +517,14 @@ async function exportData() {
     }
 }
 
+let currentImportData = null;
+
 async function handleFileImport(event) {
     const file = event.target.files[0];
     if (!file) return;
+
+    // Clear any previous import data
+    currentImportData = null;
 
     // Reset file input for future use
     event.target.value = '';
@@ -484,31 +551,12 @@ async function handleFileImport(event) {
             return;
         }
 
-        // Ask for user confirmation
-        const vocabularyCount = importData.vocabulary ? importData.vocabulary.length : 0;
-        const confirmMessage = `This will import ${vocabularyCount} vocabulary entries. This action cannot be undone. Do you want to continue?`;
+        hideImportProgress();
         
-        if (!confirm(confirmMessage)) {
-            hideImportProgress();
-            return;
-        }
-
-        // Import the data
-        showImportProgress('Importing vocabulary data...');
-        const result = await importVocabularyData(importData);
-
-        if (result.success) {
-            hideImportProgress();
-            showImportSuccess(`Successfully imported ${result.importedCount} vocabulary entries!`);
-            
-            // Refresh the stats page after a short delay
-            setTimeout(() => {
-                location.reload();
-            }, 2000);
-        } else {
-            hideImportProgress();
-            showImportError(`Import failed: ${result.error}`);
-        }
+        // Store import data and show modal for mode selection
+        currentImportData = importData;
+        console.log('Import data stored:', currentImportData ? 'Success' : 'Failed', 'Vocabulary count:', importData.vocabulary?.length || 0);
+        showImportModal(file.name, importData.vocabulary.length);
 
     } catch (error) {
         hideImportProgress();
@@ -553,13 +601,66 @@ function validateImportData(data) {
     return { isValid: true };
 }
 
-async function importVocabularyData(importData) {
+async function importVocabularyData(importData, mode) {
     try {
+        // Validate input data
+        if (!importData) {
+            throw new Error('No import data provided');
+        }
+        
+        if (!importData.vocabulary || !Array.isArray(importData.vocabulary)) {
+            throw new Error('Invalid import data: vocabulary array is missing or invalid');
+        }
+        
+        if (importData.vocabulary.length === 0) {
+            throw new Error('No vocabulary entries found in import data');
+        }
+        
         let importedCount = 0;
+        let skippedCount = 0;
+        let updatedCount = 0;
         let errors = [];
 
-        for (const entry of importData.vocabulary) {
+        // Handle replace-all mode
+        if (mode === 'replace-all') {
+            showImportProgress('Clearing existing vocabulary...');
+            const deleteResponse = await chrome.runtime.sendMessage({
+                type: 'DELETE_ALL_VOCABULARY'
+            });
+            
+            if (!deleteResponse || !deleteResponse.success) {
+                throw new Error('Failed to clear existing vocabulary');
+            }
+        }
+
+        // Get existing vocabulary for duplicate checking (except for replace-all)
+        let existingVocabulary = [];
+        if (mode !== 'replace-all' && mode !== 'merge') {
+            showImportProgress('Checking for duplicates...');
+            const response = await chrome.runtime.sendMessage({ type: 'GET_ALL_VOCABULARY' });
+            if (response && response.success) {
+                existingVocabulary = response.data;
+            }
+        }
+
+        // Process each entry
+        for (let i = 0; i < importData.vocabulary.length; i++) {
+            const entry = importData.vocabulary[i];
+            
             try {
+                // Check for duplicates
+                const isDuplicate = existingVocabulary.some(existing => 
+                    existing.originalWord.toLowerCase() === entry.originalWord.toLowerCase() &&
+                    existing.sourceLanguage === entry.sourceLanguage &&
+                    existing.targetLanguage === entry.targetLanguage
+                );
+
+                // Handle based on mode
+                if (isDuplicate && mode === 'skip') {
+                    skippedCount++;
+                    continue;
+                }
+
                 // Prepare vocabulary entry for import
                 const vocabularyEntry = {
                     originalWord: entry.originalWord,
@@ -575,15 +676,40 @@ async function importVocabularyData(importData) {
                     confidence: entry.confidence || 0.9
                 };
 
-                // Send message to background script to save the entry
-                const response = await chrome.runtime.sendMessage({
-                    type: 'SAVE_VOCABULARY',
-                    data: vocabularyEntry
-                });
-
-                if (response && response.success) {
-                    importedCount++;
+                let response;
+                
+                if (isDuplicate && mode === 'replace') {
+                    // Find and update the existing entry
+                    const existingEntry = existingVocabulary.find(existing => 
+                        existing.originalWord.toLowerCase() === entry.originalWord.toLowerCase() &&
+                        existing.sourceLanguage === entry.sourceLanguage &&
+                        existing.targetLanguage === entry.targetLanguage
+                    );
+                    
+                    response = await chrome.runtime.sendMessage({
+                        type: 'UPDATE_VOCABULARY',
+                        data: {
+                            id: existingEntry.id,
+                            updates: vocabularyEntry
+                        }
+                    });
+                    
+                    if (response && response.success) {
+                        updatedCount++;
+                    }
                 } else {
+                    // Add new entry
+                    response = await chrome.runtime.sendMessage({
+                        type: 'SAVE_VOCABULARY',
+                        data: vocabularyEntry
+                    });
+                    
+                    if (response && response.success) {
+                        importedCount++;
+                    }
+                }
+
+                if (!response || !response.success) {
                     errors.push(`Failed to import: ${entry.originalWord}`);
                 }
 
@@ -593,8 +719,9 @@ async function importVocabularyData(importData) {
             }
 
             // Show progress for large imports
-            if (importedCount % 10 === 0) {
-                showImportProgress(`Imported ${importedCount}/${importData.vocabulary.length} entries...`);
+            if ((importedCount + skippedCount + updatedCount) % 10 === 0) {
+                const processed = importedCount + skippedCount + updatedCount;
+                showImportProgress(`Processed ${processed}/${importData.vocabulary.length} entries...`);
                 
                 // Allow UI to update
                 await new Promise(resolve => setTimeout(resolve, 10));
@@ -607,6 +734,9 @@ async function importVocabularyData(importData) {
         return {
             success: true,
             importedCount,
+            skippedCount,
+            updatedCount,
+            totalProcessed: importedCount + skippedCount + updatedCount,
             errors: errors.length > 0 ? errors : null
         };
 
@@ -687,7 +817,7 @@ function showImportError(message) {
         <div class="notification-content">
             <div class="notification-icon">❌</div>
             <p>${message}</p>
-            <button onclick="this.parentElement.parentElement.remove()" class="close-btn">×</button>
+            <button class="close-btn" data-action="close-notification">×</button>
         </div>
     `;
     
@@ -704,4 +834,104 @@ function showImportError(message) {
             }, 300);
         }
     }, 8000);
+}
+
+// Modal functions
+function showImportModal(fileName, wordCount) {
+    const fileNameElement = document.getElementById('import-file-name');
+    const wordCountElement = document.getElementById('import-word-count');
+    const modal = document.getElementById('import-modal');
+    
+    if (fileNameElement) fileNameElement.textContent = fileName;
+    if (wordCountElement) wordCountElement.textContent = wordCount;
+    if (modal) {
+        modal.style.display = 'flex';
+        console.log('Modal shown for file:', fileName, 'with', wordCount, 'words');
+    }
+}
+
+function closeImportModal() {
+    const modal = document.getElementById('import-modal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+    // Don't clear currentImportData immediately in case user reopens modal
+    // It will be cleared when a new file is selected or after import completes
+    console.log('Modal closed, currentImportData preserved:', currentImportData ? 'Yes' : 'No');
+}
+
+async function confirmImport() {
+    console.log('confirmImport called, currentImportData:', currentImportData);
+    
+    if (!currentImportData) {
+        closeImportModal();
+        showImportError('Import data is no longer available. Please select the file again.');
+        return;
+    }
+    
+    if (!currentImportData.vocabulary || !Array.isArray(currentImportData.vocabulary)) {
+        closeImportModal();
+        showImportError('Invalid import data format. Please check your file.');
+        return;
+    }
+
+    const selectedModeElement = document.querySelector('input[name="importMode"]:checked');
+    if (!selectedModeElement) {
+        showImportError('Please select an import mode.');
+        return;
+    }
+    
+    const selectedMode = selectedModeElement.value;
+    
+    // Show confirmation for replace-all mode
+    if (selectedMode === 'replace-all') {
+        const confirm = window.confirm(
+            '⚠️ WARNING: This will permanently delete ALL your existing vocabulary and replace it with the imported data. This action cannot be undone!\n\nAre you absolutely sure you want to continue?'
+        );
+        if (!confirm) {
+            return;
+        }
+    }
+
+    closeImportModal();
+    
+    try {
+        // Import the data with selected mode
+        showImportProgress('Importing vocabulary data...');
+        const result = await importVocabularyData(currentImportData, selectedMode);
+
+        if (result.success) {
+            hideImportProgress();
+            
+            // Create detailed success message
+            let message = '';
+            if (selectedMode === 'replace-all') {
+                message = `Successfully replaced all vocabulary with ${result.importedCount} imported entries!`;
+            } else {
+                const parts = [];
+                if (result.importedCount > 0) parts.push(`${result.importedCount} new words added`);
+                if (result.updatedCount > 0) parts.push(`${result.updatedCount} words updated`);
+                if (result.skippedCount > 0) parts.push(`${result.skippedCount} duplicates skipped`);
+                
+                message = `Import completed: ${parts.join(', ')}!`;
+            }
+            
+            showImportSuccess(message);
+            
+            // Refresh the stats page after a short delay
+            setTimeout(() => {
+                location.reload();
+            }, 3000);
+        } else {
+            hideImportProgress();
+            showImportError(`Import failed: ${result.error}`);
+        }
+    } catch (error) {
+        hideImportProgress();
+        console.error('Error during import:', error);
+        showImportError('Failed to import data. Please try again.');
+    } finally {
+        // Clear import data after processing
+        currentImportData = null;
+    }
 }

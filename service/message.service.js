@@ -53,6 +53,12 @@ const MessageService = {
         return true;
       }
 
+      if (request.type === 'DELETE_ALL_VOCABULARY') {
+        const result = await DatabaseService.deleteAllVocabulary();
+        sendResponse({ success: true, deletedCount: result });
+        return true;
+      }
+
       if (request.type === 'UPDATE_VOCABULARY') {
         const result = await DatabaseService.updateVocabulary(request.data.id, request.data.updates);
         sendResponse({ success: true, id: result });
