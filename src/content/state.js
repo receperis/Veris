@@ -7,6 +7,7 @@ export const state = {
   selectedWords: new Map(),
   selectionContextElement: null,
   tempTargetLang: null,
+  tempSourceLang: null,
   bubbleLangMenuEl: null,
   combinationMode: false,
   selectedWordsForCombination: new Set(),

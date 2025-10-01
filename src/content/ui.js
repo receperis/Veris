@@ -145,6 +145,8 @@ export function removeBubble() {
     state.selectedWords.clear();
     state.combinationMode = false;
     state.selectedWordsForCombination.clear();
+    state.tempTargetLang = null;
+    state.tempSourceLang = null;
   }
 }
 

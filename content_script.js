@@ -23,10 +23,10 @@ async function performTranslation(text, rect) {
   ui.createBubbleAtRect(rect, text, "Translating...", true);
   state.settings = await chrome.storage.sync.get(defaultSettings);
   state.hotkeySpec = parseHotkeyString(state.settings.bubbleHotkey);
-  let sourceLanguage = "auto";
+  let sourceLanguage = state.tempSourceLang || "auto";
   try {
     const storageResult = await chrome.storage.sync.get(["sourceLanguage"]);
-    if (storageResult.sourceLanguage)
+    if (storageResult.sourceLanguage && !state.tempSourceLang)
       sourceLanguage = storageResult.sourceLanguage;
   } catch (err) {
     console.warn("Could not get source language:", err);
@@ -78,7 +78,9 @@ async function performTranslation(text, rect) {
     if (!state.bubbleEl.querySelector(".language-indicator:not(.fallback)")) {
       const languageInfo = {
         sourceLang: getLanguageName(sourceLanguage),
-        targetLang: getLanguageName(state.settings.target_lang),
+        targetLang: getLanguageName(
+          state.tempTargetLang || state.settings.target_lang
+        ),
       };
       const languageIndicator = document.createElement("div");
       languageIndicator.className = "language-indicator";
@@ -96,6 +98,14 @@ async function performTranslation(text, rect) {
       targetBadge?.addEventListener("click", (e) => {
         e.stopPropagation();
         ui.openLanguageMenu(targetBadge, retranslateBubble);
+      });
+
+      const sourceBadge = languageIndicator.querySelector(
+        ".language-badge.source-lang"
+      );
+      sourceBadge?.addEventListener("click", (e) => {
+        e.stopPropagation();
+        ui.openLanguageMenu(sourceBadge, retranslateWithNewSourceLang);
       });
     }
     words.createWordPills(text);
@@ -139,10 +149,10 @@ async function retranslateBubble(newTarget) {
   pills.forEach((p) => p.classList.remove("active", "selected"));
   state.selectedWords.clear();
   words.updateSaveButton();
-  let sourceLanguage = "auto";
+  let sourceLanguage = state.tempSourceLang || "auto";
   try {
     const storageResult = await chrome.storage.sync.get(["sourceLanguage"]);
-    if (storageResult.sourceLanguage)
+    if (storageResult.sourceLanguage && !state.tempSourceLang)
       sourceLanguage = storageResult.sourceLanguage;
   } catch {}
   try {
@@ -160,6 +170,38 @@ async function retranslateBubble(newTarget) {
   );
   if (targetBadgeLabel)
     targetBadgeLabel.textContent = getLanguageName(newTarget);
+}
+
+async function retranslateWithNewSourceLang(newSource) {
+  if (!state.bubbleEl || !state.lastSelection) return;
+  const transNode = state.bubbleEl.querySelector(".translated-text");
+  if (transNode) transNode.textContent = "Translating...";
+  state.tempSourceLang = newSource;
+  const wordTransDiv = state.bubbleEl.querySelector(".word-translation");
+  if (wordTransDiv) {
+    wordTransDiv.innerHTML = "";
+    wordTransDiv.classList.remove("show");
+  }
+  const pills = state.bubbleEl.querySelectorAll(".word-pill");
+  pills.forEach((p) => p.classList.remove("active", "selected"));
+  state.selectedWords.clear();
+  words.updateSaveButton();
+  const targetLang = state.tempTargetLang || state.settings.target_lang;
+  try {
+    const result = await translateTextWithAPI(
+      state.lastSelection,
+      targetLang,
+      newSource
+    );
+    if (transNode) transNode.textContent = result;
+  } catch (err) {
+    if (transNode) transNode.textContent = "Translation failed: " + err.message;
+  }
+  const sourceBadgeLabel = state.bubbleEl.querySelector(
+    ".language-badge.source-lang .lang-label"
+  );
+  if (sourceBadgeLabel)
+    sourceBadgeLabel.textContent = getLanguageName(newSource);
 }
 
 async function onSelection(event) {
