@@ -584,11 +584,34 @@ export async function showInstantCombinedTranslation() {
     combinationElement.addEventListener("click", (e) => {
       e.stopPropagation();
     });
+
+    // Make the translation editable just like in single mode
+    const editableTranslationSpan =
+      combinationElement.querySelector(".word-translated");
     const addCombinationButton =
       combinationElement.querySelector(".combination-add");
+    if (editableTranslationSpan && addCombinationButton) {
+      enableEditableTranslation(
+        editableTranslationSpan,
+        addCombinationButton,
+        combinedPhrase
+      );
+    }
+
     addCombinationButton?.addEventListener("click", (e) => {
       e.stopPropagation();
-      handleSaveCombination(combinedPhrase, combinationTranslation);
+      // Get the current translation value from the button's data attribute (updated by enableEditableTranslation)
+      // or fall back to querying the current span's text content
+      let currentTranslation =
+        addCombinationButton.getAttribute("data-translation");
+      if (!currentTranslation) {
+        const currentSpan =
+          combinationElement.querySelector(".word-translated");
+        currentTranslation = currentSpan
+          ? currentSpan.textContent
+          : combinationTranslation;
+      }
+      handleSaveCombination(combinedPhrase, currentTranslation);
     });
   } catch (err) {
     console.error("Instant combination translation failed:", err);
