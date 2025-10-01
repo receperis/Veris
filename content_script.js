@@ -165,6 +165,8 @@ async function retranslateBubble(newTarget) {
 async function onSelection(event) {
   try {
     if (!state.extensionEnabled) return;
+    if (!!state.bubbleEl) return;
+
     if (state.skipNextSelection) {
       state.skipNextSelection = false;
       return;
