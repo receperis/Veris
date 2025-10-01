@@ -678,6 +678,8 @@ async function importVocabularyData(importData, mode) {
                     translatedText: entry.translatedText || entry.translatedWord,
                     sourceLanguage: entry.sourceLanguage,
                     targetLanguage: entry.targetLanguage,
+                    context: entry.context || '',
+                    contextTranslation: entry.contextTranslation || '',
                     timestamp: entry.timestamp || new Date().toISOString(),
                     dateAdded: entry.dateAdded || new Date().toISOString(),
                     sessionId: entry.sessionId || `import_${Date.now()}`,
