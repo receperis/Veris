@@ -1,9 +1,9 @@
 /* IndexedDB Service - Handles all vocabulary database operations */
 
 // IndexedDB Configuration
-const DB_NAME = 'VocabularyExtension';
+const DB_NAME = "VocabularyExtension";
 const DB_VERSION = 2; // Incremented for new context and contextTranslation indexes
-const STORE_NAME = 'vocabulary';
+const STORE_NAME = "vocabulary";
 
 class VocabularyDB {
   constructor() {
@@ -21,7 +21,7 @@ class VocabularyDB {
       const request = indexedDB.open(DB_NAME, DB_VERSION);
 
       request.onerror = () => {
-        console.error('IndexedDB error:', request.error);
+        console.error("IndexedDB error:", request.error);
         this.db = null;
         reject(request.error);
       };
@@ -31,13 +31,13 @@ class VocabularyDB {
 
         // Handle unexpected database close
         this.db.onclose = () => {
-          console.warn('Database connection was closed unexpectedly');
+          console.warn("Database connection was closed unexpectedly");
           this.db = null;
         };
 
         // Handle version change
         this.db.onversionchange = () => {
-          console.warn('Database version changed, closing connection');
+          console.warn("Database version changed, closing connection");
           this.db.close();
           this.db = null;
         };
@@ -54,8 +54,8 @@ class VocabularyDB {
         // Create vocabulary store if it doesn't exist
         if (!db.objectStoreNames.contains(STORE_NAME)) {
           store = db.createObjectStore(STORE_NAME, {
-            keyPath: 'id',
-            autoIncrement: true
+            keyPath: "id",
+            autoIncrement: true,
           });
         } else {
           store = transaction.objectStore(STORE_NAME);
@@ -63,16 +63,16 @@ class VocabularyDB {
 
         // Create or update indexes for efficient querying
         const requiredIndexes = {
-          'timestamp': 'timestamp',
-          'sourceLanguage': 'sourceLanguage',
-          'targetLanguage': 'targetLanguage',
-          'originalText': 'originalText',
-          'originalWord': 'originalWord',
-          'translatedWord': 'translatedWord',
-          'context': 'context',
-          'contextTranslation': 'contextTranslation',
-          'sessionId': 'sessionId',
-          'domain': 'domain'
+          timestamp: "timestamp",
+          sourceLanguage: "sourceLanguage",
+          targetLanguage: "targetLanguage",
+          originalText: "originalText",
+          originalWord: "originalWord",
+          translatedWord: "translatedWord",
+          context: "context",
+          contextTranslation: "contextTranslation",
+          sessionId: "sessionId",
+          domain: "domain",
         };
 
         // Add missing indexes
@@ -98,17 +98,17 @@ class VocabularyDB {
           await this.init();
         }
 
-        const transaction = this.db.transaction([STORE_NAME], 'readwrite');
+        const transaction = this.db.transaction([STORE_NAME], "readwrite");
         const store = transaction.objectStore(STORE_NAME);
 
         transaction.onerror = () => {
-          console.error('Transaction failed:', transaction.error);
+          console.error("Transaction failed:", transaction.error);
           reject(transaction.error);
         };
 
         transaction.onabort = () => {
-          console.error('Transaction aborted');
-          reject(new Error('Transaction aborted'));
+          console.error("Transaction aborted");
+          reject(new Error("Transaction aborted"));
         };
 
         const request = store.add(vocabularyData);
@@ -118,15 +118,15 @@ class VocabularyDB {
         };
 
         request.onerror = () => {
-          console.error('Failed to save vocabulary:', request.error);
+          console.error("Failed to save vocabulary:", request.error);
           reject(request.error);
         };
       } catch (error) {
-        console.error('Error creating transaction:', error);
+        console.error("Error creating transaction:", error);
         // Try to reinitialize database and retry once
         try {
           await this.init();
-          const transaction = this.db.transaction([STORE_NAME], 'readwrite');
+          const transaction = this.db.transaction([STORE_NAME], "readwrite");
           const store = transaction.objectStore(STORE_NAME);
           const request = store.add(vocabularyData);
 
@@ -152,11 +152,11 @@ class VocabularyDB {
           await this.init();
         }
 
-        const transaction = this.db.transaction([STORE_NAME], 'readonly');
+        const transaction = this.db.transaction([STORE_NAME], "readonly");
         const store = transaction.objectStore(STORE_NAME);
 
         transaction.onerror = () => {
-          console.error('Transaction failed:', transaction.error);
+          console.error("Transaction failed:", transaction.error);
           reject(transaction.error);
         };
 
@@ -170,11 +170,11 @@ class VocabularyDB {
           reject(request.error);
         };
       } catch (error) {
-        console.error('Error creating transaction:', error);
+        console.error("Error creating transaction:", error);
         // Try to reinitialize database and retry once
         try {
           await this.init();
-          const transaction = this.db.transaction([STORE_NAME], 'readonly');
+          const transaction = this.db.transaction([STORE_NAME], "readonly");
           const store = transaction.objectStore(STORE_NAME);
           const request = store.getAll();
 
@@ -193,9 +193,9 @@ class VocabularyDB {
     }
 
     return new Promise((resolve, reject) => {
-      const transaction = this.db.transaction([STORE_NAME], 'readonly');
+      const transaction = this.db.transaction([STORE_NAME], "readonly");
       const store = transaction.objectStore(STORE_NAME);
-      const index = store.index('timestamp');
+      const index = store.index("timestamp");
       const range = IDBKeyRange.bound(startDate, endDate);
       const request = index.getAll(range);
 
@@ -215,7 +215,7 @@ class VocabularyDB {
     }
 
     return new Promise((resolve, reject) => {
-      const transaction = this.db.transaction([STORE_NAME], 'readwrite');
+      const transaction = this.db.transaction([STORE_NAME], "readwrite");
       const store = transaction.objectStore(STORE_NAME);
       const request = store.delete(id);
 
@@ -235,7 +235,7 @@ class VocabularyDB {
     }
 
     return new Promise((resolve, reject) => {
-      const transaction = this.db.transaction([STORE_NAME], 'readwrite');
+      const transaction = this.db.transaction([STORE_NAME], "readwrite");
       const store = transaction.objectStore(STORE_NAME);
       const request = store.clear();
 
@@ -255,7 +255,7 @@ class VocabularyDB {
     }
 
     return new Promise((resolve, reject) => {
-      const transaction = this.db.transaction([STORE_NAME], 'readwrite');
+      const transaction = this.db.transaction([STORE_NAME], "readwrite");
       const store = transaction.objectStore(STORE_NAME);
 
       // First get the existing entry
@@ -270,16 +270,16 @@ class VocabularyDB {
           const putRequest = store.put(mergedData);
 
           putRequest.onsuccess = () => {
-            console.log('Vocabulary updated with ID:', id);
+            console.log("Vocabulary updated with ID:", id);
             resolve(putRequest.result);
           };
 
           putRequest.onerror = () => {
-            console.error('Failed to update vocabulary:', putRequest.error);
+            console.error("Failed to update vocabulary:", putRequest.error);
             reject(putRequest.error);
           };
         } else {
-          reject(new Error('Entry not found'));
+          reject(new Error("Entry not found"));
         }
       };
 
@@ -295,14 +295,15 @@ class VocabularyDB {
     }
 
     return new Promise((resolve, reject) => {
-      const transaction = this.db.transaction([STORE_NAME], 'readonly');
+      const transaction = this.db.transaction([STORE_NAME], "readonly");
       const store = transaction.objectStore(STORE_NAME);
       const request = store.getAll();
 
       request.onsuccess = () => {
-        const filtered = request.result.filter(entry =>
-          entry.sourceLanguage === sourceLanguage &&
-          entry.targetLanguage === targetLanguage
+        const filtered = request.result.filter(
+          (entry) =>
+            entry.sourceLanguage === sourceLanguage &&
+            entry.targetLanguage === targetLanguage
         );
         resolve(filtered);
       };
@@ -319,9 +320,9 @@ class VocabularyDB {
     }
 
     return new Promise((resolve, reject) => {
-      const transaction = this.db.transaction([STORE_NAME], 'readonly');
+      const transaction = this.db.transaction([STORE_NAME], "readonly");
       const store = transaction.objectStore(STORE_NAME);
-      const index = store.index('originalWord');
+      const index = store.index("originalWord");
       const request = index.getAll(originalWord);
 
       request.onsuccess = () => {
@@ -340,9 +341,9 @@ class VocabularyDB {
     }
 
     return new Promise((resolve, reject) => {
-      const transaction = this.db.transaction([STORE_NAME], 'readonly');
+      const transaction = this.db.transaction([STORE_NAME], "readonly");
       const store = transaction.objectStore(STORE_NAME);
-      const index = store.index('translatedWord');
+      const index = store.index("translatedWord");
       const request = index.getAll(translatedWord);
 
       request.onsuccess = () => {
@@ -361,9 +362,9 @@ class VocabularyDB {
     }
 
     return new Promise((resolve, reject) => {
-      const transaction = this.db.transaction([STORE_NAME], 'readonly');
+      const transaction = this.db.transaction([STORE_NAME], "readonly");
       const store = transaction.objectStore(STORE_NAME);
-      const index = store.index('sessionId');
+      const index = store.index("sessionId");
       const request = index.getAll(sessionId);
 
       request.onsuccess = () => {
@@ -382,9 +383,9 @@ class VocabularyDB {
     }
 
     return new Promise((resolve, reject) => {
-      const transaction = this.db.transaction([STORE_NAME], 'readonly');
+      const transaction = this.db.transaction([STORE_NAME], "readonly");
       const store = transaction.objectStore(STORE_NAME);
-      const index = store.index('domain');
+      const index = store.index("domain");
       const request = index.getAll(domain);
 
       request.onsuccess = () => {
@@ -407,10 +408,12 @@ class VocabularyDB {
       const domains = new Set();
       const sessions = new Set();
 
-      all.forEach(entry => {
+      all.forEach((entry) => {
         if (entry.originalWord) {
           uniqueWords.add(entry.originalWord.toLowerCase());
-          languagePairs.add(`${entry.sourceLanguage} → ${entry.targetLanguage}`);
+          languagePairs.add(
+            `${entry.sourceLanguage} → ${entry.targetLanguage}`
+          );
           domains.add(entry.domain);
           if (entry.sessionId) sessions.add(entry.sessionId);
         }
@@ -422,20 +425,27 @@ class VocabularyDB {
         totalSessions: sessions.size,
         languagePairs: Array.from(languagePairs),
         domains: Array.from(domains),
-        dateRange: all.length > 0 ? {
-          first: new Date(Math.min(...all.map(entry => new Date(entry.timestamp)))).toLocaleDateString(),
-          last: new Date(Math.max(...all.map(entry => new Date(entry.timestamp)))).toLocaleDateString()
-        } : null
+        dateRange:
+          all.length > 0
+            ? {
+                first: new Date(
+                  Math.min(...all.map((entry) => new Date(entry.timestamp)))
+                ).toLocaleDateString(),
+                last: new Date(
+                  Math.max(...all.map((entry) => new Date(entry.timestamp)))
+                ).toLocaleDateString(),
+              }
+            : null,
       };
-      console.log('Vocabulary Statistics:', stats);
+      console.log("Vocabulary Statistics:", stats);
       return stats;
     } catch (error) {
-      console.error('Failed to get stats:', error);
+      console.error("Failed to get stats:", error);
       return null;
     }
   }
 
-  async getRandomWords(count = 10, difficulty = 'mixed') {
+  async getRandomWords(count = 10, difficulty = "mixed") {
     try {
       const allWords = await this.getAllVocabulary();
 
@@ -446,19 +456,19 @@ class VocabularyDB {
       let availableWords = [...allWords];
 
       // Filter by difficulty
-      if (difficulty === 'easy') {
+      if (difficulty === "easy") {
         // Recent words (last 30 days)
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-        availableWords = availableWords.filter(word =>
-          new Date(word.timestamp) >= thirtyDaysAgo
+        availableWords = availableWords.filter(
+          (word) => new Date(word.timestamp) >= thirtyDaysAgo
         );
-      } else if (difficulty === 'hard') {
+      } else if (difficulty === "hard") {
         // Older words (more than 30 days)
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-        availableWords = availableWords.filter(word =>
-          new Date(word.timestamp) < thirtyDaysAgo
+        availableWords = availableWords.filter(
+          (word) => new Date(word.timestamp) < thirtyDaysAgo
         );
       }
       // 'mixed' uses all words
@@ -467,14 +477,14 @@ class VocabularyDB {
       const shuffled = availableWords.sort(() => 0.5 - Math.random());
       return shuffled.slice(0, Math.min(count, shuffled.length));
     } catch (error) {
-      console.error('Failed to get random words:', error);
+      console.error("Failed to get random words:", error);
       return [];
     }
   }
 }
 
 // Create global instance
-if (typeof self !== 'undefined') {
+if (typeof self !== "undefined") {
   // Service worker context
   self.vocabularyDB = new VocabularyDB();
 
@@ -485,14 +495,20 @@ if (typeof self !== 'undefined') {
     saveVocabulary: (data) => self.vocabularyDB.saveVocabularyEntry(data),
     getAllVocabulary: () => self.vocabularyDB.getAllVocabulary(),
     getStats: () => self.vocabularyDB.getStats(),
-    getRandomWords: (count, difficulty) => self.vocabularyDB.getRandomWords(count, difficulty),
+    getRandomWords: (count, difficulty) =>
+      self.vocabularyDB.getRandomWords(count, difficulty),
     deleteVocabulary: (id) => self.vocabularyDB.deleteVocabularyEntry(id),
     deleteAllVocabulary: () => self.vocabularyDB.deleteAllVocabulary(),
-    updateVocabulary: (id, updates) => self.vocabularyDB.updateVocabularyEntry(id, updates),
-    getWordsByLanguage: (sourceLanguage, targetLanguage) => self.vocabularyDB.getVocabularyByLanguagePair(sourceLanguage, targetLanguage),
+    updateVocabulary: (id, updates) =>
+      self.vocabularyDB.updateVocabularyEntry(id, updates),
+    getWordsByLanguage: (sourceLanguage, targetLanguage) =>
+      self.vocabularyDB.getVocabularyByLanguagePair(
+        sourceLanguage,
+        targetLanguage
+      ),
     getWordsByDomain: (domain) => self.vocabularyDB.getWordsByDomain(domain),
 
     // Initialize database
-    init: () => self.vocabularyDB.init()
+    init: () => self.vocabularyDB.init(),
   };
 }

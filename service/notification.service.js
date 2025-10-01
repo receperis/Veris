@@ -2,42 +2,49 @@
 // Compatible with service worker (importScripts) environment
 
 const NotificationService = (() => {
-  const LOG_PREFIX = '[NotificationService]';
-  const DAILY_ID = 'daily-exercise';
-  const TEST_ID = 'test-notification';
+  const LOG_PREFIX = "[NotificationService]";
+  const DAILY_ID = "daily-exercise";
+  const TEST_ID = "test-notification";
   // Fallback icon must be a packaged resource (data URIs are not supported by Chrome notifications)
-  const FALLBACK_ICON = 'icons/icon128.png';
+  const FALLBACK_ICON = "icons/icon128.png";
 
   let initialized = false;
 
-  function log(...args) { console.log(LOG_PREFIX, ...args); }
-  function warn(...args) { console.warn(LOG_PREFIX, ...args); }
-  function error(...args) { console.error(LOG_PREFIX, ...args); }
+  function log(...args) {
+    console.log(LOG_PREFIX, ...args);
+  }
+  function warn(...args) {
+    console.warn(LOG_PREFIX, ...args);
+  }
+  function error(...args) {
+    console.error(LOG_PREFIX, ...args);
+  }
 
   async function ensureAPI() {
     if (!chrome || !chrome.notifications) {
-      error('chrome.notifications API not available');
-      return { ok: false, reason: 'api_unavailable' };
+      error("chrome.notifications API not available");
+      return { ok: false, reason: "api_unavailable" };
     }
     try {
       if (chrome.notifications.getPermissionLevel) {
         const level = await chrome.notifications.getPermissionLevel();
-        log('Permission level:', level);
-        if (level === 'denied') return { ok: false, reason: 'permission_denied' };
+        log("Permission level:", level);
+        if (level === "denied")
+          return { ok: false, reason: "permission_denied" };
       }
     } catch (e) {
-      warn('Permission level check failed:', e.message);
+      warn("Permission level check failed:", e.message);
     }
     return { ok: true };
   }
 
   function buildOptions(overrides) {
     const base = {
-      type: 'basic',
+      type: "basic",
       priority: overrides?.priority ?? 2,
       requireInteraction: overrides?.requireInteraction ?? false,
       silent: overrides?.silent ?? false,
-      iconUrl: overrides?.iconUrl || FALLBACK_ICON
+      iconUrl: overrides?.iconUrl || FALLBACK_ICON,
     };
     return { ...base, ...overrides };
   }
@@ -48,22 +55,27 @@ const NotificationService = (() => {
 
     try {
       // Clear existing with same id to avoid stale state
-      try { await chrome.notifications.clear(id); } catch (_) {}
+      try {
+        await chrome.notifications.clear(id);
+      } catch (_) {}
       const finalOptions = buildOptions(options);
-      log('Sending notification', id, finalOptions);
+      log("Sending notification", id, finalOptions);
       const createdId = await chrome.notifications.create(id, finalOptions);
       return { success: true, id: createdId };
     } catch (e) {
-      error('Failed to create notification', id, e);
+      error("Failed to create notification", id, e);
       // Retry once with fallback icon if the error is about image download and a custom icon was used
-      const msg = e?.message || '';
-      if (options?.iconUrl && msg.includes('images')) {
+      const msg = e?.message || "";
+      if (options?.iconUrl && msg.includes("images")) {
         try {
-          warn('Retrying notification with fallback icon');
-          const retryId = await chrome.notifications.create(id, buildOptions({ ...options, iconUrl: FALLBACK_ICON }));
+          warn("Retrying notification with fallback icon");
+          const retryId = await chrome.notifications.create(
+            id,
+            buildOptions({ ...options, iconUrl: FALLBACK_ICON })
+          );
           return { success: true, id: retryId, retriedWithFallback: true };
         } catch (e2) {
-          error('Retry with fallback icon failed', e2);
+          error("Retry with fallback icon failed", e2);
         }
       }
       return { success: false, error: e.message };
@@ -73,42 +85,49 @@ const NotificationService = (() => {
   async function sendDailyExerciseNotification() {
     let dueCount = null;
     try {
-      if (typeof ExerciseService?.getDueCount === 'function') {
+      if (typeof ExerciseService?.getDueCount === "function") {
         dueCount = await ExerciseService.getDueCount();
       }
     } catch (e) {
-      warn('Failed to fetch due count for notification', e.message);
+      warn("Failed to fetch due count for notification", e.message);
     }
-    const countPart = (dueCount != null) ? ` (${dueCount} due)` : '';
-    const msgDetail = (dueCount != null)
-      ? (dueCount === 0
-          ? 'No cards are due — great time to add new words or review anyway.'
-          : `${dueCount} word${dueCount===1?'':'s'} ready for review. Click to start.`)
-      : 'Time for your daily vocabulary practice! Click to start.';
+    const countPart = dueCount != null ? ` (${dueCount} due)` : "";
+    const msgDetail =
+      dueCount != null
+        ? dueCount === 0
+          ? "No cards are due — great time to add new words or review anyway."
+          : `${dueCount} word${
+              dueCount === 1 ? "" : "s"
+            } ready for review. Click to start.`
+        : "Time for your daily vocabulary practice! Click to start.";
     return send(DAILY_ID, {
-      title: 'Daily Vocabulary Exercise' + countPart,
+      title: "Daily Vocabulary Exercise" + countPart,
       message: msgDetail,
       priority: 1,
-      requireInteraction: true
+      requireInteraction: true,
     });
   }
 
   async function testNotification(extra = {}) {
     return send(TEST_ID, {
-      title: 'Test Notification',
-      message: 'This is a test notification from your extension.',
-      ...extra
+      title: "Test Notification",
+      message: "This is a test notification from your extension.",
+      ...extra,
     });
   }
 
   async function clear(id) {
-    try { return await chrome.notifications.clear(id); } catch { return false; }
+    try {
+      return await chrome.notifications.clear(id);
+    } catch {
+      return false;
+    }
   }
 
   async function clearAll() {
     if (chrome.notifications && chrome.notifications.getAll) {
-      chrome.notifications.getAll(ids => {
-        Object.keys(ids || {}).forEach(id => chrome.notifications.clear(id));
+      chrome.notifications.getAll((ids) => {
+        Object.keys(ids || {}).forEach((id) => chrome.notifications.clear(id));
       });
     }
   }
@@ -116,11 +135,15 @@ const NotificationService = (() => {
   function setupListeners() {
     if (!chrome?.notifications) return;
     chrome.notifications.onClicked.addListener((id) => {
-      log('Clicked', id);
+      log("Clicked", id);
       if (id === DAILY_ID) {
         try {
-          chrome.tabs.create({ url: chrome.runtime.getURL('exercise/exercise.html') });
-        } catch (e) { error('Failed to open exercise page', e); }
+          chrome.tabs.create({
+            url: chrome.runtime.getURL("exercise/exercise.html"),
+          });
+        } catch (e) {
+          error("Failed to open exercise page", e);
+        }
       }
       chrome.notifications.clear(id);
     });
@@ -129,7 +152,7 @@ const NotificationService = (() => {
   function setup() {
     if (initialized) return;
     initialized = true;
-    log('Initializing');
+    log("Initializing");
     setupListeners();
   }
 
@@ -139,7 +162,7 @@ const NotificationService = (() => {
     sendDailyExerciseNotification,
     testNotification,
     clear,
-    clearAll
+    clearAll,
   };
 })();
 

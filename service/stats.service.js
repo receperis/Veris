@@ -7,16 +7,16 @@ const StatsService = {
     try {
       // Get real stats from IndexedDB
       const dbStats = await DatabaseService.getStats();
-      
+
       // Get exercise stats from storage
-      const result = await chrome.storage.local.get(['vocabularyStats']);
+      const result = await chrome.storage.local.get(["vocabularyStats"]);
       let exerciseStats = result.vocabularyStats || {
         lastExercise: null,
         exercisesCompleted: 0,
         averageScore: 0,
-        totalScore: 0
+        totalScore: 0,
       };
-      
+
       // Combine database stats with exercise stats
       const combinedStats = {
         totalWords: dbStats ? dbStats.totalEntries : 0,
@@ -24,22 +24,22 @@ const StatsService = {
         lastExercise: exerciseStats.lastExercise,
         exercisesCompleted: exerciseStats.exercisesCompleted,
         averageScore: exerciseStats.averageScore,
-        totalScore: exerciseStats.totalScore
+        totalScore: exerciseStats.totalScore,
       };
-      
+
       // Update storage with current vocabulary count
       await chrome.storage.local.set({ vocabularyStats: combinedStats });
-      
+
       return combinedStats;
     } catch (error) {
-      console.error('Error updating vocabulary stats:', error);
+      console.error("Error updating vocabulary stats:", error);
       return {
         totalWords: 0,
         uniqueWords: 0,
         lastExercise: null,
         exercisesCompleted: 0,
         averageScore: 0,
-        totalScore: 0
+        totalScore: 0,
       };
     }
   },
@@ -47,17 +47,17 @@ const StatsService = {
   async getDetailedStats() {
     try {
       const dbStats = await DatabaseService.getStats();
-      const storageResult = await chrome.storage.local.get(['vocabularyStats']);
+      const storageResult = await chrome.storage.local.get(["vocabularyStats"]);
       const exerciseStats = storageResult.vocabularyStats || {};
-      
+
       return {
         database: dbStats,
         exercises: exerciseStats,
-        combined: await this.updateVocabularyStats()
+        combined: await this.updateVocabularyStats(),
       };
     } catch (error) {
-      console.error('Error getting detailed stats:', error);
+      console.error("Error getting detailed stats:", error);
       return null;
     }
-  }
+  },
 };
