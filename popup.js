@@ -1,8 +1,127 @@
 /* Popup JavaScript - Vocabulary Browser */
 
+// Performance optimization classes
+class SearchIndex {
+    constructor() {
+        this.sourceIndex = new Map();
+        this.translationIndex = new Map();
+        this.allWords = [];
+    }
+    
+    buildIndex(vocabulary) {
+        this.allWords = vocabulary;
+        this.sourceIndex.clear();
+        this.translationIndex.clear();
+        
+        vocabulary.forEach((word, index) => {
+            // Index source text
+            this.indexText((word.originalWord || '').toLowerCase(), index, this.sourceIndex);
+            // Index translation
+            this.indexText((word.translatedWord || '').toLowerCase(), index, this.translationIndex);
+        });
+    }
+    
+    indexText(text, wordIndex, index) {
+        const words = text.split(/\s+/);
+        words.forEach(word => {
+            const cleaned = word.replace(/[^\w]/g, '');
+            if (cleaned.length > 0) {
+                if (!index.has(cleaned)) {
+                    index.set(cleaned, new Set());
+                }
+                index.get(cleaned).add(wordIndex);
+                
+                // Add prefixes for partial matching
+                for (let i = 1; i <= cleaned.length; i++) {
+                    const prefix = cleaned.substring(0, i);
+                    if (!index.has(prefix)) {
+                        index.set(prefix, new Set());
+                    }
+                    index.get(prefix).add(wordIndex);
+                }
+            }
+        });
+    }
+    
+    search(query, maxResults = 100) {
+        if (!query || query.length < 1) {
+            return this.allWords.slice(0, maxResults);
+        }
+        
+        const queryLower = query.toLowerCase().replace(/[^\w\s]/g, '');
+        const queryWords = queryLower.split(/\s+/).filter(w => w.length > 0);
+        
+        if (queryWords.length === 0) {
+            return this.allWords.slice(0, maxResults);
+        }
+        
+        // For very short queries, use simple string matching to avoid huge result sets
+        if (queryWords.some(word => word.length < 3) && queryWords.length === 1) {
+            const shortQuery = queryWords[0];
+            const results = [];
+            for (let i = 0; i < this.allWords.length && results.length < maxResults; i++) {
+                const word = this.allWords[i];
+                const originalLower = (word.originalWord || '').toLowerCase();
+                const translatedLower = (word.translatedWord || '').toLowerCase();
+                if (originalLower.includes(shortQuery) || translatedLower.includes(shortQuery)) {
+                    results.push(word);
+                }
+            }
+            return results;
+        }
+        
+        // Find matches for each query word, but limit result set size early
+        let resultSets = queryWords.map(word => {
+            const sourceMatches = this.sourceIndex.get(word) || new Set();
+            const translationMatches = this.translationIndex.get(word) || new Set();
+            const combined = new Set([...sourceMatches, ...translationMatches]);
+            
+            // If any single word produces too many results, limit it early
+            if (combined.size > maxResults * 3) {
+                // Convert to array, sort by relevance, and limit
+                const limitedArray = Array.from(combined).slice(0, maxResults * 3);
+                return new Set(limitedArray);
+            }
+            return combined;
+        });
+        
+        // Start with smallest result set for more efficient intersection
+        resultSets.sort((a, b) => a.size - b.size);
+        let intersection = resultSets[0];
+        
+        // Efficient intersection with early termination
+        for (let i = 1; i < resultSets.length; i++) {
+            const newIntersection = new Set();
+            let count = 0;
+            for (const item of intersection) {
+                if (resultSets[i].has(item)) {
+                    newIntersection.add(item);
+                    count++;
+                    // Early termination if we have enough results
+                    if (count >= maxResults * 2) break;
+                }
+            }
+            intersection = newIntersection;
+            
+            // If intersection becomes empty, no point in continuing
+            if (intersection.size === 0) break;
+        }
+        
+        // Convert to vocabulary items efficiently
+        const results = [];
+        let count = 0;
+        for (const index of intersection) {
+            if (count >= maxResults) break;
+            results.push(this.allWords[index]);
+            count++;
+        }
+        
+        return results;
+    }
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     // Initialize the vocabulary browser
-    ensurePopupStyles();
     await initializeVocabularyBrowser();
 
     // Set up event listeners
@@ -26,6 +145,9 @@ let filteredVocabulary = [];
 let sourceLanguages = [];
 let editMode = false;
 
+// Search optimization
+let searchIndex = new SearchIndex();
+
 async function initializeVocabularyBrowser() {
     try {
         // Show loading state
@@ -44,6 +166,9 @@ async function initializeVocabularyBrowser() {
 
             // Extract unique source languages
             sourceLanguages = [...new Set(allVocabulary.map(item => item.sourceLanguage))].filter(lang => lang);
+
+            // Build search index for fast filtering
+            searchIndex.buildIndex(allVocabulary);
 
             // Populate language dropdown
             populateLanguageDropdown();
@@ -318,6 +443,8 @@ async function handleSaveWord(id) {
                 if (updates.originalWord !== undefined) allVocabulary[idx].originalWord = updates.originalWord;
                 if (updates.translatedWord !== undefined) allVocabulary[idx].translatedWord = updates.translatedWord;
             }
+            // Rebuild search index with updated data
+            searchIndex.buildIndex(allVocabulary);
             filterVocabulary();
             showNotice('Changes saved', 'success');
         } else {
@@ -339,6 +466,8 @@ async function handleDeleteWord(id) {
         if (response && response.success) {
             // Remove from local lists and re-render
             allVocabulary = allVocabulary.filter(w => String(w.id) !== String(id));
+            // Rebuild search index with updated data
+            searchIndex.buildIndex(allVocabulary);
             filterVocabulary();
             showNotice('Word deleted', 'success');
         } else {
@@ -400,16 +529,22 @@ function showNoResults(message) {
 
 function filterVocabulary() {
     const selectedLanguage = document.getElementById('source-language').value;
-    const searchTerm = document.getElementById('search-input').value.toLowerCase().trim();
+    const searchTerm = document.getElementById('search-input').value.trim();
 
-    filteredVocabulary = allVocabulary.filter(item => {
-        const languageMatch = selectedLanguage === 'all' || item.sourceLanguage === selectedLanguage;
-        // Restrict search to originalWord & translatedWord only (exclude context)
-        const searchMatch = !searchTerm ||
-            (item.originalWord && item.originalWord.toLowerCase().includes(searchTerm)) ||
-            (item.translatedWord && item.translatedWord.toLowerCase().includes(searchTerm));
-        return languageMatch && searchMatch;
-    });
+    // Use optimized search index if we have a search term
+    if (searchTerm && searchTerm.length > 0) {
+        const searchResults = searchIndex.search(searchTerm, 1000);
+        filteredVocabulary = searchResults.filter(item => {
+            const languageMatch = selectedLanguage === 'all' || item.sourceLanguage === selectedLanguage;
+            return languageMatch;
+        });
+    } else {
+        // No search term, use original filtering
+        filteredVocabulary = allVocabulary.filter(item => {
+            const languageMatch = selectedLanguage === 'all' || item.sourceLanguage === selectedLanguage;
+            return languageMatch;
+        });
+    }
 
     renderVocabularyList();
 }
@@ -581,276 +716,3 @@ async function initExtensionToggle() {
     }
 }
 
-// Inject small CSS snippet for popup inline edit visuals
-function ensurePopupStyles() {
-    if (document.getElementById('__popup_edit_styles')) return;
-    const css = `
-    /* Enhanced vocabulary item styling */
-    .vocabulary-item { 
-        padding: 14px 16px; 
-        border-bottom: 1px solid #f1f5f9; 
-        transition: all 0.2s ease;
-        border-radius: 0;
-    }
-    .vocabulary-item:hover {
-        background: linear-gradient(135deg, #fafbff 0%, #f8fafc 100%);
-        border-color: #e2e8f0;
-    }
-  
-    .vocabulary-item.editing { 
-        background: linear-gradient(135deg, #fefeff 0%, #f9fafb 100%);
-        border: 1px solid #e0e7ff;
-        border-radius: 12px;
-        margin: 4px 0;
-        padding: 18px;
-        box-shadow: 0 4px 16px rgba(79, 70, 229, 0.08);
-    }
-    
-    /* Typography improvements */
-    .vocabulary-item .source-text { 
-        font-weight: 600; 
-        color: #1e293b; 
-        margin-bottom: 6px;
-        font-size: 15px;
-        line-height: 1.4;
-    }
-    .vocabulary-item .translation { 
-        color: #64748b; 
-        font-size: 14px;
-        line-height: 1.3;
-        font-weight: 400;
-    }
-    
-    /* Elegant inline edit inputs */
-    .vocabulary-item input.edit-original,
-    .vocabulary-item input.edit-translation {
-        width: 100%;
-        border: none;
-        border-bottom: 2px solid #e2e8f0;
-        padding: 10px 6px 8px 6px;
-        outline: none;
-        font-size: 15px;
-        background: rgba(255, 255, 255, 0.6);
-        color: #1e293b;
-        margin-bottom: 12px;
-        border-radius: 4px 4px 0 0;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        font-weight: 500;
-    }
-    .vocabulary-item input.edit-original {
-        font-weight: 600;
-    }
-    .vocabulary-item input.edit-original:focus,
-    .vocabulary-item input.edit-translation:focus {
-        border-bottom-color: #6366f1;
-        background: rgba(255, 255, 255, 0.95);
-        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
-        transform: translateY(-1px);
-    }
-    .vocabulary-item input.edit-original::placeholder,
-    .vocabulary-item input.edit-translation::placeholder {
-        color: #94a3b8;
-        font-style: italic;
-    }
-    
-    /* Modern action buttons */
-    .vocabulary-item .quick-action-btn { 
-        padding: 8px 16px; 
-        border-radius: 10px; 
-        font-size: 13px;
-        font-weight: 600;
-        border: none;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        position: relative;
-        overflow: hidden;
-    }
-    .vocabulary-item .quick-action-btn:before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-        transition: left 0.6s;
-    }
-    .vocabulary-item .quick-action-btn:hover:before {
-        left: 100%;
-    }
-    
-    .vocabulary-item .cancel-edit { 
-        background: #f8fafc;
-        border: 1px solid #e2e8f0;
-        color: #475569;
-    }
-    .vocabulary-item .cancel-edit:hover {
-        background: #f1f5f9;
-        border-color: #cbd5e1;
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    }
-    
-    .vocabulary-item .save-word { 
-        background: #6366f1;
-        color: #ffffff;
-        border: none;
-    }
-    .vocabulary-item .save-word:hover {
-        background: #5b5bd6;
-        transform: translateY(-1px);
-        box-shadow: 0 6px 20px rgba(99, 102, 241, 0.35);
-    }
-    
-    .vocabulary-item .delete-word { 
-        background: #fef2f2;
-        border: 1px solid #fecaca;
-        color: #dc2626;
-    }
-    .vocabulary-item .delete-word:hover {
-        background: #fee2e2;
-        border-color: #fca5a5;
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2);
-    }
-    
-    /* Enhanced icon buttons */
-    .icon-btn { 
-        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-        border-radius: 8px;
-        padding: 8px;
-    }
-    .icon-btn:hover { 
-        color: #4f46e5; 
-        transform: translateY(-2px) scale(1.05);
-        background: rgba(79, 70, 229, 0.08);
-    }
-    .icon-btn:focus { 
-        outline: 2px solid rgba(79, 70, 229, 0.25); 
-        outline-offset: 2px;
-        background: rgba(79, 70, 229, 0.05);
-    }
-    /* Enhanced confirmation modal */
-    .mini-confirm-overlay {
-        position: fixed; 
-        inset: 0; 
-        background: rgba(15, 23, 42, 0.4); 
-        backdrop-filter: blur(4px);
-        display: flex;
-        align-items: center;
-        justify-content: center; 
-        z-index: 2147483646;
-        opacity: 0;
-        animation: fadeIn 0.2s ease-out forwards;
-    }
-    @keyframes fadeIn {
-        to { opacity: 1; }
-    }
-    .mini-confirm {
-        background: #ffffff; 
-        border-radius: 16px; 
-        padding: 24px; 
-        max-width: 380px; 
-        width: 94%; 
-        box-shadow: 0 20px 60px rgba(15, 23, 42, 0.25), 0 8px 24px rgba(15, 23, 42, 0.1);
-        font-family: inherit;
-        border: 1px solid rgba(226, 232, 240, 0.8);
-        transform: scale(0.95);
-        animation: slideIn 0.2s ease-out forwards;
-    }
-    @keyframes slideIn {
-        to { transform: scale(1); }
-    }
-    .mini-confirm p { 
-        color: #1e293b; 
-        margin-bottom: 20px;
-        font-size: 15px;
-        line-height: 1.5;
-    }
-    .mini-confirm .actions { 
-        display: flex; 
-        gap: 10px; 
-        justify-content: flex-end; 
-        margin-top: 24px;
-    }
-    .mini-confirm .btn { 
-        padding: 10px 20px; 
-        border-radius: 10px; 
-        font-weight: 600; 
-        cursor: pointer; 
-        border: 1px solid transparent;
-        font-size: 14px;
-        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-        position: relative;
-        overflow: hidden;
-    }
-    .mini-confirm .btn:focus {
-        outline: 2px solid rgba(99, 102, 241, 0.3);
-        outline-offset: 2px;
-    }
-    .mini-confirm .btn.confirm { 
-        background: #dc2626;
-        color: #ffffff;
-        border-color: #dc2626;
-    }
-    .mini-confirm .btn.confirm:hover {
-        background: #b91c1c;
-        border-color: #b91c1c;
-        transform: translateY(-1px);
-        box-shadow: 0 8px 20px rgba(220, 38, 38, 0.3);
-    }
-    .mini-confirm .btn.cancel { 
-        background: #f8fafc;
-        color: #475569;
-        border-color: #e2e8f0;
-    }
-    .mini-confirm .btn.cancel:hover {
-        background: #f1f5f9;
-        border-color: #cbd5e1;
-        color: #334155;
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(71, 85, 105, 0.15);
-    }
-
-    /* Refined toast notifications */
-    .mini-toast { 
-        position: fixed; 
-        right: 16px; 
-        bottom: 16px; 
-        background: #1e293b; 
-        color: #f8fafc; 
-        padding: 12px 16px; 
-        border-radius: 12px; 
-        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.3), 0 4px 12px rgba(15, 23, 42, 0.2);
-        z-index: 2147483647; 
-        opacity: 0; 
-        transform: translateY(12px); 
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        font-weight: 500;
-        font-size: 14px;
-        border: 1px solid rgba(226, 232, 240, 0.1);
-    }
-    .mini-toast.show { 
-        opacity: 1; 
-        transform: translateY(0); 
-    }
-    .mini-toast.info { 
-        background: #1e293b;
-        border-color: rgba(148, 163, 184, 0.2);
-    }
-    .mini-toast.success { 
-        background: #065f46;
-        border-color: rgba(16, 185, 129, 0.3);
-        color: #d1fae5;
-    }
-    .mini-toast.error { 
-        background: #7f1d1d;
-        border-color: rgba(239, 68, 68, 0.3);
-        color: #fee2e2;
-    }
-    `;
-    const style = document.createElement('style');
-    style.id = '__popup_edit_styles';
-    style.textContent = css;
-    document.head.appendChild(style);
-}
