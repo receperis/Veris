@@ -131,20 +131,47 @@ class VocabularyExercise {
 
   async loadWords() {
     try {
+      // Get available languages first
+      await this.populateLanguageDropdown();
+
+      // Load words with current language selection
+      await this.loadWordsForLanguage();
+
+      this.showWelcomeScreen();
+    } catch (error) {
+      console.error("Error loading Leitner session:", error);
+      this.showError("Failed to load words");
+    }
+  }
+
+  async loadWordsForLanguage() {
+    try {
       const response = await chrome.runtime.sendMessage({
         type: "PREPARE_LEITNER_SESSION",
-        data: { limit: this.questionsPerExercise },
+        data: {
+          limit: this.questionsPerExercise,
+          selectedLanguage: this.selectedLanguage || null,
+        },
       });
+
       if (!response.success) {
-        console.error("Failed to prepare Leitner session:", response.error);
-        this.showError("Failed to prepare session");
+        if (response.error === "no_words_for_language") {
+          this.showError(`No words available for the selected language`);
+        } else if (response.error === "no_words_available") {
+          this.showError("No words available / due");
+        } else {
+          console.error("Failed to prepare Leitner session:", response.error);
+          this.showError("Failed to prepare session");
+        }
         return;
       }
+
       const sessionWords = response.words || [];
       if (sessionWords.length === 0) {
         this.showError("No words available / due");
         return;
       }
+
       this.allWords = sessionWords.map((w) => ({
         id: w.id,
         original: w.originalWord,
@@ -154,21 +181,33 @@ class VocabularyExercise {
         targetLanguage: w.targetLanguage || "en",
         srs: w.srs,
       }));
-      // Initialize filtered words
-      this.applyLanguageFilter();
+
+      // Since filtering is now done service-side, words are already filtered
+      this.words = [...this.allWords];
+
+      // Update UI counts
+      this.questionsPerExercise = Math.min(
+        this.questionsPerExercise,
+        this.words.length
+      );
+
       document.getElementById("exercise-count").textContent =
         this.questionsPerExercise;
-      this.showWelcomeScreen();
-      this.populateLanguageDropdown();
+
+      const totalEl = document.getElementById("total-words");
+      if (totalEl) totalEl.textContent = this.words.length;
+
+      this.updateLanguageInfo();
     } catch (error) {
-      console.error("Error loading Leitner session:", error);
+      console.error("Error loading words for language:", error);
       this.showError("Failed to load words");
     }
   }
 
-  populateLanguageDropdown() {
+  async populateLanguageDropdown() {
     const select = document.querySelector(".language-filter");
     if (!select) return;
+
     const NAME_MAP = {
       en: "English",
       es: "Spanish",
@@ -196,46 +235,44 @@ class VocabularyExercise {
       uk: "Ukrainian",
       hu: "Hungarian",
     };
-    const langs = [
-      ...new Set(
-        this.allWords.map((w) => (w.sourceLanguage || "").toLowerCase())
-      ),
-    ]
-      .filter((l) => !!l)
-      .sort();
-    console.log("Available languages:", langs);
-    // Clear existing except first option
-    while (select.options.length > 1) select.remove(1);
-    langs.forEach((l) => {
-      const opt = document.createElement("option");
-      opt.value = l;
-      opt.textContent = NAME_MAP[l] || l.toUpperCase();
-      select.appendChild(opt);
-    });
-    select.addEventListener("change", () => {
-      this.selectedLanguage = select.value;
-      this.applyLanguageFilter();
-    });
+
+    try {
+      // Get available languages from service
+      const response = await chrome.runtime.sendMessage({
+        type: "GET_AVAILABLE_LANGUAGES",
+      });
+
+      if (!response.success) {
+        console.error("Failed to get available languages:", response.error);
+        return;
+      }
+
+      const langs = response.languages || [];
+
+      // Clear existing except first option ("All Languages")
+      while (select.options.length > 1) select.remove(1);
+
+      langs.forEach((l) => {
+        const opt = document.createElement("option");
+        opt.value = l;
+        opt.textContent = NAME_MAP[l] || l.toUpperCase();
+        select.appendChild(opt);
+      });
+
+      // Add change listener if not already added
+      if (!select.hasAttribute("data-listener-added")) {
+        select.addEventListener("change", async () => {
+          this.selectedLanguage = select.value;
+          await this.loadWordsForLanguage();
+        });
+        select.setAttribute("data-listener-added", "true");
+      }
+    } catch (error) {
+      console.error("Error populating language dropdown:", error);
+    }
   }
 
-  applyLanguageFilter() {
-    if (this.selectedLanguage) {
-      this.words = this.allWords.filter(
-        (w) => (w.sourceLanguage || "").toLowerCase() === this.selectedLanguage
-      );
-    } else {
-      this.words = [...this.allWords];
-    }
-    // Update counts
-    const totalEl = document.getElementById("total-words");
-    if (totalEl) totalEl.textContent = this.words.length;
-    // Adjust questions per exercise if fewer words
-    this.questionsPerExercise = Math.min(
-      this.questionsPerExercise,
-      this.words.length
-    );
-    const countEl = document.getElementById("exercise-count");
-    if (countEl) countEl.textContent = this.questionsPerExercise;
+  updateLanguageInfo() {
     const info = document.querySelector(".language-available-count");
     if (info) {
       if (this.selectedLanguage) {
@@ -292,9 +329,7 @@ class VocabularyExercise {
   }
 
   startExercise() {
-    // Refresh filtered view in case words changed via selection
-    this.applyLanguageFilter();
-    // Shuffle words and select subset for exercise
+    // Shuffle words and select subset for exercise (words are already filtered by service)
     this.shuffleArray(this.words);
     this.words = this.words.slice(0, this.questionsPerExercise);
 

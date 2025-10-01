@@ -310,10 +310,30 @@ const ExerciseService = (() => {
     handleExerciseCompleted,
     setupTestAlarm,
     // Leitner API
-    prepareLeitnerSession: async (limit = 10) => {
+    prepareLeitnerSession: async (limit = 10, selectedLanguage = null) => {
       try {
         const words = await DatabaseService.getAllVocabulary();
-        const enriched = words.map((w) => ensureLeitnerMeta(w));
+
+        // Filter by language if specified
+        let filteredWords = words;
+        if (selectedLanguage) {
+          filteredWords = words.filter(
+            (w) =>
+              (w.sourceLanguage || "").toLowerCase() ===
+              selectedLanguage.toLowerCase()
+          );
+        }
+
+        if (filteredWords.length === 0) {
+          return {
+            success: false,
+            error: selectedLanguage
+              ? "no_words_for_language"
+              : "no_words_available",
+          };
+        }
+
+        const enriched = filteredWords.map((w) => ensureLeitnerMeta(w));
         const selection = selectLeitnerSession(enriched, limit);
         // Strip heavy fields if any
         return {
@@ -328,6 +348,7 @@ const ExerciseService = (() => {
             srs: { boxIndex: w.srs.boxIndex, dueAt: w.srs.dueAt },
           })),
           counts: leitnerCounts(enriched),
+          selectedLanguage: selectedLanguage,
         };
       } catch (e) {
         error("prepareLeitnerSession", e);
@@ -354,6 +375,40 @@ const ExerciseService = (() => {
       try {
         const all = await DatabaseService.getAllVocabulary();
         return countDue(all);
+      } catch {
+        return 0;
+      }
+    },
+    getAvailableLanguages: async () => {
+      try {
+        const words = await DatabaseService.getAllVocabulary();
+        const languages = new Set();
+
+        words.forEach((word) => {
+          if (word.sourceLanguage)
+            languages.add(word.sourceLanguage.toLowerCase());
+        });
+
+        return { success: true, languages: Array.from(languages).sort() };
+      } catch (e) {
+        error("getAvailableLanguages", e);
+        return { success: false, error: e.message };
+      }
+    },
+    getDueCountByLanguage: async (selectedLanguage = null) => {
+      try {
+        const all = await DatabaseService.getAllVocabulary();
+        let filteredWords = all;
+
+        if (selectedLanguage) {
+          filteredWords = all.filter(
+            (w) =>
+              (w.sourceLanguage || "").toLowerCase() ===
+              selectedLanguage.toLowerCase()
+          );
+        }
+
+        return countDue(filteredWords);
       } catch {
         return 0;
       }

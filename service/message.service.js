@@ -35,8 +35,11 @@ const MessageService = {
 
       // Leitner session preparation
       if (request.type === "PREPARE_LEITNER_SESSION") {
-        const { limit = 10 } = request.data || {};
-        const result = await ExerciseService.prepareLeitnerSession(limit);
+        const { limit = 10, selectedLanguage = null } = request.data || {};
+        const result = await ExerciseService.prepareLeitnerSession(
+          limit,
+          selectedLanguage
+        );
         sendResponse(result);
         return true;
       }
@@ -131,6 +134,22 @@ const MessageService = {
         const result =
           await NotificationService.sendDailyExerciseNotification();
         sendResponse({ success: result });
+        return true;
+      }
+
+      // Handle language-related operations
+      if (request.type === "GET_AVAILABLE_LANGUAGES") {
+        const result = await ExerciseService.getAvailableLanguages();
+        sendResponse(result);
+        return true;
+      }
+
+      if (request.type === "GET_DUE_COUNT_BY_LANGUAGE") {
+        const { selectedLanguage = null } = request.data || {};
+        const count = await ExerciseService.getDueCountByLanguage(
+          selectedLanguage
+        );
+        sendResponse({ success: true, count });
         return true;
       }
 
