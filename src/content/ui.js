@@ -5,6 +5,7 @@ import {
   getFullLanguageName,
   buildLanguageList,
 } from "./utils.js";
+import { ContentTemplates } from "../../templates/template-utils.js";
 
 // Note: some functions reference other modules; import cycles are avoided by keeping DOM-only helpers here.
 
@@ -22,7 +23,7 @@ export function showTriggerIcon(rect, triggerClickHandler) {
   const icon = document.createElement("div");
   icon.className = "__veris_trigger_icon";
   icon.title = "Translate selection";
-  icon.textContent = "V";
+  icon.textContent = ContentTemplates.triggerIcon();
   const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
   const scrollY = window.pageYOffset || document.documentElement.scrollTop;
   icon.style.position = "absolute";
@@ -64,49 +65,14 @@ export function createBubbleAtRect(
   bubble.className =
     "__translator_bubble" + (isLoading ? " __translator_loading" : "");
   bubble.id = "translate_bubble";
-  const languageIndicator =
-    languageInfo && !isLoading
-      ? `
-    <div class="language-indicator">
-      <div class="language-badge source-lang">
-        <span class="lang-label">${escapeHtml(languageInfo.sourceLang)}</span>
-      </div>
-      <div class="language-arrow">→</div>
-      <div class="language-badge target-lang">
-        <span class="lang-label">${escapeHtml(languageInfo.targetLang)}</span>
-      </div>
-    </div>
-  `
-      : "";
 
-  bubble.innerHTML = `
-    <div class="close-btn" title="Close">×</div>
-    ${languageIndicator}
-    <div class="source-text">${escapeHtml(sourceText)}</div>
-    <div class="translated-text">${escapeHtml(translatedText)}</div>
-    <div class="word-breakdown">
-
-      <div class="combination-controls">
-        <div class="combination-status show">
-           <div class="combination-info">
-              <span>Click words for individual translations</span>
-          </div>
-        </div>
-        <button class="combination-btn" title="Enter combination mode for multiple words">🔗</button>
-      </div>
-      <div class="word-pills"></div>
-      <div class="word-translation"></div>
-    </div>
-    <div class="save-section">
-      <button class="save-button-translate">
-        <span>💾</span>
-        <span>Save</span>
-        <span class="save-count">0</span>
-      </button>
-      <div class="save-status"></div>
-    </div>
-    <div class="meta">Built-in Translation</div>
-  `;
+  // Use template for bubble content
+  bubble.innerHTML = ContentTemplates.translationBubble(
+    sourceText,
+    translatedText,
+    isLoading,
+    languageInfo
+  );
 
   const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
   const scrollY = window.pageYOffset || document.documentElement.scrollTop;
@@ -157,22 +123,9 @@ export function openLanguageMenu(targetBadge, retranslateCallback) {
   menu.id = "lang_menu";
   const codes = buildLanguageList();
   const current = state.tempTargetLang || state.settings?.target_lang || "en";
-  menu.innerHTML = `
-    <div class="__lang_menu_header">
-      <input type="text" placeholder="Search language..." class="__lang_menu_search" />
-    </div>
-    <div class="__lang_menu_list">
-      ${codes
-        .map(
-          (c) => `<div class="__lang_menu_item ${
-            c === current ? "active" : ""
-          }" data-code="${c}">
-         <span class="code">${getLanguageName(c)}</span>
-         <span class="name">${getFullLanguageName(c)}</span>
-      </div>`
-        )
-        .join("")}
-    </div>`;
+
+  // Use template for language menu
+  menu.innerHTML = ContentTemplates.languageMenu(codes, current);
   document.body.appendChild(menu);
   state.bubbleLangMenuEl = menu;
   const rect = targetBadge.getBoundingClientRect();

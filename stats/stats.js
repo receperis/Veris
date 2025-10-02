@@ -1,6 +1,7 @@
 /* Stats Page JavaScript */
 
 import "./stats.css";
+import { StatsTemplates, TemplateUtils } from "../templates/template-utils.js";
 
 document.addEventListener("DOMContentLoaded", async () => {
   await initializeStatsPage();
@@ -164,15 +165,7 @@ function updateLanguageChart(languageDistribution) {
   const languageList = document.getElementById("language-list");
 
   if (languageDistribution.length === 0) {
-    languageList.innerHTML = `
-            <div class="language-item">
-                <span class="language-name">No vocabulary data</span>
-                <div class="language-progress">
-                    <div class="progress-bar" style="width: 0%"></div>
-                </div>
-                <span class="language-count">0</span>
-            </div>
-        `;
+    languageList.innerHTML = StatsTemplates.noLanguageData();
     return;
   }
 
@@ -181,17 +174,12 @@ function updateLanguageChart(languageDistribution) {
   languageList.innerHTML = languageDistribution
     .map((lang) => {
       const percentage = ((lang.count / total) * 100).toFixed(1);
-      return `
-            <div class="language-item">
-                <span class="language-name">${getLanguageDisplayName(
-                  lang.language
-                )}</span>
-                <div class="language-progress">
-                    <div class="progress-bar" style="width: ${percentage}%"></div>
-                </div>
-                <span class="language-count">${lang.count}</span>
-            </div>
-        `;
+      return StatsTemplates.languageItem(
+        lang.language,
+        lang.count,
+        percentage,
+        getLanguageDisplayName(lang.language)
+      );
     })
     .join("");
 }
@@ -231,31 +219,13 @@ function updateActivityTimeline(activities) {
   const timeline = document.getElementById("activity-timeline");
 
   if (activities.length === 0) {
-    timeline.innerHTML = `
-            <div class="timeline-item">
-                <div class="timeline-icon">📝</div>
-                <div class="timeline-content">
-                    <p class="timeline-text">No recent activity</p>
-                    <span class="timeline-date">Start translating to see activity here</span>
-                </div>
-            </div>
-        `;
+    timeline.innerHTML = StatsTemplates.noActivity();
     return;
   }
 
   timeline.innerHTML = activities
     .slice(0, 10)
-    .map(
-      (activity) => `
-        <div class="timeline-item">
-            <div class="timeline-icon">${activity.icon}</div>
-            <div class="timeline-content">
-                <p class="timeline-text">${activity.text}</p>
-                <span class="timeline-date">${activity.date}</span>
-            </div>
-        </div>
-    `
-    )
+    .map((activity) => StatsTemplates.timelineItem(activity))
     .join("");
 }
 
@@ -420,21 +390,7 @@ function animateValue(elementId, start, end, duration, suffix = "") {
 
 function hideLoadingWithError(message) {
   const loadingOverlay = document.getElementById("loading-overlay");
-  loadingOverlay.innerHTML = `
-        <div style="text-align: center; color: #e53e3e;">
-            <div style="font-size: 3rem; margin-bottom: 20px;">⚠️</div>
-            <p>${message}</p>
-            <button id="retry-btn" style="
-                margin-top: 20px;
-                padding: 10px 20px;
-                background: #4f46e5;
-                color: white;
-                border: none;
-                border-radius: 8px;
-                cursor: pointer;
-            ">Retry</button>
-        </div>
-    `;
+  loadingOverlay.innerHTML = StatsTemplates.loadingError(message);
 
   // Add event listener for retry button
   setTimeout(() => {
@@ -862,10 +818,7 @@ function showImportProgress(message) {
     progressOverlay = document.createElement("div");
     progressOverlay.id = "import-progress-overlay";
     progressOverlay.className = "loading-overlay";
-    progressOverlay.innerHTML = `
-            <div class="loading-spinner"></div>
-            <p id="import-progress-message">${message}</p>
-        `;
+    progressOverlay.innerHTML = StatsTemplates.importProgressOverlay(message);
     document.body.appendChild(progressOverlay);
   } else {
     const messageElement = document.getElementById("import-progress-message");
@@ -892,12 +845,7 @@ function showImportSuccess(message) {
   // Create success notification
   const notification = document.createElement("div");
   notification.className = "import-notification success";
-  notification.innerHTML = `
-        <div class="notification-content">
-            <div class="notification-icon">✅</div>
-            <p>${message}</p>
-        </div>
-    `;
+  notification.innerHTML = StatsTemplates.successNotification(message);
 
   document.body.appendChild(notification);
 
@@ -918,13 +866,7 @@ function showImportError(message) {
   // Create error notification
   const notification = document.createElement("div");
   notification.className = "import-notification error";
-  notification.innerHTML = `
-        <div class="notification-content">
-            <div class="notification-icon">❌</div>
-            <p>${message}</p>
-            <button class="close-btn" data-action="close-notification">×</button>
-        </div>
-    `;
+  notification.innerHTML = StatsTemplates.errorNotification(message);
 
   document.body.appendChild(notification);
 

@@ -1,6 +1,10 @@
 /* Vocabulary Exercise Logic */
 
 import "./exercise.css";
+import {
+  ExerciseTemplates,
+  TemplateUtils,
+} from "../templates/template-utils.js";
 
 class VocabularyExercise {
   constructor() {
@@ -253,10 +257,10 @@ class VocabularyExercise {
       while (select.options.length > 1) select.remove(1);
 
       langs.forEach((l) => {
-        const opt = document.createElement("option");
-        opt.value = l;
-        opt.textContent = NAME_MAP[l] || l.toUpperCase();
-        select.appendChild(opt);
+        select.innerHTML += ExerciseTemplates.languageOption(
+          l,
+          NAME_MAP[l] || l.toUpperCase()
+        );
       });
 
       // Add change listener if not already added
@@ -322,9 +326,14 @@ class VocabularyExercise {
     document.querySelector(".loading-screen").style.display = "none";
     document.querySelector(".error-screen").style.display = "block";
 
-    const errorContent = document.querySelector(".error-content p");
-    if (errorContent) {
-      errorContent.textContent = message;
+    const errorScreen = document.querySelector(".error-screen");
+    if (errorScreen) {
+      errorScreen.innerHTML = ExerciseTemplates.errorContent(message);
+      // Re-attach close button event listener
+      const closeBtn = errorScreen.querySelector(".close-error-btn");
+      if (closeBtn) {
+        closeBtn.addEventListener("click", () => this.closeExercise());
+      }
     }
   }
 
@@ -463,9 +472,8 @@ class VocabularyExercise {
     const choicesContainer = document.querySelector(".answer-choices");
     choicesContainer.innerHTML = "";
     choices.forEach((choice) => {
-      const button = document.createElement("button");
-      button.className = "answer-btn";
-      button.textContent = choice;
+      const buttonHTML = ExerciseTemplates.answerChoice(choice, correctAnswer);
+      const button = TemplateUtils.createElement(buttonHTML);
       button.addEventListener("click", () =>
         this.selectAnswer(choice, correctAnswer)
       );
@@ -668,32 +676,12 @@ class VocabularyExercise {
 
   showAnswerNotification(message, type) {
     // Remove existing if present
-    const existing = document.querySelector(".answer-toast");
-    if (existing) existing.remove();
-    const container = document.body; // place toast in viewport so it cannot go off-screen
-    if (!container) return;
+    TemplateUtils.removeElements("answer-toast");
 
-    const toast = document.createElement("div");
-    toast.className = `answer-toast ${type}`;
-    toast.setAttribute("role", "status");
-    toast.setAttribute("aria-live", "polite");
-    toast.setAttribute("aria-atomic", "true");
-
-    const icon = document.createElement("span");
-    icon.className = "icon";
-    if (type === "correct") icon.textContent = "✓";
-    else if (type === "incorrect") icon.textContent = "✕";
-    else icon.textContent = "ℹ";
-
-    const msg = document.createElement("div");
-    msg.className = "message";
-    msg.textContent = message;
-
-    toast.appendChild(icon);
-    toast.appendChild(msg);
-
-    // Insert into body so fixed positioning keeps it inside viewport
-    container.prepend(toast);
+    const toast = TemplateUtils.createElement(
+      ExerciseTemplates.answerToast(message, type)
+    );
+    document.body.prepend(toast);
 
     // Force reflow then show
     requestAnimationFrame(() => {
@@ -760,13 +748,7 @@ class VocabularyExercise {
 
       reviewList.innerHTML = "";
       this.incorrectWords.forEach((word) => {
-        const item = document.createElement("div");
-        item.className = "review-word-item";
-        item.innerHTML = `
-                    <span class="review-original">${word.original}</span>
-                    <span class="review-translation">${word.translation}</span>
-                `;
-        reviewList.appendChild(item);
+        reviewList.innerHTML += ExerciseTemplates.reviewWordItem(word);
       });
 
       reviewSection.style.display = "block";
@@ -891,8 +873,7 @@ class VocabularyExercise {
     if (this.isTranslatingBulk) return; // do not open while translating
     // Remove existing
     document.querySelector(".target-lang-menu")?.remove();
-    const menu = document.createElement("div");
-    menu.className = "target-lang-menu";
+
     const LANGS = [
       "en",
       "es",
@@ -915,12 +896,10 @@ class VocabularyExercise {
       "hu",
       "ro",
     ];
-    menu.innerHTML =
-      '<div class="tlm-header">Change target language</div>' +
-      LANGS.map(
-        (c) => `<button data-lang="${c}">${this.languageName(c)}</button>`
-      ).join("") +
-      '<button class="tlm-cancel" data-cancel="1">Cancel</button>';
+
+    const menu = TemplateUtils.createElement(
+      ExerciseTemplates.targetLanguageMenu(LANGS)
+    );
     document.body.appendChild(menu);
     // position near anchor
     const rect = anchorEl.getBoundingClientRect();

@@ -1,5 +1,8 @@
 /* Popup JavaScript - Vocabulary Browser */
 
+// Import templates and utilities
+import { PopupTemplates, TemplateUtils } from "./templates/template-utils.js";
+
 // Performance optimization classes
 class SearchIndex {
   constructor() {
@@ -167,7 +170,7 @@ async function initializeVocabularyBrowser() {
   try {
     // Show loading state
     document.getElementById("vocabulary-list").innerHTML =
-      '<div class="loading">Loading vocabulary...</div>';
+      PopupTemplates.loadingState("Loading vocabulary...");
 
     // Get all vocabulary from background service worker
     const response = await chrome.runtime.sendMessage({
@@ -215,10 +218,10 @@ function populateLanguageDropdown() {
   dropdown.innerHTML = '<option value="all">All Languages</option>';
 
   sourceLanguages.forEach((lang) => {
-    const option = document.createElement("option");
-    option.value = lang;
-    option.textContent = getLanguageDisplayName(lang);
-    dropdown.appendChild(option);
+    dropdown.innerHTML += PopupTemplates.languageOption(
+      lang,
+      getLanguageDisplayName(lang)
+    );
   });
 }
 
@@ -271,84 +274,19 @@ function renderVocabularyList() {
     return;
   }
 
-  // Render different markup depending on edit mode
-  // Helper to render the optional context panel (keeps markup consistent)
-  const renderContextPanel = (item, id) => {
-    const hasContext =
-      (item.context && item.context.trim()) ||
-      (item.contextTranslation && item.contextTranslation.trim());
-    if (!hasContext) return "";
-    return `
-            <div class="context-panel" data-id="${id}" style="display: none;">
-                ${
-                  item.context && item.context.trim()
-                    ? `
-                <div class="context-original">
-                    <span class="context-text">${escapeHtml(
-                      item.context
-                    )}</span>
-                </div>`
-                    : ""
-                }
-                ${
-                  item.contextTranslation && item.contextTranslation.trim()
-                    ? `
-                <div class="context-translation">
-                    <span class="context-text">${escapeHtml(
-                      item.contextTranslation
-                    )}</span>
-                </div>`
-                    : ""
-                }
-            </div>`;
-  };
-
-  // Helper to render the shared left/main column (keeps typography & spacing identical)
-  const renderMainColumn = (item) => `
-        <div style="flex:1;">
-            <div class="source-text">${escapeHtml(
-              item.originalWord || ""
-            )}</div>
-            <div class="translation">${escapeHtml(
-              item.translatedWord || ""
-            )}</div>
-        </div>`;
-
-  // Helper to render the edit-mode display (pen icon + optional context toggle)
-  const renderItem = (item, id, hasContext) => `
-        <div class="vocabulary-item" data-id="${id}">
-            <div class="vocabulary-content">
-                <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
-                    ${renderMainColumn(item)}
-                    <div style="display:flex;gap:6px;align-items:center;">
-                        ${
-                          editMode
-                            ? `<button class="icon-btn icon-edit" title="Edit" data-id="${id}" style="background:transparent;border:none;cursor:pointer;font-size:16px;color:#6b7280;padding:6px;">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                            <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z" fill="currentColor"></path>
-                            <path d="M20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" fill="currentColor"></path>
-                        </svg>
-                        </button>`
-                            : ""
-                        }
-                        ${
-                          hasContext
-                            ? `<button class="context-toggle" title="Show context" data-id="${id}">📖</button>`
-                            : ""
-                        }
-                    </div>
-                </div>
-            </div>
-            ${renderContextPanel(item, id)}
-        </div>`;
-
   vocabularyList.innerHTML = filteredVocabulary
     .map((item) => {
       const id = item.id || "";
       const hasContext =
         (item.context && item.context.trim()) ||
         (item.contextTranslation && item.contextTranslation.trim());
-      return renderItem(item, id, hasContext);
+
+      // Use template based on edit mode
+      if (editMode) {
+        return PopupTemplates.vocabularyItemEdit(item, id, hasContext);
+      } else {
+        return PopupTemplates.vocabularyItem(item, id, hasContext);
+      }
     })
     .join("");
 }
@@ -359,21 +297,9 @@ function beginInlineEdit(id) {
   if (!container) return;
   const item = allVocabulary.find((w) => String(w.id) === String(id));
   if (!item) return;
-  // Replace innerHTML with edit inputs (re-use same markup as editMode)
-  container.innerHTML = `
-        <div class="vocabulary-content">
-            <input class="edit-original" data-id="${id}" value="${escapeHtml(
-    item.originalWord || ""
-  )}" style="width:100%;padding:6px;margin-bottom:6px;box-sizing:border-box;" />
-            <input class="edit-translation" data-id="${id}" value="${escapeHtml(
-    item.translatedWord || ""
-  )}" style="width:100%;padding:6px;margin-bottom:6px;box-sizing:border-box;" />
-            <div style="display:flex;gap:8px;justify-content:flex-end;">
-                <button class="quick-action-btn save-word" data-id="${id}">Save</button>
-                <button class="quick-action-btn cancel-edit" data-id="${id}">Cancel</button>
-                <button class="quick-action-btn delete-word" data-id="${id}" style="background:#fee2e2;border-color:#fecaca;color:#991b1b;">Delete</button>
-            </div>
-        </div>`;
+
+  // Replace content with edit form template
+  container.innerHTML = PopupTemplates.inlineEditForm(item, id);
 }
 
 // Handle delete icon click with confirmation and deletion
@@ -577,17 +503,12 @@ function showConfirm(
       .forEach((n) => n.remove());
     const overlay = document.createElement("div");
     overlay.className = "mini-confirm-overlay";
-    overlay.innerHTML = `<div class="mini-confirm" role="dialog" aria-modal="true">
-            <p><strong>${escapeHtml(
-              title
-            )}</strong><br/><small style="color:#6b7280">${escapeHtml(
-      details || ""
-    )}</small></p>
-            <div class="actions">
-                <button class="btn cancel">${escapeHtml(cancelLabel)}</button>
-                <button class="btn confirm">${escapeHtml(confirmLabel)}</button>
-            </div>
-        </div>`;
+    overlay.innerHTML = PopupTemplates.confirmDialog(
+      title,
+      details,
+      confirmLabel,
+      cancelLabel
+    );
     document.body.appendChild(overlay);
     const btnCancel = overlay.querySelector(".btn.cancel");
     const btnConfirm = overlay.querySelector(".btn.confirm");
@@ -611,9 +532,11 @@ function showConfirm(
 // Minimal toast notice
 function showNotice(message, kind = "info", duration = 2000) {
   // Remove existing identical to prevent spam
-  const notice = document.createElement("div");
-  notice.className = `mini-toast ${kind}`;
-  notice.textContent = message;
+  TemplateUtils.removeElements("mini-toast");
+
+  const notice = TemplateUtils.createElement(
+    PopupTemplates.toastNotification(message, kind)
+  );
   document.body.appendChild(notice);
   requestAnimationFrame(() => notice.classList.add("show"));
   setTimeout(() => {
@@ -626,7 +549,7 @@ function showNotice(message, kind = "info", duration = 2000) {
 
 function showNoResults(message) {
   const listContainer = document.getElementById("vocabulary-list");
-  listContainer.innerHTML = `<div class="no-results">${message}</div>`;
+  listContainer.innerHTML = PopupTemplates.noResultsState(message);
 }
 
 function filterVocabulary() {
@@ -653,11 +576,8 @@ function filterVocabulary() {
   renderVocabularyList();
 }
 
-function escapeHtml(text) {
-  const div = document.createElement("div");
-  div.textContent = text;
-  return div.innerHTML;
-}
+// HTML escaping function moved to templates - use PopupTemplates.escapeHtml or TemplateUtils.escapeHtml
+const escapeHtml = TemplateUtils.escapeHtml;
 
 // Normalize id to the type likely used by IndexedDB (coerce numeric-looking strings to Number)
 function normalizeId(id) {
