@@ -3,59 +3,71 @@
  * Extracted from inline styles in JavaScript files for better maintainability
  */
 
-/* Toast Notification Styles (from popup.js) */
+/* Toast Notification Styles (improved exercise styles) */
 .answer-toast {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  padding: 12px 18px;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  z-index: 10001;
-  max-width: 300px;
-  opacity: 0;
-  transform: translateY(-20px);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  border: 1px solid transparent;
-  display: flex;
+  position: fixed; /* keep toast within viewport */
+  top: calc(env(safe-area-inset-top, 0px) + 18px);
+  left: 50%;
+  transform: translateX(-50%) translateY(-6px);
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  padding: 12px 18px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 15px;
+  color: #ffffff;
+  box-shadow: 0 8px 24px rgba(2,6,23,0.2);
+  z-index: 1200;
+  opacity: 0;
+  transition: transform 220ms cubic-bezier(.2,.9,.2,1), opacity 220ms ease;
+  pointer-events: none; /* non-interactive */
+  max-width: calc(100% - 80px);
+  text-align: center;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 .answer-toast.show {
   opacity: 1;
-  transform: translateY(0);
-}
-
-.answer-toast.correct {
-  background: #d1fae5;
-  color: #065f46;
-  border-color: #a7f3d0;
-}
-
-.answer-toast.incorrect {
-  background: #fee2e2;
-  color: #991b1b;
-  border-color: #fecaca;
-}
-
-.answer-toast.skipped {
-  background: #dbeafe;
-  color: #1e40af;
-  border-color: #bfdbfe;
+  transform: translateX(-50%) translateY(0);
 }
 
 .answer-toast .icon {
-  font-size: 16px;
-  font-weight: bold;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.answer-toast.correct {
+  background: linear-gradient(90deg, #10b981 0%, #34d399 100%);
+}
+.answer-toast.correct .icon { 
+  background: rgba(255,255,255,0.12); 
+}
+
+.answer-toast.incorrect {
+  background: linear-gradient(90deg, #ef4444 0%, #f87171 100%);
+}
+.answer-toast.incorrect .icon { 
+  background: rgba(255,255,255,0.12); 
+}
+
+.answer-toast.skipped {
+  background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%);
+}
+.answer-toast.skipped .icon { 
+  background: rgba(255,255,255,0.12); 
 }
 
 .answer-toast .message {
-  flex: 1;
-  line-height: 1.4;
+  line-height: 1.2;
+  color: #fff;
+  font-size: 14px;
 }
 
 /* Target Language Menu Styles (from exercise.js) */
@@ -383,7 +395,15 @@
 
 /* Responsive Utilities */
 @media (max-width: 480px) {
-  .answer-toast,
+  .answer-toast {
+    left: 12px;
+    transform: translateX(0) translateY(-6px);
+    max-width: calc(100% - 24px);
+  }
+  .answer-toast.show { 
+    transform: translateX(0) translateY(0); 
+  }
+  
   .import-notification {
     left: 10px;
     right: 10px;
