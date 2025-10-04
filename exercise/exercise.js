@@ -125,6 +125,19 @@ class VocabularyExercise {
         this.closeExercise();
       });
 
+    // No words screen actions
+    document
+      .querySelector(".close-no-words-btn")
+      ?.addEventListener("click", () => {
+        this.closeExercise();
+      });
+
+    document
+      .querySelector(".back-to-filter-btn")
+      ?.addEventListener("click", () => {
+        this.returnToWelcomeFromNoWords();
+      });
+
     // Target language switch (exercise screen span)
     document
       .querySelector(".target-language")
@@ -138,10 +151,8 @@ class VocabularyExercise {
       // Get available languages first
       await this.populateLanguageDropdown();
 
-      // Load words with current language selection
+      // Load words with current language selection - this will show appropriate screen
       await this.loadWordsForLanguage();
-
-      this.showWelcomeScreen();
     } catch (error) {
       console.error("Error loading Leitner session:", error);
       this.showError("Failed to load words");
@@ -160,9 +171,15 @@ class VocabularyExercise {
 
       if (!response.success) {
         if (response.error === "no_words_for_language") {
-          this.showError(`No words available for the selected language`);
+          this.showNoWords(
+            `No words are available for the selected language. Try selecting a different language or start saving words in this language.`,
+            true
+          );
         } else if (response.error === "no_words_available") {
-          this.showError("No words available / due");
+          this.showNoWords(
+            "You don't have any vocabulary words available for practice yet.",
+            false
+          );
         } else {
           console.error("Failed to prepare Leitner session:", response.error);
           this.showError("Failed to prepare session");
@@ -172,7 +189,10 @@ class VocabularyExercise {
 
       const sessionWords = response.words || [];
       if (sessionWords.length === 0) {
-        this.showError("No words available / due");
+        this.showNoWords(
+          "You don't have any vocabulary words available for practice yet.",
+          false
+        );
         return;
       }
 
@@ -202,9 +222,12 @@ class VocabularyExercise {
       if (totalEl) totalEl.textContent = this.words.length;
 
       this.updateLanguageInfo();
+
+      // Show welcome screen since we have words available
+      this.showWelcomeScreen();
     } catch (error) {
       console.error("Error loading words for language:", error);
-      this.showError("Failed to load words");
+      this.showError("Failed to load words. Please try again.");
     }
   }
 
@@ -267,6 +290,16 @@ class VocabularyExercise {
       if (!select.hasAttribute("data-listener-added")) {
         select.addEventListener("change", async () => {
           this.selectedLanguage = select.value;
+
+          // Show loading state while switching languages
+          const languageName = this.selectedLanguage
+            ? this.getLanguageDisplayName(this.selectedLanguage)
+            : "all languages";
+          this.showLoadingScreen(
+            `Loading words for ${languageName}...`,
+            "Checking available vocabulary words"
+          );
+
           await this.loadWordsForLanguage();
         });
         select.setAttribute("data-listener-added", "true");
@@ -318,8 +351,42 @@ class VocabularyExercise {
   }
 
   showWelcomeScreen() {
+    console.log(
+      "Showing welcome screen with",
+      this.words?.length || 0,
+      "words available"
+    );
+
+    // Hide all other screens first
     document.querySelector(".loading-screen").style.display = "none";
+    document.querySelector(".no-words-screen").style.display = "none";
+    document.querySelector(".error-screen").style.display = "none";
+    document.querySelector(".exercise-screen").style.display = "none";
+    document.querySelector(".results-screen").style.display = "none";
+
+    // Show welcome screen
     document.querySelector(".welcome-screen").style.display = "block";
+  }
+
+  showLoadingScreen(
+    message = "Preparing your vocabulary exercise...",
+    description = "Fetching your saved words and creating flashcards"
+  ) {
+    // Hide all other screens
+    document.querySelector(".welcome-screen").style.display = "none";
+    document.querySelector(".no-words-screen").style.display = "none";
+    document.querySelector(".error-screen").style.display = "none";
+    document.querySelector(".exercise-screen").style.display = "none";
+    document.querySelector(".results-screen").style.display = "none";
+
+    // Update loading screen text
+    const title = document.querySelector(".loading-title");
+    const desc = document.querySelector(".loading-description");
+    if (title) title.textContent = message;
+    if (desc) desc.textContent = description;
+
+    // Show loading screen
+    document.querySelector(".loading-screen").style.display = "block";
   }
 
   showError(message) {
@@ -334,6 +401,45 @@ class VocabularyExercise {
       if (closeBtn) {
         closeBtn.addEventListener("click", () => this.closeExercise());
       }
+    }
+  }
+
+  showNoWords(message, showLanguageFilter = false) {
+    console.log(
+      "Showing no words screen:",
+      message,
+      "showLanguageFilter:",
+      showLanguageFilter
+    );
+
+    // Hide loading screen and other screens
+    document.querySelector(".loading-screen").style.display = "none";
+    document.querySelector(".welcome-screen").style.display = "none";
+    document.querySelector(".exercise-screen").style.display = "none";
+    document.querySelector(".results-screen").style.display = "none";
+    document.querySelector(".error-screen").style.display = "none";
+
+    // Show no words screen
+    const noWordsScreen = document.querySelector(".no-words-screen");
+    noWordsScreen.style.display = "block";
+
+    // Update content using template
+    noWordsScreen.innerHTML = ExerciseTemplates.noWordsContent(
+      message,
+      showLanguageFilter
+    );
+
+    // Re-attach event listeners
+    const closeBtn = noWordsScreen.querySelector(".close-no-words-btn");
+    if (closeBtn) {
+      closeBtn.addEventListener("click", () => this.closeExercise());
+    }
+
+    const backToFilterBtn = noWordsScreen.querySelector(".back-to-filter-btn");
+    if (backToFilterBtn) {
+      backToFilterBtn.addEventListener("click", () =>
+        this.returnToWelcomeFromNoWords()
+      );
     }
   }
 
@@ -869,6 +975,24 @@ class VocabularyExercise {
     if (midActions) midActions.style.display = "none";
   }
 
+  returnToWelcomeFromNoWords() {
+    // Reset language selection to "All Languages" to give user a fresh start
+    const languageSelect = document.querySelector(".language-filter");
+    if (languageSelect) {
+      languageSelect.value = "";
+      this.selectedLanguage = "";
+    }
+
+    // Show loading while switching to all languages
+    this.showLoadingScreen(
+      "Loading words for all languages...",
+      "Checking available vocabulary words"
+    );
+
+    // Reload words for all languages - this will show appropriate screen
+    this.loadWordsForLanguage();
+  }
+
   showTargetLanguageMenu(anchorEl) {
     if (this.isTranslatingBulk) return; // do not open while translating
     // Remove existing
@@ -958,6 +1082,10 @@ class VocabularyExercise {
       ro: "Romanian",
     };
     return MAP[code] || code.toUpperCase();
+  }
+
+  getLanguageDisplayName(code) {
+    return this.languageName(code);
   }
 
   async applyNewTargetLanguage(lang) {

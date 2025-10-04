@@ -85,12 +85,49 @@ export const ExerciseTemplates = {
     </div>
   `,
 
+  // No words screen content
+  noWordsContent: (message, showLanguageFilter = true) => `
+    <div class="no-words-content">
+      <div class="no-words-icon">📚</div>
+      <h2>No Words Available for Practice</h2>
+      <p class="no-words-message">${escapeHtml(message)}</p>
+      <div class="no-words-suggestions">
+        <div class="suggestion-item">
+          <span class="suggestion-icon">💡</span>
+          <span class="suggestion-text">Start browsing websites and save new words you encounter</span>
+        </div>
+        <div class="suggestion-item">
+          <span class="suggestion-icon">🔄</span>
+          <span class="suggestion-text">Words you've learned will become available for review over time</span>
+        </div>
+        ${
+          showLanguageFilter
+            ? `
+        <div class="suggestion-item">
+          <span class="suggestion-icon">🌍</span>
+          <span class="suggestion-text">Try changing the language filter to see if you have words in other languages</span>
+        </div>
+        `
+            : ""
+        }
+      </div>
+      <div class="no-words-actions">
+        <button class="close-no-words-btn primary-btn">Close Exercise</button>
+        ${
+          showLanguageFilter
+            ? '<button class="back-to-filter-btn secondary-btn">Change Language Filter</button>'
+            : ""
+        }
+      </div>
+    </div>
+  `,
+
   // Error screen content
   errorContent: (message) => `
     <div class="error-content">
-      <div class="error-icon">😔</div>
+      <div class="error-icon">❌</div>
       <h2>Exercise Error</h2>
-      <p>${escapeHtml(message)}</p>
+      <p class="error-message">${escapeHtml(message)}</p>
       <button class="close-error-btn">Close</button>
     </div>
   `,
