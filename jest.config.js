@@ -1,66 +1,61 @@
 module.exports = {
   // Test environment configuration
-  testEnvironment: 'node',
-  
+  testEnvironment: "node",
+
   // Setup files to run before tests
-  setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
-  
+  setupFilesAfterEnv: ["<rootDir>/tests/setup.js"],
+
   // Test patterns
-  testMatch: [
-    '<rootDir>/tests/**/*.test.js',
-    '<rootDir>/tests/**/*.spec.js'
-  ],
-  
+  testMatch: ["<rootDir>/tests/**/*.test.js", "<rootDir>/tests/**/*.spec.js"],
+
   // Module paths for extension files
   moduleNameMapper: {
-    '^@/(.*)$': '<rootDir>/$1',
-    '^@tests/(.*)$': '<rootDir>/tests/$1'
+    "^@/(.*)$": "<rootDir>/$1",
+    "^@tests/(.*)$": "<rootDir>/tests/$1",
   },
-  
+
   // Collect coverage from these files
   collectCoverageFrom: [
-    'service/**/*.js',
-    'src/**/*.js',
-    'popup.js',
-    'background.js',
-    'content_script.js',
-    'options.js',
-    'exercise/**/*.js',
-    'stats/**/*.js',
-    '!**/node_modules/**',
-    '!**/tests/**'
+    "service/**/*.js",
+    "src/**/*.js",
+    "popup.js",
+    "background.js",
+    "content_script.js",
+    "options.js",
+    "exercise/**/*.js",
+    "stats/**/*.js",
+    "!**/node_modules/**",
+    "!**/tests/**",
   ],
-  
+
   // Coverage thresholds
   coverageThreshold: {
     global: {
       branches: 50,
       functions: 50,
       lines: 50,
-      statements: 50
-    }
+      statements: 50,
+    },
   },
-  
+
   // Transform files for testing
   transform: {
-    '^.+\\.js$': 'babel-jest'
+    "^.+\\.js$": "babel-jest",
   },
-  
+
   // Mock Chrome extension APIs
-  setupFiles: ['<rootDir>/tests/chrome-mock.js'],
-  
+  setupFiles: ["<rootDir>/tests/chrome-mock.js"],
+
   // Test timeout
   testTimeout: 30000,
 
   // Verbose output
-  verbose: false,  // Clear mocks between tests
+  verbose: false, // Clear mocks between tests
   clearMocks: true,
-  
+
   // Restore mocks after each test
   restoreMocks: true,
-  
+
   // Transform node_modules for ES modules
-  transformIgnorePatterns: [
-    'node_modules/(?!(fake-indexeddb)/)'
-  ]
+  transformIgnorePatterns: ["node_modules/(?!(fake-indexeddb)/)"],
 };
