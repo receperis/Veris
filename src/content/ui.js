@@ -1,181 +1,183 @@
-import { state } from './state.js';
-import { escapeHtml, getLanguageName, getFullLanguageName, buildLanguageList } from './utils.js';
+import { state } from "./state.js";
+import {
+  escapeHtml,
+  getLanguageName,
+  getFullLanguageName,
+  buildLanguageList,
+} from "./utils.js";
+import { ContentTemplates } from "../../templates/template-utils.js";
 
 // Note: some functions reference other modules; import cycles are avoided by keeping DOM-only helpers here.
 
 export function ensureTriggerStyles() {
-    if (document.getElementById('__veris_trigger_icon_style')) return;
-    const style = document.createElement('style');
-    style.id = '__veris_trigger_icon_style';
-    style.textContent = `.__veris_trigger_icon{background:linear-gradient(135deg,#16a34a,#059669);color:#fff;font-size:16px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;line-height:1;display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;cursor:pointer;box-shadow:0 6px 16px rgba(22,163,74,.3),inset 0 1px 0 rgba(255,255,255,.2);transition:all .2s cubic-bezier(.4,0,.2,1);border:2px solid rgba(255,255,255,.1);text-shadow:0 1px 2px rgba(0,0,0,.3);}.__veris_trigger_icon:hover{background:linear-gradient(135deg,#15803d,#047857);transform:scale(1.08) translateY(-1px);box-shadow:0 8px 20px rgba(22,163,74,.4),inset 0 1px 0 rgba(255,255,255,.25);}.__veris_trigger_icon:active{background:linear-gradient(135deg,#166534,#065f46);transform:scale(.95);box-shadow:0 4px 8px rgba(22,163,74,.2);} `;
-    document.head.appendChild(style);
+  if (document.getElementById("__veris_trigger_icon_style")) return;
+  const style = document.createElement("style");
+  style.id = "__veris_trigger_icon_style";
+  style.textContent = `.__veris_trigger_icon{background:linear-gradient(135deg,#16a34a,#059669);color:#fff;font-size:16px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;line-height:1;display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;cursor:pointer;box-shadow:0 6px 16px rgba(22,163,74,.3),inset 0 1px 0 rgba(255,255,255,.2);transition:all .2s cubic-bezier(.4,0,.2,1);border:2px solid rgba(255,255,255,.1);text-shadow:0 1px 2px rgba(0,0,0,.3);}.__veris_trigger_icon:hover{background:linear-gradient(135deg,#15803d,#047857);transform:scale(1.08) translateY(-1px);box-shadow:0 8px 20px rgba(22,163,74,.4),inset 0 1px 0 rgba(255,255,255,.25);}.__veris_trigger_icon:active{background:linear-gradient(135deg,#166534,#065f46);transform:scale(.95);box-shadow:0 4px 8px rgba(22,163,74,.2);} `;
+  document.head.appendChild(style);
 }
 
 export function showTriggerIcon(rect, triggerClickHandler) {
-    if (!state.extensionEnabled) return;
+  if (!state.extensionEnabled) return;
+  clearTriggerIcon();
+  const icon = document.createElement("div");
+  icon.className = "__veris_trigger_icon";
+  icon.title = "Translate selection";
+  icon.textContent = ContentTemplates.triggerIcon();
+  const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
+  const scrollY = window.pageYOffset || document.documentElement.scrollTop;
+  icon.style.position = "absolute";
+  const offsetX = 4;
+  const offsetY = 6;
+  icon.style.left = rect.right + scrollX - 14 + offsetX + "px";
+  icon.style.top = rect.bottom + scrollY + offsetY + "px";
+  icon.style.zIndex = 999999;
+  icon.addEventListener("click", (e) => {
+    e.stopPropagation();
+    state.skipNextSelection = true;
     clearTriggerIcon();
-    const icon = document.createElement('div');
-    icon.className = '__veris_trigger_icon';
-    icon.title = 'Translate selection';
-    icon.textContent = 'V';
-    const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
-    const scrollY = window.pageYOffset || document.documentElement.scrollTop;
-    icon.style.position = 'absolute';
-    const offsetX = 4;
-    const offsetY = 6;
-    icon.style.left = (rect.right + scrollX - 14 + offsetX) + 'px';
-    icon.style.top = (rect.bottom + scrollY + offsetY) + 'px';
-    icon.style.zIndex = 999999;
-    icon.addEventListener('click', (e) => {
-        e.stopPropagation();
-        state.skipNextSelection = true;
-        clearTriggerIcon();
-        if (typeof triggerClickHandler === 'function') triggerClickHandler();
-    });
-    document.body.appendChild(icon);
-    state.triggerIconEl = icon;
+    if (typeof triggerClickHandler === "function") triggerClickHandler();
+  });
+  document.body.appendChild(icon);
+  state.triggerIconEl = icon;
 }
 
 export function clearTriggerIcon() {
-    if (state.triggerIconTimer) { clearTimeout(state.triggerIconTimer); state.triggerIconTimer = null; }
-    if (state.triggerIconEl) { state.triggerIconEl.remove(); state.triggerIconEl = null; }
+  if (state.triggerIconTimer) {
+    clearTimeout(state.triggerIconTimer);
+    state.triggerIconTimer = null;
+  }
+  if (state.triggerIconEl) {
+    state.triggerIconEl.remove();
+    state.triggerIconEl = null;
+  }
 }
 
-export function createBubbleAtRect(rect, sourceText, translatedText, isLoading = false, languageInfo = null) {
+export function createBubbleAtRect(
+  rect,
+  sourceText,
+  translatedText,
+  isLoading = false,
+  languageInfo = null
+) {
+  removeBubble();
+  const bubble = document.createElement("div");
+  bubble.className =
+    "__translator_bubble" + (isLoading ? " __translator_loading" : "");
+  bubble.id = "translate_bubble";
+
+  // Use template for bubble content
+  bubble.innerHTML = ContentTemplates.translationBubble(
+    sourceText,
+    translatedText,
+    isLoading,
+    languageInfo
+  );
+
+  const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
+  const scrollY = window.pageYOffset || document.documentElement.scrollTop;
+  const left = rect.left + scrollX;
+  const top = rect.bottom + scrollY + 5;
+  bubble.style.left = left + "px";
+  bubble.style.top = top + "px";
+  document.body.appendChild(bubble);
+  state.bubbleEl = bubble;
+
+  const closeBtn = bubble.querySelector(".close-btn");
+  closeBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
     removeBubble();
-    const bubble = document.createElement('div');
-    bubble.className = '__translator_bubble' + (isLoading ? ' __translator_loading' : '');
-    bubble.id = 'translate_bubble';
-    const languageIndicator = languageInfo && !isLoading ? `
-    <div class="language-indicator">
-      <div class="language-badge source-lang">
-        <span class="lang-label">${escapeHtml(languageInfo.sourceLang)}</span>
-      </div>
-      <div class="language-arrow">→</div>
-      <div class="language-badge target-lang">
-        <span class="lang-label">${escapeHtml(languageInfo.targetLang)}</span>
-      </div>
-    </div>
-  ` : '';
+  });
 
-    bubble.innerHTML = `
-    <div class="close-btn" title="Close">×</div>
-    ${languageIndicator}
-    <div class="source-text">${escapeHtml(sourceText)}</div>
-    <div class="translated-text">${escapeHtml(translatedText)}</div>
-    <div class="word-breakdown">
+  const saveBtn = bubble.querySelector(".save-button-translate");
+  saveBtn.addEventListener("click", (e) => {
+    e.stopPropagation(); /* handler attached in words module */
+  });
 
-      <div class="combination-controls">
-        <div class="combination-status show">
-           <div class="combination-info">
-              <span>Click words for individual translations</span>
-          </div>
-        </div>
-        <button class="combination-btn" title="Enter combination mode for multiple words">🔗</button>
-      </div>
-      <div class="word-pills"></div>
-      <div class="word-translation"></div>
-    </div>
-    <div class="save-section">
-      <button class="save-button-translate">
-        <span>💾</span>
-        <span>Save</span>
-        <span class="save-count">0</span>
-      </button>
-      <div class="save-status"></div>
-    </div>
-    <div class="meta">Built-in Translation</div>
-  `;
+  const combinationBtn = bubble.querySelector(".combination-btn");
+  combinationBtn.addEventListener("click", (e) => {
+    e.stopPropagation(); /* handler in words module */
+  });
 
-    const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
-    const scrollY = window.pageYOffset || document.documentElement.scrollTop;
-    const left = rect.left + scrollX;
-    const top = rect.bottom + scrollY + 5;
-    bubble.style.left = left + 'px';
-    bubble.style.top = top + 'px';
-    document.body.appendChild(bubble);
-    state.bubbleEl = bubble;
+  // word pills and event handlers are attached from the words module after bubble creation
 
-    const closeBtn = bubble.querySelector('.close-btn');
-    closeBtn.addEventListener('click', (e) => { e.stopPropagation(); removeBubble(); });
-
-    const saveBtn = bubble.querySelector('.save-button-translate');
-    saveBtn.addEventListener('click', (e) => { e.stopPropagation(); /* handler attached in words module */ });
-
-    const combinationBtn = bubble.querySelector('.combination-btn');
-    combinationBtn.addEventListener('click', (e) => { e.stopPropagation(); /* handler in words module */ });
-
-    // word pills and event handlers are attached from the words module after bubble creation
-
-    return bubble;
+  return bubble;
 }
 
 export function removeBubble() {
-    if (state.bubbleEl) {
-        state.bubbleEl.remove();
-        state.bubbleEl = null;
-        state.selectedWords.clear();
-        state.combinationMode = false;
-        state.selectedWordsForCombination.clear();
-    }
+  if (state.bubbleEl) {
+    state.bubbleEl.remove();
+    state.bubbleEl = null;
+    state.selectedWords.clear();
+    state.combinationMode = false;
+    state.selectedWordsForCombination.clear();
+    state.tempTargetLang = null;
+    state.tempSourceLang = null;
+  }
 }
 
 export function openLanguageMenu(targetBadge, retranslateCallback) {
+  closeLanguageMenu();
+  const menu = document.createElement("div");
+  menu.className = "__translator_lang_menu";
+  menu.id = "lang_menu";
+  const codes = buildLanguageList();
+  const current = state.tempTargetLang || state.settings?.target_lang || "en";
+
+  // Use template for language menu
+  menu.innerHTML = ContentTemplates.languageMenu(codes, current);
+  document.body.appendChild(menu);
+  state.bubbleLangMenuEl = menu;
+  const rect = targetBadge.getBoundingClientRect();
+  menu.style.position = "absolute";
+  menu.style.top = window.scrollY + rect.bottom + 6 + "px";
+  menu.style.left = window.scrollX + rect.left + "px";
+  menu.style.zIndex = 9999;
+  menu.addEventListener("click", async (e) => {
+    const item = e.target.closest(".__lang_menu_item");
+    if (!item) return;
+    const code = item.dataset.code;
+    if (typeof retranslateCallback === "function")
+      await retranslateCallback(code);
     closeLanguageMenu();
-    const menu = document.createElement('div');
-    menu.className = '__translator_lang_menu';
-    menu.id = 'lang_menu';
-    const codes = buildLanguageList();
-    const current = state.tempTargetLang || state.settings?.target_lang || 'en';
-    menu.innerHTML = `
-    <div class="__lang_menu_header">
-      <input type="text" placeholder="Search language..." class="__lang_menu_search" />
-    </div>
-    <div class="__lang_menu_list">
-      ${codes.map(c => `<div class="__lang_menu_item ${c === current ? 'active' : ''}" data-code="${c}">
-         <span class="code">${getLanguageName(c)}</span>
-         <span class="name">${getFullLanguageName(c)}</span>
-      </div>`).join('')}
-    </div>`;
-    document.body.appendChild(menu);
-    state.bubbleLangMenuEl = menu;
-    const rect = targetBadge.getBoundingClientRect();
-    menu.style.position = 'absolute';
-    menu.style.top = (window.scrollY + rect.bottom + 6) + 'px';
-    menu.style.left = (window.scrollX + rect.left) + 'px';
-    menu.style.zIndex = 9999;
-    menu.addEventListener('click', async (e) => {
-        const item = e.target.closest('.__lang_menu_item');
-        if (!item) return;
-        const code = item.dataset.code;
-        if (typeof retranslateCallback === 'function') await retranslateCallback(code);
-        closeLanguageMenu();
+  });
+  const search = menu.querySelector(".__lang_menu_search");
+  search.addEventListener("input", () => {
+    const q = search.value.trim().toLowerCase();
+    menu.querySelectorAll(".__lang_menu_item").forEach((it) => {
+      const code = it.dataset.code;
+      const name = getFullLanguageName(code).toLowerCase();
+      const short = getLanguageName(code).toLowerCase();
+      it.style.display =
+        !q || name.includes(q) || short.includes(q) ? "" : "none";
     });
-    const search = menu.querySelector('.__lang_menu_search');
-    search.addEventListener('input', () => {
-        const q = search.value.trim().toLowerCase();
-        menu.querySelectorAll('.__lang_menu_item').forEach(it => {
-            const code = it.dataset.code;
-            const name = getFullLanguageName(code).toLowerCase();
-            const short = getLanguageName(code).toLowerCase();
-            it.style.display = (!q || name.includes(q) || short.includes(q)) ? '' : 'none';
-        });
+  });
+  setTimeout(() => {
+    document.addEventListener("mousedown", handleOutsideMenuClick, {
+      capture: true,
+      once: true,
     });
-    setTimeout(() => { document.addEventListener('mousedown', handleOutsideMenuClick, { capture: true, once: true }); }, 0);
+  }, 0);
 }
 
 function handleOutsideMenuClick(e) {
-    if (state.bubbleLangMenuEl && !state.bubbleLangMenuEl.contains(e.target)) closeLanguageMenu();
+  if (state.bubbleLangMenuEl && !state.bubbleLangMenuEl.contains(e.target))
+    closeLanguageMenu();
 }
 
-export function closeLanguageMenu() { if (state.bubbleLangMenuEl) { state.bubbleLangMenuEl.remove(); state.bubbleLangMenuEl = null; } }
+export function closeLanguageMenu() {
+  if (state.bubbleLangMenuEl) {
+    state.bubbleLangMenuEl.remove();
+    state.bubbleLangMenuEl = null;
+  }
+}
 
 // Inject minimal menu styles
-const existingStyle = document.getElementById('__translator_lang_menu_style');
+const existingStyle = document.getElementById("__translator_lang_menu_style");
 if (!existingStyle) {
-    const style = document.createElement('style');
-    style.id = '__translator_lang_menu_style';
-    style.textContent = `
+  const style = document.createElement("style");
+  style.id = "__translator_lang_menu_style";
+  style.textContent = `
   .__translator_lang_menu{background:#fff;border:1px solid #d1d5db;border-radius:8px;padding:8px 0;width:220px;box-shadow:0 8px 24px rgba(0,0,0,.15);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;font-size:12px;}
   .__translator_lang_menu .__lang_menu_header{padding:0 10px 6px;}
   .__translator_lang_menu .__lang_menu_search{width:100%;padding:6px 8px;border:1px solid #e5e7eb;border-radius:6px;font-size:12px;}
@@ -186,5 +188,5 @@ if (!existingStyle) {
   .__translator_lang_menu .__lang_menu_item:hover{background:#f3f4f6;}
   .__translator_lang_menu .__lang_menu_item.active{background:#eef2ff;}
   `;
-    document.head.appendChild(style);
+  document.head.appendChild(style);
 }

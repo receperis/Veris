@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Learning Statistics - Veris</title>
     <link rel="stylesheet" href="stats.css">
+    <link rel="stylesheet" href="../styles/dynamic-ui.css">
 </head>
 
 <body>
@@ -145,12 +146,86 @@
                     <button class="action-btn secondary" id="export-data-btn">
                         💾 Export Data
                     </button>
+                    <button class="action-btn secondary" id="import-data-btn">
+                        📥 Import Data
+                    </button>
                 </div>
+                
+                <!-- Hidden file input for import -->
+                <input type="file" id="import-file-input" accept=".json" style="display: none;">
             </section>
         </main>
+
+        <!-- Import Mode Selection Modal -->
+        <div id="import-modal" class="modal-overlay" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Import Vocabulary Data</h3>
+                    <button class="modal-close" id="modal-close-btn">×</button>
+                </div>
+                <div class="modal-body">
+                    <p class="import-info">
+                        <span id="import-file-name"></span><br>
+                        <strong><span id="import-word-count"></span> vocabulary entries</strong> found in the file.
+                    </p>
+                    
+                    <div class="import-modes">
+                        <h4>How would you like to import this data?</h4>
+                        
+                        <div class="mode-option">
+                            <input type="radio" id="mode-merge" name="importMode" value="merge" checked>
+                            <label for="mode-merge">
+                                <span class="mode-icon">🔄</span>
+                                <div class="mode-details">
+                                    <strong>Merge (Default)</strong>
+                                    <p>Add all imported words to your existing vocabulary. Duplicates will be kept as separate entries.</p>
+                                </div>
+                            </label>
+                        </div>
+
+                        <div class="mode-option">
+                            <input type="radio" id="mode-skip" name="importMode" value="skip">
+                            <label for="mode-skip">
+                                <span class="mode-icon">⏭️</span>
+                                <div class="mode-details">
+                                    <strong>Skip Duplicates</strong>
+                                    <p>Add only new words. Skip words that already exist in your vocabulary.</p>
+                                </div>
+                            </label>
+                        </div>
+
+                        <div class="mode-option">
+                            <input type="radio" id="mode-replace" name="importMode" value="replace">
+                            <label for="mode-replace">
+                                <span class="mode-icon">🔄</span>
+                                <div class="mode-details">
+                                    <strong>Replace Duplicates</strong>
+                                    <p>Update existing words with imported data. Add new words that don't exist.</p>
+                                </div>
+                            </label>
+                        </div>
+
+                        <div class="mode-option warning">
+                            <input type="radio" id="mode-replace-all" name="importMode" value="replace-all">
+                            <label for="mode-replace-all">
+                                <span class="mode-icon">🗑️</span>
+                                <div class="mode-details">
+                                    <strong>Replace All Data</strong>
+                                    <p class="warning-text">⚠️ Delete all existing vocabulary and replace with imported data. This cannot be undone!</p>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-secondary" id="modal-cancel-btn">Cancel</button>
+                    <button class="btn-primary" id="modal-confirm-btn">Import Data</button>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <script src="stats.js"></script>
+    <script type="module" src="stats.js"></script>
 </body>
 
 </html>

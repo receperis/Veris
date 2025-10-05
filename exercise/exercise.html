@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vocabulary Exercise</title>
     <link rel="stylesheet" href="exercise.css">
+    <link rel="stylesheet" href="../styles/dynamic-ui.css">
 </head>
 
 <body>
@@ -39,8 +40,8 @@
         <div class="loading-screen">
             <div class="loading-content">
                 <div class="loading-spinner"></div>
-                <h2>Preparing your vocabulary exercise...</h2>
-                <p>Fetching your saved words and creating flashcards</p>
+                <h2 class="loading-title">Preparing your vocabulary exercise...</h2>
+                <p class="loading-description">Fetching your saved words and creating flashcards</p>
             </div>
         </div>
 
@@ -182,19 +183,45 @@
             </div>
         </div>
 
+        <!-- No Words Screen -->
+        <div class="no-words-screen" style="display: none;">
+            <div class="no-words-content">
+                <div class="no-words-icon">�</div>
+                <h2>No Words Available for Practice</h2>
+                <p class="no-words-message">There are currently no vocabulary words available for your exercise.</p>
+                <div class="no-words-suggestions">
+                    <div class="suggestion-item">
+                        <span class="suggestion-icon">💡</span>
+                        <span class="suggestion-text">Start browsing websites and save new words you encounter</span>
+                    </div>
+                    <div class="suggestion-item">
+                        <span class="suggestion-icon">🔄</span>
+                        <span class="suggestion-text">Words you've learned will become available for review over time</span>
+                    </div>
+                    <div class="suggestion-item">
+                        <span class="suggestion-icon">🌍</span>
+                        <span class="suggestion-text">Try changing the language filter to see if you have words in other languages</span>
+                    </div>
+                </div>
+                <div class="no-words-actions">
+                    <button class="close-no-words-btn primary-btn">Close Exercise</button>
+                    <button class="back-to-filter-btn secondary-btn">Change Language Filter</button>
+                </div>
+            </div>
+        </div>
+
         <!-- Error Screen -->
         <div class="error-screen" style="display: none;">
             <div class="error-content">
-                <div class="error-icon">😔</div>
-                <h2>No Words Found</h2>
-                <p>You haven't saved any vocabulary words yet. Start translating and saving words to use this exercise
-                    feature!</p>
+                <div class="error-icon">❌</div>
+                <h2>Exercise Error</h2>
+                <p class="error-message">An unexpected error occurred while loading the exercise.</p>
                 <button class="close-error-btn">Close</button>
             </div>
         </div>
     </div>
 
-    <script src="exercise.js"></script>
+    <script type="module" src="exercise.js"></script>
 </body>
 
 </html>

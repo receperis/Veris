@@ -646,6 +646,107 @@ body {
     transform: translateY(-1px);
 }
 
+/* No Words Screen */
+.no-words-screen {
+    padding: 40px 30px;
+    text-align: center;
+}
+
+.no-words-content {
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.no-words-icon {
+    font-size: 80px;
+    margin-bottom: 20px;
+    opacity: 0.8;
+}
+
+.no-words-content h2 {
+    color: #374151;
+    margin-bottom: 15px;
+    font-size: 24px;
+    font-weight: 600;
+}
+
+.no-words-message {
+    color: #6b7280;
+    line-height: 1.6;
+    margin-bottom: 30px;
+    font-size: 16px;
+}
+
+.no-words-suggestions {
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 25px;
+    margin-bottom: 30px;
+    text-align: left;
+}
+
+.suggestion-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.suggestion-item:last-child {
+    margin-bottom: 0;
+}
+
+.suggestion-icon {
+    font-size: 18px;
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+.suggestion-text {
+    color: #374151;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.no-words-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.primary-btn {
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.primary-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(79, 70, 229, 0.3);
+}
+
+.secondary-btn {
+    background: white;
+    color: #4f46e5;
+    border: 2px solid #4f46e5;
+    padding: 10px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.secondary-btn:hover {
+    background: #f0f9ff;
+    transform: translateY(-1px);
+}
+
 /* Error Screen */
 .error-screen {
     padding: 60px 30px;
@@ -709,6 +810,40 @@ body {
     .results-breakdown {
         flex-direction: column;
         gap: 15px;
+    }
+
+    /* No words screen responsive */
+    .no-words-screen {
+        padding: 20px 15px;
+    }
+
+    .no-words-content {
+        max-width: 100%;
+    }
+
+    .no-words-suggestions {
+        padding: 20px;
+    }
+
+    .suggestion-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .suggestion-icon {
+        align-self: flex-start;
+    }
+
+    .no-words-actions {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .primary-btn,
+    .secondary-btn {
+        width: 100%;
+        padding: 14px 20px;
     }
 }
 
