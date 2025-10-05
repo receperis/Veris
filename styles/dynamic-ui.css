@@ -142,8 +142,8 @@
 .inline-edit-container .edit-original:focus,
 .inline-edit-container .edit-translation:focus {
   outline: none;
-  border-color: #4f46e5;
-  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
+  border-color: #14b8a6;
+  box-shadow: 0 0 0 2px rgba(20, 184, 166, 0.1);
 }
 
 .inline-edit-container .edit-actions {
@@ -164,14 +164,14 @@
 }
 
 .inline-edit-container .save-word {
-  background: #10b981;
+  background: #14b8a6;
   color: white;
-  border-color: #059669;
+  border-color: #0d9488;
 }
 
 .inline-edit-container .save-word:hover {
-  background: #059669;
-  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+  background: #0d9488;
+  box-shadow: 0 2px 8px rgba(20, 184, 166, 0.4);
 }
 
 .inline-edit-container .cancel-edit {
@@ -292,7 +292,7 @@
   width: 40px;
   height: 40px;
   border: 4px solid #e5e7eb;
-  border-top: 4px solid #4f46e5;
+  border-top: 4px solid #14b8a6;
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 16px;
