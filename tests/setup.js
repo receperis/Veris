@@ -103,7 +103,7 @@ global.testUtils = {
     });
   },
 
-  flushPromises: () => new Promise((resolve) => setImmediate(resolve)),
+  flushPromises: () => new Promise((resolve) => setTimeout(resolve, 0)),
 };
 
 // Clean up after each test

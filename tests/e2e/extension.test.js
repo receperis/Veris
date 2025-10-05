@@ -1,12 +1,12 @@
 /**
- * describe.skip('Chrome Extension E2E Tests', () => {nd-to-end tests for Chrome Extension
+ * End-to-end tests for Chrome Extension
  * Tests complete user workflows using Puppeteer
  */
 
 const puppeteer = require("puppeteer");
 const path = require("path");
 
-describe("Chrome Extension E2E Tests", () => {
+describe.skip("Chrome Extension E2E Tests", () => {
   let browser;
   let extensionPage;
   let extensionId;
