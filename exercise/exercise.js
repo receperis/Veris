@@ -33,8 +33,23 @@ class VocabularyExercise {
     // Setup event listeners
     this.setupEventListeners();
 
+    // Load vocabulary language preference
+    await this.loadLanguagePreference();
+
     // Load words from database via background service worker
     await this.loadWords();
+  }
+
+  async loadLanguagePreference() {
+    try {
+      const stored = await chrome.storage.sync.get(['selectedVocabularyLanguage']);
+      if (stored.selectedVocabularyLanguage && stored.selectedVocabularyLanguage !== 'all') {
+        this.selectedLanguage = stored.selectedVocabularyLanguage;
+        console.log('Loaded language preference:', this.selectedLanguage);
+      }
+    } catch (error) {
+      console.error('Failed to load language preference:', error);
+    }
   }
 
   setupEventListeners() {
@@ -286,10 +301,28 @@ class VocabularyExercise {
         );
       });
 
+      // Set the dropdown to the loaded language preference
+      if (this.selectedLanguage && this.selectedLanguage !== 'all') {
+        // Check if the loaded language exists in the dropdown
+        const optionExists = Array.from(select.options).some(option =>
+          option.value === this.selectedLanguage
+        );
+        if (optionExists) {
+          select.value = this.selectedLanguage;
+        }
+      }
+
       // Add change listener if not already added
       if (!select.hasAttribute("data-listener-added")) {
         select.addEventListener("change", async () => {
           this.selectedLanguage = select.value;
+
+          // Save the selected language preference for next time
+          try {
+            chrome.storage.sync.set({ selectedVocabularyLanguage: select.value });
+          } catch (error) {
+            console.error('Failed to save language preference:', error);
+          }
 
           // Show loading state while switching languages
           const languageName = this.selectedLanguage
@@ -981,6 +1014,13 @@ class VocabularyExercise {
     if (languageSelect) {
       languageSelect.value = "";
       this.selectedLanguage = "";
+
+      // Also update the stored preference to "all"
+      try {
+        chrome.storage.sync.set({ selectedVocabularyLanguage: "all" });
+      } catch (error) {
+        console.error('Failed to save language reset preference:', error);
+      }
     }
 
     // Show loading while switching to all languages

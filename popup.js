@@ -195,11 +195,13 @@ async function initializeVocabularyBrowser() {
       // Build search index for fast filtering
       searchIndex.buildIndex(allVocabulary);
 
-      // Populate language dropdown
-      populateLanguageDropdown();
+      // Populate language dropdown and restore selection
+      await populateLanguageDropdown();
 
-      // Initial display of all vocabulary
-      filteredVocabulary = [...allVocabulary];
+      // Initial display of all vocabulary (filterVocabulary might have been called in populateLanguageDropdown)
+      if (filteredVocabulary.length === 0) {
+        filteredVocabulary = [...allVocabulary];
+      }
       renderVocabularyList();
     } else {
       console.error("Failed to load vocabulary:", response);
@@ -213,7 +215,7 @@ async function initializeVocabularyBrowser() {
   }
 }
 
-function populateLanguageDropdown() {
+async function populateLanguageDropdown() {
   const dropdown = document.getElementById("source-language");
   dropdown.innerHTML = '<option value="all">All Languages</option>';
 
@@ -223,6 +225,24 @@ function populateLanguageDropdown() {
       getLanguageDisplayName(lang)
     );
   });
+
+  // Restore previously selected language from storage
+  try {
+    const stored = await chrome.storage.sync.get(['selectedVocabularyLanguage']);
+    if (stored.selectedVocabularyLanguage && stored.selectedVocabularyLanguage !== 'all') {
+      // Check if the stored language still exists in the options
+      const optionExists = Array.from(dropdown.options).some(option =>
+        option.value === stored.selectedVocabularyLanguage
+      );
+      if (optionExists) {
+        dropdown.value = stored.selectedVocabularyLanguage;
+        // Trigger filtering to show words for the selected language
+        filterVocabulary();
+      }
+    }
+  } catch (error) {
+    console.error('Failed to restore selected language:', error);
+  }
 }
 
 function getLanguageDisplayName(langCode) {
@@ -555,6 +575,13 @@ function showNoResults(message) {
 function filterVocabulary() {
   const selectedLanguage = document.getElementById("source-language").value;
   const searchTerm = document.getElementById("search-input").value.trim();
+
+  // Save the selected language to storage for persistence
+  try {
+    chrome.storage.sync.set({ selectedVocabularyLanguage: selectedLanguage });
+  } catch (error) {
+    console.error('Failed to save selected language:', error);
+  }
 
   // Use optimized search index if we have a search term
   if (searchTerm && searchTerm.length > 0) {
