@@ -427,7 +427,36 @@ export function toggleCombinationMode() {
     });
     removeInstantCombinedTranslation();
     state.selectedWordsForCombination.length = 0;
+
+    // Restore active state for words that have individual translations displayed
+    restoreActiveWordPills();
   }
+}
+
+// Helper function to restore active state for words with visible translations
+function restoreActiveWordPills() {
+  if (!state.bubbleEl) return;
+
+  const wordTranslationDiv = state.bubbleEl.querySelector(".word-translation");
+  if (!wordTranslationDiv) return;
+
+  // Find all individual word translation items (excluding combination translations)
+  const wordTranslationItems = wordTranslationDiv.querySelectorAll(
+    ".word-translation-item:not(.instant-combination-translation)"
+  );
+
+  wordTranslationItems.forEach((item) => {
+    const word = item.dataset.word;
+    if (word) {
+      // Find the corresponding pill and restore its active state
+      const pill = state.bubbleEl.querySelector(
+        `.word-pill[data-word="${word}"]`
+      );
+      if (pill) {
+        pill.classList.add("active");
+      }
+    }
+  });
 }
 
 export function toggleWordForCombination(word, pillElement) {
