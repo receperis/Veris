@@ -1,4 +1,4 @@
-export function showSaveToast(message) {
+function showToast(message, type = 'info') {
   try {
     let container = document.getElementById("__translator_toast_container");
     if (!container) {
@@ -15,8 +15,24 @@ export function showSaveToast(message) {
     }
     const toast = document.createElement("div");
     toast.className = "__translator_toast";
-    toast.textContent = "💾 " + message;
-    toast.style.background = "#16a34a";
+
+    // Set icon and background color based on type
+    let icon = "ℹ️";
+    let background = "#3b82f6";
+
+    if (type === 'save') {
+      icon = "💾";
+      background = "#16a34a";
+    } else if (type === 'loading') {
+      icon = "⏳";
+      background = "#5d2881ff";
+    } else if (type === 'error') {
+      icon = "⚠️";
+      background = "#dc2626";
+    }
+
+    toast.textContent = icon + " " + message;
+    toast.style.background = background;
     toast.style.color = "#fff";
     toast.style.padding = "8px 14px";
     toast.style.fontSize = "13px";
@@ -42,6 +58,14 @@ export function showSaveToast(message) {
       }, 300);
     }, 2600);
   } catch (err) {
-    console.warn("Failed to show save toast:", err);
+    console.warn("Failed to show toast:", err);
   }
+}
+
+export function showSaveToast(message) {
+  showToast(message, 'save');
+}
+
+export function showLoadingToast(message) {
+  showToast(message, 'loading');
 }

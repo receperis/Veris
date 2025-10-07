@@ -9,7 +9,7 @@ import {
 import * as ui from "./src/content/ui.js";
 import * as words from "./src/content/words.js";
 import { translateTextWithAPI } from "./src/content/api.js";
-import { showSaveToast } from "./src/content/toast.js";
+import { showSaveToast, showLoadingToast } from "./src/content/toast.js";
 
 import "./content_script.css";
 
@@ -304,7 +304,7 @@ async function onSelection(event) {
       state.pendingSelection = { text, rect };
     }
   } catch (err) {
-    console.error("Translator content script selection handling error:", err);
+    showLoadingToast("Extension loading. Try refreshing the page");
   }
 }
 
