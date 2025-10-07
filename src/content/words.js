@@ -8,6 +8,31 @@ import { showSaveToast } from "./toast.js";
 import { translateTextWithAPI } from "./api.js";
 import { clearTriggerIcon, openLanguageMenu } from "./ui.js";
 
+// Helper function to get source language reliably
+async function getSourceLanguageForSaving() {
+  try {
+    // First try to get from storage (set by background script)
+    const storageResult = await chrome.storage.sync.get(["sourceLanguage"]);
+    if (storageResult.sourceLanguage && storageResult.sourceLanguage !== 'und') {
+      return storageResult.sourceLanguage;
+    }
+
+    // If not in storage, try direct detection
+    const response = await chrome.runtime.sendMessage({
+      type: "DETECT_PAGE_LANGUAGE"
+    });
+
+    if (response && response.ok && response.language && response.language !== 'und') {
+      return response.language;
+    }
+  } catch (err) {
+    console.warn("Could not get source language for saving:", err);
+  }
+
+  // Fallback to 'auto' or empty string
+  return "";
+}
+
 export function createWordPills(text) {
   if (!state.bubbleEl) return;
   const pillsContainer = state.bubbleEl.querySelector(".word-pills");
@@ -197,14 +222,8 @@ export async function handleSaveWords() {
     saveStatus.classList.add("show");
   }
   try {
-    let detectedSourceLanguage = "";
-    try {
-      const storageResult = await chrome.storage.sync.get(["sourceLanguage"]);
-      if (storageResult.sourceLanguage)
-        detectedSourceLanguage = storageResult.sourceLanguage;
-    } catch (err) {
-      console.warn("Could not get detected source language:", err);
-    }
+    // Use the improved language detection
+    const detectedSourceLanguage = await getSourceLanguageForSaving();
     const saveData = {
       timestamp: new Date().toISOString(),
       originalText: state.lastSelection,

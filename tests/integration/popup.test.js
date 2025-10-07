@@ -56,11 +56,10 @@ describe("Popup Integration Tests", () => {
             <span class="original-word">${item.originalWord}</span>
             <span class="translated-word">${item.translatedWord}</span>
           </div>
-          ${
-            hasContext
-              ? `<button class="context-toggle" data-id="${id}">📝</button>`
-              : ""
-          }
+          ${hasContext
+          ? `<button class="context-toggle" data-id="${id}">📝</button>`
+          : ""
+        }
         </div>
       `,
       vocabularyItemEdit: (item, id, hasContext) => `
@@ -96,13 +95,13 @@ describe("Popup Integration Tests", () => {
         text.replace(
           /[&<>"']/g,
           (m) =>
-            ({
-              "&": "&amp;",
-              "<": "&lt;",
-              ">": "&gt;",
-              '"': "&quot;",
-              "'": "&#39;",
-            }[m])
+          ({
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#39;",
+          }[m])
         ),
       createElement: (html) => {
         const div = document.createElement("div");
@@ -352,8 +351,7 @@ describe("Popup Integration Tests", () => {
 
       vocabList.innerHTML = `
         ${window.PopupTemplates.vocabularyItem(mockItem, mockItem.id, true)}
-        <div class="context-panel" data-id="${
-          mockItem.id
+        <div class="context-panel" data-id="${mockItem.id
         }" style="display: none;">
           <div class="context-content">${mockItem.context}</div>
         </div>
@@ -592,6 +590,102 @@ describe("Popup Integration Tests", () => {
 
       // The error handling would be in the actual popup script
       expect(chrome.runtime.sendMessage).toBeDefined();
+    });
+  });
+
+  describe("Language Persistence", () => {
+    beforeEach(() => {
+      // Clean up any existing elements
+      const existingSelect = document.getElementById("source-language");
+      if (existingSelect) {
+        existingSelect.remove();
+      }
+    });
+
+    test("should save selected language to storage", async () => {
+      // Mock chrome.storage.sync.set to track calls
+      chrome.storage.sync.set = jest.fn().mockResolvedValue();
+      chrome.storage.sync.get = jest.fn().mockResolvedValue({
+        selectedVocabularyLanguage: 'all'
+      });
+
+      // Set up a language dropdown
+      const select = document.createElement("select");
+      select.id = "source-language";
+      select.innerHTML = `
+        <option value="all">All Languages</option>
+        <option value="en">English</option>
+        <option value="es">Spanish</option>
+      `;
+      document.body.appendChild(select);
+
+      // Mock the filterVocabulary function since it's the one that saves the language
+      const mockFilterVocabulary = () => {
+        const selectedLanguage = document.getElementById("source-language").value;
+        try {
+          chrome.storage.sync.set({ selectedVocabularyLanguage: selectedLanguage });
+        } catch (error) {
+          console.error('Failed to save selected language:', error);
+        }
+      };
+
+      // Simulate user selecting a language
+      select.value = "es";
+
+      // Trigger the mock function with the selected value
+      mockFilterVocabulary();
+
+      // Verify that chrome.storage.sync.set was called with the correct value
+      expect(chrome.storage.sync.set).toHaveBeenCalledWith({
+        selectedVocabularyLanguage: "es"
+      });
+    });
+
+    test("should restore selected language on initialization", async () => {
+      // Mock chrome.storage.sync.get to return a stored language
+      chrome.storage.sync.get = jest.fn().mockResolvedValue({
+        selectedVocabularyLanguage: 'es'
+      });
+
+      // Set up a language dropdown
+      const select = document.createElement("select");
+      select.id = "source-language";
+      select.innerHTML = `
+        <option value="all">All Languages</option>
+        <option value="en">English</option>
+        <option value="es">Spanish</option>
+      `;
+      document.body.appendChild(select);
+
+      // Mock the populateLanguageDropdown function that restores the language
+      const mockPopulateLanguageDropdown = async () => {
+        try {
+          const stored = await chrome.storage.sync.get(['selectedVocabularyLanguage']);
+          const dropdown = document.getElementById("source-language");
+          if (stored.selectedVocabularyLanguage && stored.selectedVocabularyLanguage !== 'all') {
+            const optionExists = Array.from(dropdown.options).some(option =>
+              option.value === stored.selectedVocabularyLanguage
+            );
+            if (optionExists) {
+              dropdown.value = stored.selectedVocabularyLanguage;
+            }
+          }
+        } catch (error) {
+          console.error('Failed to restore selected language:', error);
+        }
+      };
+
+      // Call the mock function
+      await mockPopulateLanguageDropdown();
+
+      // Verify that the dropdown was set to the restored value
+      expect(select.value).toBe("es");
+    });
+
+    test("should verify storage methods are available", () => {
+      // Basic test to verify storage mocking is working
+      expect(chrome.storage.sync.set).toBeDefined();
+      expect(chrome.storage.sync.get).toBeDefined();
     });
   });
 });

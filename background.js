@@ -75,18 +75,44 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 // Setup tab listener for language detection
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     if (changeInfo.status === 'complete' && tab.url && !tab.url.startsWith('chrome://')) {
-        chrome.tabs.detectLanguage(tabId, (language) => {
-            if (chrome.runtime.lastError) {
-                console.error('Language detection error:', chrome.runtime.lastError.message);
-            } else {
-                chrome.storage.sync.set({ sourceLanguage: language }, () => {
-                    if (chrome.runtime.lastError) {
-                        console.error('Persist error:', chrome.runtime.lastError.message);
-                    }
-                });
-            }
-        });
+        // Detect language with a small delay to ensure page is fully loaded
+        setTimeout(() => {
+            chrome.tabs.detectLanguage(tabId, (language) => {
+                if (chrome.runtime.lastError) {
+                    console.warn('Language detection error:', chrome.runtime.lastError.message);
+                } else if (language && language !== 'und') {
+                    chrome.storage.sync.set({ sourceLanguage: language }, () => {
+                        if (chrome.runtime.lastError) {
+                            console.error('Persist error:', chrome.runtime.lastError.message);
+                        } else {
+                            console.log(`Language detected and stored: ${language} for tab ${tabId}`);
+                        }
+                    });
+                } else {
+                    console.log(`Language detection returned: ${language} (undetermined) for tab ${tabId}`);
+                }
+            });
+        }, 500); // Small delay to ensure page content is loaded
     }
+});
+
+// Also detect language when tab becomes active (user switches to it)
+chrome.tabs.onActivated.addListener((activeInfo) => {
+    chrome.tabs.get(activeInfo.tabId, (tab) => {
+        if (chrome.runtime.lastError) return;
+
+        if (tab.url && !tab.url.startsWith('chrome://') && tab.status === 'complete') {
+            chrome.tabs.detectLanguage(activeInfo.tabId, (language) => {
+                if (!chrome.runtime.lastError && language && language !== 'und') {
+                    chrome.storage.sync.set({ sourceLanguage: language }, () => {
+                        if (!chrome.runtime.lastError) {
+                            console.log(`Language detected on tab switch: ${language} for tab ${activeInfo.tabId}`);
+                        }
+                    });
+                }
+            });
+        }
+    });
 });
 
 console.log('Background service worker initialized with modular services');
