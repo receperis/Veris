@@ -153,6 +153,39 @@ const MessageService = {
         return true;
       }
 
+      // Handle page language detection requests
+      if (request.type === "DETECT_PAGE_LANGUAGE") {
+        try {
+          // Get the active tab or the sender's tab
+          const tabId = sender.tab?.id;
+          if (!tabId) {
+            sendResponse({ ok: false, error: "No tab information available" });
+            return true;
+          }
+
+          // Detect language for the specific tab
+          chrome.tabs.detectLanguage(tabId, (language) => {
+            if (chrome.runtime.lastError) {
+              console.warn('Language detection error:', chrome.runtime.lastError.message);
+              sendResponse({ ok: false, error: chrome.runtime.lastError.message });
+            } else if (language && language !== 'und') {
+              // Store the detected language for future use
+              chrome.storage.sync.set({ sourceLanguage: language }, () => {
+                sendResponse({ ok: true, language: language });
+              });
+            } else {
+              // If language detection returns 'und' (undetermined) or null, fallback
+              sendResponse({ ok: false, error: "Language could not be determined" });
+            }
+          });
+          return true; // Will respond asynchronously
+        } catch (error) {
+          console.error("Error in language detection:", error);
+          sendResponse({ ok: false, error: error.message });
+          return true;
+        }
+      }
+
       // Unknown message type
       sendResponse({ success: false, error: "Try refreshing the page" });
       return false;

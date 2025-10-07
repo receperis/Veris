@@ -13,24 +13,88 @@ import { showSaveToast } from "./src/content/toast.js";
 
 import "./content_script.css";
 
+// Language detection cache and timing
+let languageCache = {
+  language: null,
+  timestamp: 0,
+  url: null
+};
+const LANGUAGE_CACHE_DURATION = 30000; // 30 seconds
+
 // Initialize extensionEnabled flag at startup
 chrome.storage.sync.get({ extensionEnabled: true }, (res) => {
   state.extensionEnabled =
     res.extensionEnabled === undefined ? true : !!res.extensionEnabled;
 });
 
+// Robust language detection with caching and fallback
+async function getSourceLanguage(fallbackToAuto = true) {
+  const currentUrl = window.location.href;
+  const now = Date.now();
+
+  // Check if we have a fresh cache for this URL
+  if (languageCache.language &&
+    languageCache.url === currentUrl &&
+    (now - languageCache.timestamp) < LANGUAGE_CACHE_DURATION) {
+    return languageCache.language;
+  }
+
+  // First, try to get from storage (set by background script)
+  try {
+    const storageResult = await chrome.storage.sync.get(["sourceLanguage"]);
+    if (storageResult.sourceLanguage && storageResult.sourceLanguage !== 'und') {
+      // Update cache
+      languageCache = {
+        language: storageResult.sourceLanguage,
+        timestamp: now,
+        url: currentUrl
+      };
+      return storageResult.sourceLanguage;
+    }
+  } catch (err) {
+    console.warn("Could not get source language from storage:", err);
+  }
+
+  // If no language in storage, try direct detection via background script
+  try {
+    const response = await chrome.runtime.sendMessage({
+      type: "DETECT_PAGE_LANGUAGE"
+    });
+
+    if (response && response.ok && response.language && response.language !== 'und') {
+      // Update cache with the detected language
+      languageCache = {
+        language: response.language,
+        timestamp: now,
+        url: currentUrl
+      };
+      return response.language;
+    }
+  } catch (err) {
+    console.warn("Direct language detection failed:", err);
+  }
+
+  // Fallback to 'auto' if detection fails
+  if (fallbackToAuto) {
+    const fallbackLang = 'auto';
+    languageCache = {
+      language: fallbackLang,
+      timestamp: now,
+      url: currentUrl
+    };
+    return fallbackLang;
+  }
+
+  return null;
+}
+
 async function performTranslation(text, rect) {
   ui.createBubbleAtRect(rect, text, "Translating...", true);
   state.settings = await chrome.storage.sync.get(defaultSettings);
   state.hotkeySpec = parseHotkeyString(state.settings.bubbleHotkey);
-  let sourceLanguage = state.tempSourceLang || "auto";
-  try {
-    const storageResult = await chrome.storage.sync.get(["sourceLanguage"]);
-    if (storageResult.sourceLanguage && !state.tempSourceLang)
-      sourceLanguage = storageResult.sourceLanguage;
-  } catch (err) {
-    console.warn("Could not get source language:", err);
-  }
+
+  // Use the improved language detection
+  let sourceLanguage = state.tempSourceLang || await getSourceLanguage();
   let translated;
   try {
     translated = await translateTextWithAPI(
@@ -39,36 +103,8 @@ async function performTranslation(text, rect) {
       sourceLanguage
     );
   } catch (err) {
-    console.error("Translation failed, attempting detection fallback:", err);
-    try {
-      const resp = await chrome.runtime.sendMessage({
-        type: "DETECT_PAGE_LANGUAGE",
-      });
-      if (resp && resp.ok) {
-        translated = `Source language: ${resp.language}. Translation API not available.`;
-        if (state.bubbleEl) {
-          const languageInfo = {
-            sourceLang: getLanguageName(resp.language || "auto"),
-            targetLang: getLanguageName(state.settings.target_lang),
-          };
-          const languageIndicator = document.createElement("div");
-          languageIndicator.className = "language-indicator fallback";
-          languageIndicator.innerHTML = `<div class="language-badge source-lang"><span class="lang-label">${languageInfo.sourceLang}</span></div><div class="language-arrow">⚠</div><div class="language-badge target-lang"><span class="lang-label">${languageInfo.targetLang}</span></div>`;
-          const closeBtn = state.bubbleEl.querySelector(".close-btn");
-          if (closeBtn && closeBtn.nextSibling)
-            state.bubbleEl.insertBefore(
-              languageIndicator,
-              closeBtn.nextSibling
-            );
-        }
-      } else {
-        translated =
-          "Translation and language detection failed: " +
-          (resp && resp.error ? resp.error : "Unknown error");
-      }
-    } catch (detErr) {
-      translated = "Translation not available: " + err.message;
-    }
+    console.error("Translation failed:", err);
+    translated = "Translation not available: " + err.message;
   }
   if (state.bubbleEl) {
     state.bubbleEl.classList.remove("__translator_loading");
@@ -149,12 +185,7 @@ async function retranslateBubble(newTarget) {
   pills.forEach((p) => p.classList.remove("active", "selected"));
   state.selectedWords.clear();
   words.updateSaveButton();
-  let sourceLanguage = state.tempSourceLang || "auto";
-  try {
-    const storageResult = await chrome.storage.sync.get(["sourceLanguage"]);
-    if (storageResult.sourceLanguage && !state.tempSourceLang)
-      sourceLanguage = storageResult.sourceLanguage;
-  } catch {}
+  let sourceLanguage = state.tempSourceLang || await getSourceLanguage();
   try {
     const result = await translateTextWithAPI(
       state.lastSelection,
@@ -403,6 +434,25 @@ chrome.storage.onChanged.addListener((changes, area) => {
     });
   }
 });
+
+// Clear language cache when page changes
+let lastUrl = window.location.href;
+function checkForUrlChange() {
+  const currentUrl = window.location.href;
+  if (currentUrl !== lastUrl) {
+    // URL changed, clear the language cache
+    languageCache = { language: null, timestamp: 0, url: null };
+    lastUrl = currentUrl;
+  }
+}
+
+// Check for URL changes periodically (for SPAs that don't trigger full page loads)
+setInterval(checkForUrlChange, 1000);
+
+// Also listen for page navigation events
+window.addEventListener('popstate', checkForUrlChange);
+window.addEventListener('pushstate', checkForUrlChange);
+window.addEventListener('replacestate', checkForUrlChange);
 
 // Minimal initialization
 (async () => {
