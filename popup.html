@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Translator</title>
+    <link rel="stylesheet" href="styles/unified-theme.css">
     <link rel="stylesheet" href="styles/dynamic-ui.css">
     <style>
         body {
@@ -47,10 +48,13 @@
         }
 
         @keyframes pulse-glow {
-            0%, 100% {
+
+            0%,
+            100% {
                 box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
                 transform: scale(1);
             }
+
             50% {
                 box-shadow: 0 4px 16px rgba(16, 185, 129, 0.5);
                 transform: scale(1.02);
@@ -411,14 +415,14 @@
         .vocabulary-list::-webkit-scrollbar-thumb:hover {
             background: #a1a1a1;
         }
-        
+
         .main-translation {
             flex: 1;
             display: flex;
             flex-direction: column;
             gap: 4px;
         }
-        
+
         .context-toggle {
             background: transparent;
             border: none;
@@ -435,7 +439,7 @@
             align-items: center;
             justify-content: center;
         }
-        
+
         .context-toggle:hover {
             background: rgba(20, 184, 166, 0.1);
             color: #0d9488;
@@ -443,19 +447,19 @@
             transform: translateY(-1px);
             box-shadow: 0 2px 8px rgba(20, 184, 166, 0.15);
         }
-        
+
         .context-toggle:focus {
             outline: 2px solid rgba(20, 184, 166, 0.3);
             outline-offset: 2px;
             background: rgba(20, 184, 166, 0.05);
         }
-        
+
         .context-toggle.active {
             background: rgba(20, 184, 166, 0.1);
             color: #0d9488;
             opacity: 1;
         }
-        
+
         .context-panel {
             margin-top: 12px;
             padding: 16px;
@@ -470,11 +474,11 @@
         .context-panel.expanding {
             animation: expandContext 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        
+
         .context-panel[style*="display: none"] {
             display: none !important;
         }
-        
+
         @keyframes expandContext {
             from {
                 opacity: 0;
@@ -483,6 +487,7 @@
                 padding-top: 0;
                 padding-bottom: 0;
             }
+
             to {
                 opacity: 1;
                 transform: scaleY(1) translateY(0);
@@ -491,7 +496,7 @@
                 padding-bottom: 16px;
             }
         }
-        
+
         .context-original,
         .context-translation {
             display: flex;
@@ -499,7 +504,7 @@
             gap: 8px;
             margin-bottom: 16px;
         }
-        
+
         .context-original:last-child,
         .context-translation:last-child {
             margin-bottom: 0;
@@ -518,7 +523,7 @@
             padding-bottom: 8px;
             border-bottom: 1px solid rgba(226, 232, 240, 0.6);
         }
-        
+
         .context-label {
             font-size: 12px;
             font-weight: 700;
@@ -528,7 +533,7 @@
             align-items: center;
             gap: 4px;
         }
-        
+
         .context-text {
             font-size: 13px;
             line-height: 1.5;
@@ -543,12 +548,12 @@
             word-wrap: break-word;
             overflow-wrap: break-word;
         }
-        
+
         .context-original .context-text {
             border-left: 4px solid #f59e0b;
             background: linear-gradient(135deg, rgba(251, 191, 36, 0.08) 0%, rgba(255, 255, 255, 0.9) 100%);
         }
-        
+
         .context-translation .context-text {
             border-left: 4px solid #10b981;
             background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(255, 255, 255, 0.9) 100%);
@@ -567,7 +572,7 @@
             left: 0;
             right: 0;
         }
-        
+
         /* Enhance vocabulary item hover when it has context */
         .vocabulary-item:has(.context-toggle) .vocabulary-content:hover {
             background: linear-gradient(135deg, rgba(248, 250, 252, 0.8) 0%, rgba(241, 245, 249, 0.6) 100%);
@@ -598,6 +603,7 @@
                 opacity: 0;
                 backdrop-filter: blur(0px);
             }
+
             to {
                 opacity: 1;
                 backdrop-filter: blur(2px);
@@ -621,6 +627,7 @@
                 opacity: 0;
                 transform: translateY(-20px) scale(0.95);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0) scale(1);
@@ -853,8 +860,7 @@
             <p class="subtitle">Browse and manage your vocabulary</p>
             <div class="extension-toggle">
                 <button id="extension-toggle-btn" class="action-button small-toggle minimal-toggle on"
-                    title="Toggle extension on/off" aria-pressed="true"
-                    aria-label="Enable or disable Veris">
+                    title="Toggle extension on/off" aria-pressed="true" aria-label="Enable or disable Veris">
                     <span id="extension-toggle-icon">●</span>
                     <span id="extension-status" style="font-weight:600;">Enable</span>
                 </button>

@@ -1,4 +1,6 @@
 /* Stats Page Styles */
+@import url('../styles/unified-theme.css');
+
 * {
     margin: 0;
     padding: 0;
@@ -483,64 +485,62 @@ body {
     top: 20px;
     right: 20px;
     max-width: 400px;
-    padding: 0;
+    padding: 12px 18px;
     border-radius: 12px;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
     z-index: 2000;
     animation: slideInRight 0.3s ease-out;
     backdrop-filter: blur(10px);
+    border: 1px solid;
+    display: flex;
+    align-items: center;
+    gap: 12px;
 }
 
 .import-notification.success {
-    background: rgba(34, 197, 94, 0.95);
-    border: 1px solid rgba(34, 197, 94, 0.3);
+    background: var(--veris-success-bg);
+    color: var(--veris-success-text);
+    border-color: #a7f3d0;
 }
 
 .import-notification.error {
-    background: rgba(239, 68, 68, 0.95);
-    border: 1px solid rgba(239, 68, 68, 0.3);
+    background: var(--veris-error-bg);
+    color: var(--veris-error-text);
+    border-color: #fecaca;
 }
 
 .notification-content {
     display: flex;
-    align-items: center;
-    padding: 20px;
-    color: white;
-    position: relative;
+    align-items: flex-start;
+    gap: 12px;
+    flex: 1;
 }
 
 .notification-icon {
-    font-size: 1.5rem;
-    margin-right: 15px;
+    font-size: 18px;
     flex-shrink: 0;
 }
 
 .notification-content p {
-    flex: 1;
-    font-weight: 500;
-    line-height: 1.4;
     margin: 0;
+    flex: 1;
+    line-height: 1.4;
+    font-weight: 500;
 }
 
 .close-btn {
     background: none;
     border: none;
-    color: white;
-    font-size: 1.5rem;
+    font-size: 18px;
     cursor: pointer;
+    color: inherit;
     padding: 0;
-    margin-left: 15px;
-    width: 24px;
-    height: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    transition: background-color 0.2s;
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
 }
 
 .close-btn:hover {
-    background-color: rgba(255, 255, 255, 0.2);
+    opacity: 1;
 }
 
 .import-notification.fade-out {

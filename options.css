@@ -1,4 +1,6 @@
 /* Options page styling */
+@import url('./styles/unified-theme.css');
+
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     background: #f8f9fa;
@@ -22,7 +24,7 @@ h1 {
     font-size: 28px;
     margin: 0 0 30px 0;
     font-weight: 600;
-    border-bottom: 2px solid #3498db;
+    border-bottom: 2px solid var(--veris-primary);
     padding-bottom: 10px;
 }
 
@@ -88,8 +90,8 @@ input[type="text"]:focus,
 input[type="time"]:focus,
 select:focus {
     outline: none;
-    border-color: #3498db;
-    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+    border-color: var(--veris-primary);
+    box-shadow: 0 0 0 3px var(--veris-shadow);
     cursor: text;
 }
 
@@ -156,25 +158,29 @@ button {
 }
 
 #saveBtn {
-    background: #3498db;
+    background: var(--veris-primary);
     color: white;
     flex: 1;
 }
 
 #saveBtn:hover {
-    background: #2980b9;
+    background: var(--veris-primary-dark);
     transform: translateY(-1px);
+    box-shadow: 0 4px 12px var(--veris-shadow-strong);
 }
 
 #resetBtn {
-    background: #95a5a6;
+    background: var(--veris-gray-400);
     color: white;
     flex: 1;
 }
 
 #resetBtn:hover {
-    background: #7f8c8d;
+    background: var(--veris-primary-bg);
+    border: 1px solid var(--veris-primary-light);
+    color: var(--veris-text-dark);
     transform: translateY(-1px);
+    box-shadow: 0 2px 8px var(--veris-shadow);
 }
 
 button:active {
@@ -192,7 +198,7 @@ button:active {
 
 .status:not(:empty) {
     background: #f8f9fa;
-    border-left: 4px solid #3498db;
+    border-left: 4px solid var(--veris-primary);
 }
 
 .note {
@@ -241,10 +247,10 @@ button:active {
 
 /* Focus styles for accessibility */
 button:focus-visible {
-    outline: 2px solid #3498db;
+    outline: 2px solid var(--veris-primary);
     outline-offset: 2px;
 }
 
 input:focus-visible {
-    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.3);
+    box-shadow: 0 0 0 3px var(--veris-shadow);
 }

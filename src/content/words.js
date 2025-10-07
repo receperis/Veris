@@ -399,7 +399,7 @@ export function enableEditableTranslation(spanEl, addButton, word) {
 // Combination mode functions
 export function toggleCombinationMode() {
   state.combinationMode = !state.combinationMode;
-  state.selectedWordsForCombination.clear();
+  state.selectedWordsForCombination.length = 0;
   const combinationBtn = state.bubbleEl?.querySelector(".combination-btn");
   const combinationStatus = state.bubbleEl?.querySelector(
     ".combination-status"
@@ -426,25 +426,59 @@ export function toggleCombinationMode() {
       pill.classList.remove("combination-selected");
     });
     removeInstantCombinedTranslation();
-    state.selectedWordsForCombination.clear();
+    state.selectedWordsForCombination.length = 0;
+
+    // Restore active state for words that have individual translations displayed
+    restoreActiveWordPills();
   }
+}
+
+// Helper function to restore active state for words with visible translations
+function restoreActiveWordPills() {
+  if (!state.bubbleEl) return;
+
+  const wordTranslationDiv = state.bubbleEl.querySelector(".word-translation");
+  if (!wordTranslationDiv) return;
+
+  // Find all individual word translation items (excluding combination translations)
+  const wordTranslationItems = wordTranslationDiv.querySelectorAll(
+    ".word-translation-item:not(.instant-combination-translation)"
+  );
+
+  wordTranslationItems.forEach((item) => {
+    const word = item.dataset.word;
+    if (word) {
+      // Find the corresponding pill and restore its active state
+      const pill = state.bubbleEl.querySelector(
+        `.word-pill[data-word="${word}"]`
+      );
+      if (pill) {
+        pill.classList.add("active");
+      }
+    }
+  });
 }
 
 export function toggleWordForCombination(word, pillElement) {
   if (!state.combinationMode || !state.bubbleEl) return;
-  const isSelected = state.selectedWordsForCombination.has(word);
+  const isSelected = state.selectedWordsForCombination.includes(word);
   const combinationStatus = state.bubbleEl.querySelector(".combination-status");
   if (isSelected) {
-    state.selectedWordsForCombination.delete(word);
+    // Remove word from array while maintaining order of other words
+    const index = state.selectedWordsForCombination.indexOf(word);
+    if (index > -1) {
+      state.selectedWordsForCombination.splice(index, 1);
+    }
     pillElement.classList.remove("combination-selected");
   } else {
-    state.selectedWordsForCombination.add(word);
+    // Add word to end of array (selection order)
+    state.selectedWordsForCombination.push(word);
     pillElement.classList.add("combination-selected");
   }
   const infoSpan = combinationStatus?.querySelector(".combination-info span");
   if (infoSpan) {
-    if (state.selectedWordsForCombination.size >= 2) {
-      infoSpan.textContent = `${state.selectedWordsForCombination.size} words selected for combination`;
+    if (state.selectedWordsForCombination.length >= 2) {
+      infoSpan.textContent = `${state.selectedWordsForCombination.length} words selected for combination`;
       showInstantCombinedTranslation();
     } else {
       infoSpan.textContent = "Select words to combine for multiple words";
@@ -506,7 +540,7 @@ export async function handleSaveCombination(combinedPhrase, translation) {
       url: window.location.href,
       domain: window.location.hostname,
       isCombination: true,
-      combinedWords: Array.from(state.selectedWordsForCombination),
+      combinedWords: [...state.selectedWordsForCombination],
     };
     const response = await chrome.runtime.sendMessage({
       type: "SAVE_VOCABULARY",
@@ -543,15 +577,9 @@ export async function handleSaveCombination(combinedPhrase, translation) {
 }
 
 export async function showInstantCombinedTranslation() {
-  if (!state.bubbleEl || state.selectedWordsForCombination.size < 2) return;
-  const allPills = Array.from(state.bubbleEl.querySelectorAll(".word-pill"));
-  const selectedPillsInOrder = allPills.filter((pill) =>
-    state.selectedWordsForCombination.has(pill.dataset.word)
-  );
-  if (selectedPillsInOrder.length === 0) return;
-  const combinedPhrase = selectedPillsInOrder
-    .map((pill) => pill.dataset.word)
-    .join(" ");
+  if (!state.bubbleEl || state.selectedWordsForCombination.length < 2) return;
+  // Use the selection order directly from the array
+  const combinedPhrase = state.selectedWordsForCombination.join(" ");
   const wordTranslationDiv = state.bubbleEl.querySelector(".word-translation");
   if (!wordTranslationDiv) return;
   wordTranslationDiv.classList.add("show");

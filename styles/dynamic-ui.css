@@ -2,6 +2,7 @@
  * Dynamic UI Styles Module
  * Extracted from inline styles in JavaScript files for better maintainability
  */
+@import url('./unified-theme.css');
 
 /* Toast Notification Styles (improved exercise styles) */
 .answer-toast {
@@ -142,8 +143,8 @@
 .inline-edit-container .edit-original:focus,
 .inline-edit-container .edit-translation:focus {
   outline: none;
-  border-color: #14b8a6;
-  box-shadow: 0 0 0 2px rgba(20, 184, 166, 0.1);
+  border-color: var(--veris-primary);
+  box-shadow: 0 0 0 2px var(--veris-shadow);
 }
 
 .inline-edit-container .edit-actions {
@@ -164,14 +165,14 @@
 }
 
 .inline-edit-container .save-word {
-  background: #14b8a6;
+  background: var(--veris-primary);
   color: white;
-  border-color: #0d9488;
+  border-color: var(--veris-primary-dark);
 }
 
 .inline-edit-container .save-word:hover {
-  background: #0d9488;
-  box-shadow: 0 2px 8px rgba(20, 184, 166, 0.4);
+  background: var(--veris-primary-dark);
+  box-shadow: 0 2px 8px var(--veris-shadow-strong);
 }
 
 .inline-edit-container .cancel-edit {
@@ -181,7 +182,9 @@
 }
 
 .inline-edit-container .cancel-edit:hover {
-  background: #e5e7eb;
+  background: var(--veris-primary-bg);
+  border-color: var(--veris-primary-light);
+  color: var(--veris-text-dark);
 }
 
 .inline-edit-container .delete-word {
@@ -223,14 +226,14 @@
 }
 
 .import-notification.success {
-  background: #d1fae5;
-  color: #065f46;
+  background: var(--veris-success-bg);
+  color: var(--veris-success-text);
   border-color: #a7f3d0;
 }
 
 .import-notification.error {
-  background: #fee2e2;
-  color: #991b1b;
+  background: var(--veris-error-bg);
+  color: var(--veris-error-text);
   border-color: #fecaca;
 }
 
@@ -292,7 +295,7 @@
   width: 40px;
   height: 40px;
   border: 4px solid #e5e7eb;
-  border-top: 4px solid #14b8a6;
+  border-top: 4px solid var(--veris-primary);
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 16px;
@@ -339,9 +342,9 @@
 }
 
 .hotkey-recorded {
-  background: #d1fae5;
-  border: 1px solid #10b981;
-  color: #065f46;
+  background: var(--veris-success-bg);
+  border: 1px solid var(--veris-success);
+  color: var(--veris-success-text);
 }
 
 /* Context Panel Animation (enhanced from popup.html styles) */
@@ -385,12 +388,12 @@
 }
 
 .__translator_lang_menu_enhanced::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: var(--veris-primary-light);
   border-radius: 3px;
 }
 
 .__translator_lang_menu_enhanced::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: var(--veris-primary);
 }
 
 /* Responsive Utilities */
