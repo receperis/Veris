@@ -110,7 +110,7 @@ export function removeBubble() {
     state.bubbleEl = null;
     state.selectedWords.clear();
     state.combinationMode = false;
-    state.selectedWordsForCombination.clear();
+    state.selectedWordsForCombination.length = 0;
     state.tempTargetLang = null;
     state.tempSourceLang = null;
   }

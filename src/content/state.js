@@ -10,7 +10,7 @@ export const state = {
   tempSourceLang: null,
   bubbleLangMenuEl: null,
   combinationMode: false,
-  selectedWordsForCombination: new Set(),
+  selectedWordsForCombination: [],
   triggerIconEl: null,
   triggerIconTimer: null,
   pendingSelection: null,
