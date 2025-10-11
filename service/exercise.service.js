@@ -257,7 +257,7 @@ const ExerciseService = (() => {
     }
     due.sort((a, b) => Date.parse(a.srs.dueAt) - Date.parse(b.srs.dueAt));
     const selected = [];
-    for (const list of [fresh, due, nearDue]) {
+    for (const list of [due, fresh, nearDue]) {
       for (const w of list) {
         if (selected.length >= limit) break;
         selected.push(w);
@@ -356,6 +356,7 @@ const ExerciseService = (() => {
             context: w.context || w.sentence || "",
             srs: { boxIndex: w.srs.boxIndex, dueAt: w.srs.dueAt },
           })),
+          //TODO: consider returning stats for the selection only
           counts: leitnerCounts(enriched),
           selectedLanguage: selectedLanguage,
         };
