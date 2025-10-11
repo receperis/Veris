@@ -257,7 +257,7 @@ const ExerciseService = (() => {
     }
     due.sort((a, b) => Date.parse(a.srs.dueAt) - Date.parse(b.srs.dueAt));
     const selected = [];
-    for (const list of [due, fresh, nearDue]) {
+    for (const list of [fresh, due, nearDue]) {
       for (const w of list) {
         if (selected.length >= limit) break;
         selected.push(w);
@@ -279,7 +279,15 @@ const ExerciseService = (() => {
     const now = Date.now();
     let c = 0;
     for (const w of words) {
-      if (w.srs && w.srs.dueAt && Date.parse(w.srs.dueAt) <= now) c++;
+      // Ensure the word has SRS metadata
+      ensureLeitnerMeta(w);
+
+      // Count as due if:
+      // 1. No dueAt set (newly added words are immediately available)
+      // 2. dueAt is in the past (scheduled words that are due)
+      if (!w.srs.dueAt || Date.parse(w.srs.dueAt) <= now) {
+        c++;
+      }
     }
     return c;
   }
@@ -291,7 +299,8 @@ const ExerciseService = (() => {
     for (const w of words) {
       ensureLeitnerMeta(w);
       counts["box" + w.srs.boxIndex]++;
-      if (w.srs.dueAt && Date.parse(w.srs.dueAt) <= now) counts.due++;
+      // Count as due if no dueAt set (new words) or dueAt is in the past
+      if (!w.srs.dueAt || Date.parse(w.srs.dueAt) <= now) counts.due++;
     }
     return counts;
   }
