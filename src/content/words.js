@@ -41,7 +41,7 @@ async function getSourceLanguageForSaving() {
   return "";
 }
 
-export function createWordPills(text) {
+export function renderWordPills(text) {
   if (!state.bubbleEl) return;
   const pillsContainer = state.bubbleEl.querySelector(".word-pills");
   if (!pillsContainer) return;
@@ -88,6 +88,8 @@ export async function handlePillClick(word, pillElement) {
     const currentSettings = await chrome.storage.sync.get({
       target_lang: "en",
     });
+    // Use temporary target language if set, otherwise use stored settings
+    const targetLang = state.tempTargetLang || currentSettings.target_lang;
     let sourceLanguage = "auto";
     try {
       const storageResult = await chrome.storage.sync.get(["sourceLanguage"]);
@@ -100,7 +102,7 @@ export async function handlePillClick(word, pillElement) {
     try {
       wordTranslation = await translateTextWithAPI(
         cleanWord,
-        currentSettings.target_lang,
+        targetLang,
         sourceLanguage
       );
     } catch (err) {
@@ -611,6 +613,8 @@ export async function showInstantCombinedTranslation() {
     const currentSettings = await chrome.storage.sync.get({
       target_lang: "en",
     });
+    // Use temporary target language if set, otherwise use stored settings
+    const targetLang = state.tempTargetLang || currentSettings.target_lang;
     let sourceLanguage = "auto";
     try {
       const storageResult = await chrome.storage.sync.get(["sourceLanguage"]);
@@ -624,7 +628,7 @@ export async function showInstantCombinedTranslation() {
     }
     const combinationTranslation = await translateTextWithAPI(
       combinedPhrase,
-      currentSettings.target_lang,
+      targetLang,
       sourceLanguage
     );
     combinationElement.innerHTML = `\n      <div class="word-translation-content combination-instant">\n        <span class="combination-label">🔗 Combined:</span>\n        <span class="word-original">"${escapeHtml(
@@ -688,4 +692,99 @@ export function removeInstantCombinedTranslation() {
     ".word-translation-item"
   );
   if (remainingWords.length === 0) wordTranslationDiv.classList.remove("show");
+}
+
+/**
+ * Retranslate existing word pills and combinations with new target language
+ * This function is called when the target language changes temporarily
+ */
+export async function retranslateExistingWords() {
+  if (!state.bubbleEl) return;
+
+  const wordTranslationDiv = state.bubbleEl.querySelector(".word-translation");
+  if (!wordTranslationDiv) return;
+
+  // Get current target language (temporary or stored)
+  const currentSettings = await chrome.storage.sync.get({
+    target_lang: "en",
+  });
+  const targetLang = state.tempTargetLang || currentSettings.target_lang;
+
+  // Get source language
+  let sourceLanguage = state.tempSourceLang || "auto";
+  if (sourceLanguage === "auto") {
+    try {
+      const storageResult = await chrome.storage.sync.get(["sourceLanguage"]);
+      if (storageResult.sourceLanguage)
+        sourceLanguage = storageResult.sourceLanguage;
+    } catch (err) {
+      console.warn("Could not get source language for retranslation:", err);
+    }
+  }
+
+  // Retranslate individual word translations
+  const wordItems = wordTranslationDiv.querySelectorAll(
+    ".word-translation-item:not(.instant-combination-translation)"
+  );
+
+  for (const wordItem of wordItems) {
+    const word = wordItem.dataset.word;
+    if (!word) continue;
+
+    // Show loading state
+    const translatedSpan = wordItem.querySelector(".word-translated");
+    if (translatedSpan) {
+      translatedSpan.textContent = "Translating...";
+      wordItem
+        .querySelector(".word-translation-content")
+        ?.classList.add("loading");
+    }
+
+    try {
+      const cleanWord = word.replace(/[.,;:!?"""''()[\]{}]/g, "").trim();
+      let wordTranslation;
+
+      if (!cleanWord) {
+        wordTranslation = "N/A";
+      } else {
+        wordTranslation = await translateTextWithAPI(
+          cleanWord,
+          targetLang,
+          sourceLanguage
+        );
+      }
+
+      // Update the translation in the display
+      if (translatedSpan) {
+        translatedSpan.textContent = wordTranslation;
+        wordItem
+          .querySelector(".word-translation-content")
+          ?.classList.remove("loading");
+      }
+
+      // Update the add button's data attribute
+      const addButton = wordItem.querySelector(".add-word-btn");
+      if (addButton) {
+        addButton.setAttribute("data-translation", wordTranslation);
+      }
+
+      // Update selected words map if this word is selected
+      if (state.selectedWords.has(word)) {
+        state.selectedWords.set(word, wordTranslation);
+      }
+    } catch (err) {
+      console.error("Failed to retranslate word:", word, err);
+      if (translatedSpan) {
+        translatedSpan.textContent = "Translation failed";
+        wordItem
+          .querySelector(".word-translation-content")
+          ?.classList.remove("loading");
+      }
+    }
+  }
+
+  // Retranslate combination if it exists and we're in combination mode
+  if (state.combinationMode && state.selectedWordsForCombination.length >= 2) {
+    await showInstantCombinedTranslation();
+  }
 }
