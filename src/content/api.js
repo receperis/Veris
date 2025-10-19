@@ -1,4 +1,10 @@
+import { showInfoToast } from "./toast";
+
 export async function translateTextWithAPI(text, targetLang, sourceLanguage) {
+  if (targetLang === sourceLanguage) {
+    showInfoToast("Target and source languages are the same"); // If the target language is the same as the source language, no translation is needed
+    return text;
+  }
   try {
     const cleanText = text.trim();
     if (!cleanText) throw new Error("Empty text provided for translation");

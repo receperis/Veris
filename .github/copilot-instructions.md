@@ -9,6 +9,7 @@ These rules are mandatory for all code generated or modified by Copilot Agent in
 - Use **descriptive and consistent variable, function, and class names**.
 - Keep code **simple, concise, and clear**, prioritizing understandability over cleverness.
 - Adhere to any relevant project-specific style guides and conventions.
+- Use Prettier and ESLint to ensure code quality and consistency.
 
 ## 1. UI Modification Prohibition
 

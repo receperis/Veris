@@ -1,4 +1,4 @@
-function showToast(message, type = 'info') {
+function showToast(message, type = "info") {
   try {
     let container = document.getElementById("__translator_toast_container");
     if (!container) {
@@ -20,13 +20,13 @@ function showToast(message, type = 'info') {
     let icon = "ℹ️";
     let background = "#3b82f6";
 
-    if (type === 'save') {
+    if (type === "save") {
       icon = "💾";
       background = "#16a34a";
-    } else if (type === 'loading') {
+    } else if (type === "loading") {
       icon = "⏳";
       background = "#5d2881ff";
-    } else if (type === 'error') {
+    } else if (type === "error") {
       icon = "⚠️";
       background = "#dc2626";
     }
@@ -63,9 +63,13 @@ function showToast(message, type = 'info') {
 }
 
 export function showSaveToast(message) {
-  showToast(message, 'save');
+  showToast(message, "save");
 }
 
 export function showLoadingToast(message) {
-  showToast(message, 'loading');
+  showToast(message, "loading");
+}
+
+export function showInfoToast(message) {
+  showToast(message, "info");
 }

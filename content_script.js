@@ -9,7 +9,7 @@ import {
 import * as ui from "./src/content/ui.js";
 import * as words from "./src/content/words.js";
 import { translateTextWithAPI } from "./src/content/api.js";
-import { showSaveToast, showLoadingToast } from "./src/content/toast.js";
+import { showLoadingToast, showInfoToast } from "./src/content/toast.js";
 
 import "./content_script.css";
 
@@ -17,7 +17,7 @@ import "./content_script.css";
 let languageCache = {
   language: null,
   timestamp: 0,
-  url: null
+  url: null,
 };
 const LANGUAGE_CACHE_DURATION = 30000; // 30 seconds
 
@@ -33,21 +33,26 @@ async function getSourceLanguage(fallbackToAuto = true) {
   const now = Date.now();
 
   // Check if we have a fresh cache for this URL
-  if (languageCache.language &&
+  if (
+    languageCache.language &&
     languageCache.url === currentUrl &&
-    (now - languageCache.timestamp) < LANGUAGE_CACHE_DURATION) {
+    now - languageCache.timestamp < LANGUAGE_CACHE_DURATION
+  ) {
     return languageCache.language;
   }
 
   // First, try to get from storage (set by background script)
   try {
     const storageResult = await chrome.storage.sync.get(["sourceLanguage"]);
-    if (storageResult.sourceLanguage && storageResult.sourceLanguage !== 'und') {
+    if (
+      storageResult.sourceLanguage &&
+      storageResult.sourceLanguage !== "und"
+    ) {
       // Update cache
       languageCache = {
         language: storageResult.sourceLanguage,
         timestamp: now,
-        url: currentUrl
+        url: currentUrl,
       };
       return storageResult.sourceLanguage;
     }
@@ -58,15 +63,20 @@ async function getSourceLanguage(fallbackToAuto = true) {
   // If no language in storage, try direct detection via background script
   try {
     const response = await chrome.runtime.sendMessage({
-      type: "DETECT_PAGE_LANGUAGE"
+      type: "DETECT_PAGE_LANGUAGE",
     });
 
-    if (response && response.ok && response.language && response.language !== 'und') {
+    if (
+      response &&
+      response.ok &&
+      response.language &&
+      response.language !== "und"
+    ) {
       // Update cache with the detected language
       languageCache = {
         language: response.language,
         timestamp: now,
-        url: currentUrl
+        url: currentUrl,
       };
       return response.language;
     }
@@ -76,11 +86,11 @@ async function getSourceLanguage(fallbackToAuto = true) {
 
   // Fallback to 'auto' if detection fails
   if (fallbackToAuto) {
-    const fallbackLang = 'auto';
+    const fallbackLang = "auto";
     languageCache = {
       language: fallbackLang,
       timestamp: now,
-      url: currentUrl
+      url: currentUrl,
     };
     return fallbackLang;
   }
@@ -94,7 +104,7 @@ async function performTranslation(text, rect) {
   state.hotkeySpec = parseHotkeyString(state.settings.bubbleHotkey);
 
   // Use the improved language detection
-  let sourceLanguage = state.tempSourceLang || await getSourceLanguage();
+  let sourceLanguage = state.tempSourceLang || (await getSourceLanguage());
   let translated;
   try {
     translated = await translateTextWithAPI(
@@ -185,7 +195,7 @@ async function retranslateBubble(newTarget) {
   pills.forEach((p) => p.classList.remove("active", "selected"));
   state.selectedWords.clear();
   words.updateSaveButton();
-  let sourceLanguage = state.tempSourceLang || await getSourceLanguage();
+  let sourceLanguage = state.tempSourceLang || (await getSourceLanguage());
   try {
     const result = await translateTextWithAPI(
       state.lastSelection,
@@ -244,8 +254,25 @@ async function onSelection(event) {
       state.skipNextSelection = false;
       return;
     }
+
     const sel = window.getSelection();
     if (!sel) return;
+
+    // Check if the selection is happening in search, email, or password input fields
+    if (sel.rangeCount > 0) {
+      try {
+        const range = sel.getRangeAt(0);
+        const container = range.commonAncestorContainer;
+        let inputElement = container.querySelector?.("input, textarea");
+
+        if (inputElement) {
+          return;
+        }
+      } catch (error) {
+        showInfoToast("Input element check issue");
+      }
+    }
+
     if (
       state.bubbleEl &&
       event &&
@@ -253,6 +280,7 @@ async function onSelection(event) {
       state.bubbleEl.contains(event.target)
     )
       return;
+
     const text = sel.toString().trim();
     if (!text) {
       const active = document.activeElement;
@@ -265,17 +293,21 @@ async function onSelection(event) {
       ) {
         return;
       }
+
       ui.clearTriggerIcon();
       state.pendingSelection = null;
       return;
     }
     state.lastSelection = text;
+
     let range;
+
     try {
       range = sel.getRangeAt(0);
     } catch {
       return;
     }
+
     const rects = range.getClientRects();
     let rect = range.getBoundingClientRect();
     if (rect && rect.width === 0 && rects.length) rect = rects[0];
@@ -379,13 +411,24 @@ function handleSequenceKey(spec, e) {
     return false;
   }
 }
+// Use multiple events to robustly detect user selections (mouse, pointer, touch, and programmatic)
+// document.addEventListener("selectionchange", () => {
+//   // selectionchange doesn't provide an event target, so call without event
+//   setTimeout(() => onSelection(), 200);
+// });
 
-document.addEventListener("mouseup", (e) => {
-  setTimeout(() => onSelection(e), 10);
-});
-document.addEventListener("keyup", (e) => {
-  setTimeout(() => onSelection(e), 10);
-});
+["pointerup", "mouseup", "touchend"].forEach((evt) =>
+  document.addEventListener(evt, (e) => {
+    setTimeout(() => onSelection(e), 10);
+  })
+);
+
+// document.addEventListener("mousedown", (e) => {
+// setTimeout(() => onSelection(e), 10);
+// });
+// document.addEventListener("keyup", (e) => {
+//   setTimeout(() => onSelection(e), 10);
+// });
 
 window.addEventListener(
   "scroll",
@@ -450,9 +493,9 @@ function checkForUrlChange() {
 setInterval(checkForUrlChange, 1000);
 
 // Also listen for page navigation events
-window.addEventListener('popstate', checkForUrlChange);
-window.addEventListener('pushstate', checkForUrlChange);
-window.addEventListener('replacestate', checkForUrlChange);
+window.addEventListener("popstate", checkForUrlChange);
+window.addEventListener("pushstate", checkForUrlChange);
+window.addEventListener("replacestate", checkForUrlChange);
 
 // Minimal initialization
 (async () => {
