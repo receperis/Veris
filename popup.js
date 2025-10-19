@@ -2,6 +2,10 @@
 
 // Import templates and utilities
 import { PopupTemplates, TemplateUtils } from "./templates/template-utils.js";
+// Import shared utilities and constants
+import { escapeHtml, normalizeId } from "./src/shared/utils.js";
+import { getLanguageDisplayName } from "./src/shared/languages.js";
+import { saveSetting, getSetting } from "./src/shared/storage.js";
 
 // Performance optimization classes
 class SearchIndex {
@@ -228,63 +232,24 @@ async function populateLanguageDropdown() {
 
   // Restore previously selected language from storage
   try {
-    const stored = await chrome.storage.sync.get(['selectedVocabularyLanguage']);
-    if (stored.selectedVocabularyLanguage && stored.selectedVocabularyLanguage !== 'all') {
+    const selectedLang = await getSetting("selectedVocabularyLanguage", "all");
+    if (selectedLang && selectedLang !== "all") {
       // Check if the stored language still exists in the options
-      const optionExists = Array.from(dropdown.options).some(option =>
-        option.value === stored.selectedVocabularyLanguage
+      const optionExists = Array.from(dropdown.options).some(
+        (option) => option.value === selectedLang
       );
       if (optionExists) {
-        dropdown.value = stored.selectedVocabularyLanguage;
+        dropdown.value = selectedLang;
         // Trigger filtering to show words for the selected language
         filterVocabulary();
       }
     }
   } catch (error) {
-    console.error('Failed to restore selected language:', error);
+    console.error("Failed to restore selected language:", error);
   }
 }
 
-function getLanguageDisplayName(langCode) {
-  const languageNames = {
-    en: "English",
-    es: "Spanish",
-    fr: "French",
-    de: "German",
-    it: "Italian",
-    pt: "Portuguese",
-    ru: "Russian",
-    ja: "Japanese",
-    ko: "Korean",
-    zh: "Chinese",
-    ar: "Arabic",
-    hi: "Hindi",
-    tr: "Turkish",
-    nl: "Dutch",
-    pl: "Polish",
-    sv: "Swedish",
-    da: "Danish",
-    no: "Norwegian",
-    fi: "Finnish",
-    cs: "Czech",
-    sk: "Slovak",
-    hu: "Hungarian",
-    ro: "Romanian",
-    bg: "Bulgarian",
-    hr: "Croatian",
-    uk: "Ukrainian",
-    el: "Greek",
-    he: "Hebrew",
-    fa: "Persian",
-    th: "Thai",
-    vi: "Vietnamese",
-    id: "Indonesian",
-    ms: "Malay",
-    auto: "Auto-detected",
-  };
-
-  return languageNames[langCode] || langCode.toUpperCase();
-}
+// getLanguageDisplayName is now imported from shared/languages.js
 
 function renderVocabularyList() {
   const vocabularyList = document.getElementById("vocabulary-list");
@@ -572,15 +537,15 @@ function showNoResults(message) {
   listContainer.innerHTML = PopupTemplates.noResultsState(message);
 }
 
-function filterVocabulary() {
+async function filterVocabulary() {
   const selectedLanguage = document.getElementById("source-language").value;
   const searchTerm = document.getElementById("search-input").value.trim();
 
   // Save the selected language to storage for persistence
   try {
-    chrome.storage.sync.set({ selectedVocabularyLanguage: selectedLanguage });
+    await saveSetting("selectedVocabularyLanguage", selectedLanguage);
   } catch (error) {
-    console.error('Failed to save selected language:', error);
+    console.error("Failed to save selected language:", error);
   }
 
   // Use optimized search index if we have a search term
@@ -603,21 +568,9 @@ function filterVocabulary() {
   renderVocabularyList();
 }
 
-// HTML escaping function moved to templates - use PopupTemplates.escapeHtml or TemplateUtils.escapeHtml
-const escapeHtml = TemplateUtils.escapeHtml;
+// HTML escaping function is now imported from shared/utils.js
 
-// Normalize id to the type likely used by IndexedDB (coerce numeric-looking strings to Number)
-function normalizeId(id) {
-  if (id === null || id === undefined) return id;
-  // If already a number, return as-is
-  if (typeof id === "number") return id;
-  // If it's a numeric string, convert to number
-  if (typeof id === "string" && id.trim() !== "" && !isNaN(Number(id))) {
-    return Number(id);
-  }
-  // otherwise return original (likely a string key)
-  return id;
-}
+// normalizeId function is now imported from shared/utils.js
 
 // Toggle context panel visibility
 function toggleContextPanel(id) {
@@ -760,8 +713,8 @@ async function initExtensionToggle() {
   if (!btn || !status) return;
 
   // Read stored value (default true)
-  const stored = await chrome.storage.sync.get({ extensionEnabled: true });
-  updateToggleUI(stored.extensionEnabled);
+  const extensionEnabled = await getSetting("extensionEnabled", true);
+  updateToggleUI(extensionEnabled);
 
   // Listen to changes in storage to reflect external updates
   chrome.storage.onChanged.addListener((changes, area) => {
@@ -772,10 +725,9 @@ async function initExtensionToggle() {
 
   btn.addEventListener("click", async () => {
     // Toggle value
-    const current = (await chrome.storage.sync.get({ extensionEnabled: true }))
-      .extensionEnabled;
+    const current = await getSetting("extensionEnabled", true);
     const next = !current;
-    await chrome.storage.sync.set({ extensionEnabled: next });
+    await saveSetting("extensionEnabled", next);
     updateToggleUI(next);
   });
 

@@ -13,16 +13,24 @@ async function getSourceLanguageForSaving() {
   try {
     // First try to get from storage (set by background script)
     const storageResult = await chrome.storage.sync.get(["sourceLanguage"]);
-    if (storageResult.sourceLanguage && storageResult.sourceLanguage !== 'und') {
+    if (
+      storageResult.sourceLanguage &&
+      storageResult.sourceLanguage !== "und"
+    ) {
       return storageResult.sourceLanguage;
     }
 
     // If not in storage, try direct detection
     const response = await chrome.runtime.sendMessage({
-      type: "DETECT_PAGE_LANGUAGE"
+      type: "DETECT_PAGE_LANGUAGE",
     });
 
-    if (response && response.ok && response.language && response.language !== 'und') {
+    if (
+      response &&
+      response.ok &&
+      response.language &&
+      response.language !== "und"
+    ) {
       return response.language;
     }
   } catch (err) {

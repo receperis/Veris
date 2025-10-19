@@ -1,4 +1,4 @@
-import { showInfoToast } from "./toast";
+import { showInfoToast } from "./toast.js";
 
 export async function translateTextWithAPI(text, targetLang, sourceLanguage) {
   if (targetLang === sourceLanguage) {

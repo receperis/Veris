@@ -2,20 +2,15 @@
 
 import "./options.css";
 import { TemplateUtils } from "./templates/template-utils.js";
+// Import shared utilities and constants
+import {
+  getSettings,
+  saveSettings,
+  DEFAULT_SETTINGS,
+} from "./src/shared/storage.js";
 
-const defaultSettings = {
-  target_lang: "en",
-  bubbleMode: "auto", // 'auto' | 'icon' | 'hotkey'
-  bubbleIconDelay: 450,
-  bubbleHotkey: "", // empty -> use double copy gesture
-  exerciseSettings: {
-    enabled: true,
-    time: "09:00",
-    days: [1, 2, 3, 4, 5], // Monday to Friday
-    difficulty: "mixed",
-    questionsPerSession: 10,
-  },
-};
+// Use shared default settings
+const defaultSettings = DEFAULT_SETTINGS;
 
 function qs(id) {
   return document.getElementById(id);
@@ -56,7 +51,7 @@ async function saveOptions() {
   }
 
   try {
-    await chrome.storage.sync.set({
+    const success = await saveSettings({
       target_lang,
       bubbleMode,
       bubbleIconDelay,
@@ -70,10 +65,13 @@ async function saveOptions() {
       },
     });
 
-    // Notify background script to update alarms
-    chrome.runtime.sendMessage({ type: "UPDATE_EXERCISE_SETTINGS" });
-
-    saveStatus("Settings saved successfully!");
+    if (success) {
+      // Notify background script to update alarms
+      chrome.runtime.sendMessage({ type: "UPDATE_EXERCISE_SETTINGS" });
+      saveStatus("Settings saved successfully!");
+    } else {
+      saveStatus("Failed to save settings", false);
+    }
   } catch (err) {
     console.error("Error saving settings:", err);
     saveStatus("Error saving settings: " + err.message, false);
@@ -82,7 +80,7 @@ async function saveOptions() {
 
 async function restoreOptions() {
   try {
-    const settings = await chrome.storage.sync.get(defaultSettings);
+    const settings = await getSettings(defaultSettings);
 
     // Restore translation settings
     qs("target_lang").value = settings.target_lang;

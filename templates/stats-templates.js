@@ -96,11 +96,8 @@ export const StatsTemplates = {
 };
 
 // Helper function for HTML escaping
-function escapeHtml(text) {
-  const div = document.createElement("div");
-  div.textContent = text;
-  return div.innerHTML;
-}
+// Import shared escapeHtml function
+import { escapeHtml } from "../src/shared/utils.js";
 
 // Make escapeHtml available for templates
 StatsTemplates.escapeHtml = escapeHtml;

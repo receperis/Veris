@@ -132,40 +132,16 @@ export const ExerciseTemplates = {
     </div>
   `,
 
-  // Helper method for language names
-  languageName: (code) => {
-    const languageNames = {
-      en: "English",
-      es: "Spanish",
-      fr: "French",
-      de: "German",
-      it: "Italian",
-      pt: "Portuguese",
-      ru: "Russian",
-      ja: "Japanese",
-      ko: "Korean",
-      zh: "Chinese",
-      tr: "Turkish",
-      nl: "Dutch",
-      sv: "Swedish",
-      da: "Danish",
-      no: "Norwegian",
-      fi: "Finnish",
-      pl: "Polish",
-      cs: "Czech",
-      hu: "Hungarian",
-      ro: "Romanian",
-    };
-    return languageNames[code] || code.toUpperCase();
-  },
+  // Language name function will be set from imports
+  languageName: null,
 };
 
-// Helper function for HTML escaping
-function escapeHtml(text) {
-  const div = document.createElement("div");
-  div.textContent = text;
-  return div.innerHTML;
-}
+// Import shared utilities
+import { escapeHtml } from "../src/shared/utils.js";
+import { getLanguageDisplayName } from "../src/shared/languages.js";
+
+// Set the imported functions
+ExerciseTemplates.languageName = getLanguageDisplayName;
 
 // Make escapeHtml available for templates
 ExerciseTemplates.escapeHtml = escapeHtml;

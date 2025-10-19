@@ -2,6 +2,9 @@
 
 import "./stats.css";
 import { StatsTemplates, TemplateUtils } from "../templates/template-utils.js";
+// Import shared utilities
+import { formatRelativeDate } from "../src/shared/utils.js";
+import { getLanguageDisplayName } from "../src/shared/languages.js";
 
 document.addEventListener("DOMContentLoaded", async () => {
   await initializeStatsPage();
@@ -304,62 +307,9 @@ function calculateStudyStreak(exerciseHistory) {
   return streak;
 }
 
-function getLanguageDisplayName(langCode) {
-  const languageNames = {
-    en: "English",
-    es: "Spanish",
-    fr: "French",
-    de: "German",
-    it: "Italian",
-    pt: "Portuguese",
-    ru: "Russian",
-    ja: "Japanese",
-    ko: "Korean",
-    zh: "Chinese",
-    ar: "Arabic",
-    hi: "Hindi",
-    tr: "Turkish",
-    nl: "Dutch",
-    pl: "Polish",
-    sv: "Swedish",
-    da: "Danish",
-    no: "Norwegian",
-    fi: "Finnish",
-    cs: "Czech",
-    sk: "Slovak",
-    hu: "Hungarian",
-    ro: "Romanian",
-    bg: "Bulgarian",
-    hr: "Croatian",
-    uk: "Ukrainian",
-    el: "Greek",
-    he: "Hebrew",
-    fa: "Persian",
-    th: "Thai",
-    vi: "Vietnamese",
-    id: "Indonesian",
-    ms: "Malay",
-    auto: "Auto-detected",
-    unknown: "Unknown",
-  };
+// getLanguageDisplayName is now imported from shared/languages.js
 
-  return languageNames[langCode] || langCode.toUpperCase();
-}
-
-function formatRelativeDate(date) {
-  const now = new Date();
-  const diffMs = now - date;
-  const diffMins = Math.floor(diffMs / (1000 * 60));
-  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-  if (diffMins < 1) return "Just now";
-  if (diffMins < 60) return `${diffMins} minutes ago`;
-  if (diffHours < 24) return `${diffHours} hours ago`;
-  if (diffDays < 7) return `${diffDays} days ago`;
-
-  return date.toLocaleDateString();
-}
+// formatRelativeDate is now imported from shared/utils.js
 
 function animateValue(elementId, start, end, duration, suffix = "") {
   const element = document.getElementById(elementId);

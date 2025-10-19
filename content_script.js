@@ -411,24 +411,12 @@ function handleSequenceKey(spec, e) {
     return false;
   }
 }
-// Use multiple events to robustly detect user selections (mouse, pointer, touch, and programmatic)
-// document.addEventListener("selectionchange", () => {
-//   // selectionchange doesn't provide an event target, so call without event
-//   setTimeout(() => onSelection(), 200);
-// });
 
 ["pointerup", "mouseup", "touchend"].forEach((evt) =>
   document.addEventListener(evt, (e) => {
     setTimeout(() => onSelection(e), 10);
   })
 );
-
-// document.addEventListener("mousedown", (e) => {
-// setTimeout(() => onSelection(e), 10);
-// });
-// document.addEventListener("keyup", (e) => {
-//   setTimeout(() => onSelection(e), 10);
-// });
 
 window.addEventListener(
   "scroll",

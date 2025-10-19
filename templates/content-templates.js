@@ -153,96 +153,22 @@ export const ContentTemplates = {
     </div>
   `,
 
-  // Helper methods for language names (these should be imported from utils)
-  getLanguageName: (code) => {
-    // This should be imported from utils.js in actual implementation
-    const languageNames = {
-      en: "EN",
-      es: "ES",
-      fr: "FR",
-      de: "DE",
-      it: "IT",
-      pt: "PT",
-      ru: "RU",
-      ja: "JA",
-      ko: "KO",
-      zh: "ZH",
-      ar: "AR",
-      hi: "HI",
-      tr: "TR",
-      nl: "NL",
-      pl: "PL",
-      sv: "SV",
-      da: "DA",
-      no: "NO",
-      fi: "FI",
-      cs: "CS",
-      sk: "SK",
-      hu: "HU",
-      ro: "RO",
-      bg: "BG",
-      hr: "HR",
-      uk: "UK",
-      el: "EL",
-      he: "HE",
-      fa: "FA",
-      th: "TH",
-      vi: "VI",
-      id: "ID",
-      ms: "MS",
-      auto: "AUTO",
-    };
-    return languageNames[code] || code.toUpperCase();
-  },
+  // Language name functions are now imported from shared modules
+  getLanguageName: null, // Will be set from imports
 
-  getFullLanguageName: (code) => {
-    // This should be imported from utils.js in actual implementation
-    const fullNames = {
-      en: "English",
-      es: "Spanish",
-      fr: "French",
-      de: "German",
-      it: "Italian",
-      pt: "Portuguese",
-      ru: "Russian",
-      ja: "Japanese",
-      ko: "Korean",
-      zh: "Chinese",
-      ar: "Arabic",
-      hi: "Hindi",
-      tr: "Turkish",
-      nl: "Dutch",
-      pl: "Polish",
-      sv: "Swedish",
-      da: "Danish",
-      no: "Norwegian",
-      fi: "Finnish",
-      cs: "Czech",
-      sk: "Slovak",
-      hu: "Hungarian",
-      ro: "Romanian",
-      bg: "Bulgarian",
-      hr: "Croatian",
-      uk: "Ukrainian",
-      el: "Greek",
-      he: "Hebrew",
-      fa: "Persian",
-      th: "Thai",
-      vi: "Vietnamese",
-      id: "Indonesian",
-      ms: "Malay",
-      auto: "Auto-detected",
-    };
-    return fullNames[code] || code;
-  },
+  getFullLanguageName: null, // Will be set from imports
 };
 
-// Helper function for HTML escaping
-function escapeHtml(text) {
-  const div = document.createElement("div");
-  div.textContent = text;
-  return div.innerHTML;
-}
+// Import shared utilities
+import { escapeHtml } from "../src/shared/utils.js";
+import {
+  getLanguageName,
+  getLanguageDisplayName,
+} from "../src/shared/languages.js";
+
+// Set the imported functions
+ContentTemplates.getLanguageName = getLanguageName;
+ContentTemplates.getFullLanguageName = getLanguageDisplayName;
 
 // Make escapeHtml available for templates
 ContentTemplates.escapeHtml = escapeHtml;
