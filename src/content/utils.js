@@ -23,8 +23,14 @@ export {
 
 export function findBlockAncestor(node) {
   if (!node) return null;
-  if (node.nodeType === 3) node = node.parentElement;
-  const BLOCK_TAGS = new Set([
+
+  // If a text node was provided, use its parent element
+  const startElement =
+    node.nodeType === Node.TEXT_NODE ? node.parentElement : node;
+
+  if (!startElement) return null;
+
+  const BLOCK_LEVEL_TAGS = new Set([
     "P",
     "DIV",
     "LI",
@@ -34,17 +40,28 @@ export function findBlockAncestor(node) {
     "TD",
     "TH",
   ]);
-  let cur = node;
-  let depth = 0;
-  while (cur && cur !== document.body && depth < 10) {
-    if (cur.tagName && BLOCK_TAGS.has(cur.tagName)) return cur;
-    cur = cur.parentElement;
-    depth++;
+
+  const MAX_DEPTH = 10;
+  let ancestor = startElement;
+  for (
+    let depth = 0;
+    ancestor && ancestor !== document.body && depth < MAX_DEPTH;
+    depth++
+  ) {
+    if (
+      ancestor.nodeType === Node.ELEMENT_NODE &&
+      BLOCK_LEVEL_TAGS.has(ancestor.tagName)
+    ) {
+      return ancestor;
+    }
+    ancestor = ancestor.parentElement;
   }
-  return cur || null;
+
+  // Preserve previous behavior: return the current ancestor (could be document.body) or null
+  return ancestor || null;
 }
 
-export function computeContextSentence(originalWord, translatedWord) {
+export function computeContextSentence(originalString, translatedString) {
   const { selectionContextElement, lastSelection } = state;
   if (!selectionContextElement) return lastSelection;
   let raw = "";
@@ -57,10 +74,20 @@ export function computeContextSentence(originalWord, translatedWord) {
   if (!raw) return lastSelection;
   raw = raw.replace(/\s+/g, " ").trim();
   if (!raw) return lastSelection;
-  const sentences = raw.split(/(?<=[.!?])\s+/);
-  const lw = (originalWord || "").toLowerCase();
-  const lt = (translatedWord || "").toLowerCase();
-  let found = sentences.find((s) => s.toLowerCase().includes(lw));
+
+  const sentences = raw.split(/(?<=[.!?])\s+/); // Split by sentence-ending punctuation
+  const lw = (originalString || "").toLowerCase();
+  const lt = (translatedString || "").toLowerCase();
+  let found;
+  const lwTrim = lw.trim();
+  if (lwTrim) {
+    const lwWords = lwTrim.split(/\s+/).filter(Boolean); // Splits into words in case it is a phrase
+    found = sentences.find((s) => {
+      const lower = s.toLowerCase();
+      return lwWords.some((w) => lower.includes(w));
+    });
+  }
+
   if (!found && lt) found = sentences.find((s) => s.toLowerCase().includes(lt));
   return (found || lastSelection).trim();
 }

@@ -519,7 +519,7 @@ export async function handleSaveCombination(combinedPhrase, translation) {
       console.warn("Could not get detected source language:", err);
     }
 
-    const context = state.lastSelection;
+    const context = computeContextSentence(combinedPhrase, translation);
     let contextTranslation = "";
 
     // Translate the context to target language if it exists and is different from the combined phrase
