@@ -16,8 +16,8 @@ export const LANGUAGE_NAMES = {
   ja: "Japanese",
   ko: "Korean",
   zh: "Chinese",
-  "zh-cn": "Chinese (Simplified)",
-  "zh-tw": "Chinese (Traditional)",
+  "zh-CN": "Chinese (Simplified)",
+  "zh-TW": "Chinese (Traditional)",
   ar: "Arabic",
   hi: "Hindi",
   tr: "Turkish",
@@ -87,8 +87,8 @@ export const SHORT_LANGUAGE_CODES = {
   ja: "JA",
   ko: "KO",
   zh: "ZH",
-  "zh-cn": "CN",
-  "zh-tw": "TW",
+  "zh-CN": "CN",
+  "zh-TW": "TW",
   ar: "AR",
   hi: "HI",
   tr: "TR",
@@ -243,8 +243,10 @@ export function normalizeLanguageCode(langCode) {
   // Handle common variations
   const variations = {
     chinese: "zh",
-    "simplified chinese": "zh-cn",
-    "traditional chinese": "zh-tw",
+    "simplified chinese": "zh-CN",
+    "traditional chinese": "zh-TW",
+    "zh-cn": "zh-CN", // Handle lowercase variations
+    "zh-tw": "zh-TW", // Handle lowercase variations
     arabic: "ar",
     japanese: "ja",
     korean: "ko",

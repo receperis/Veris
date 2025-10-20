@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Chrome Translator API Language Availability Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .controls {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f1f5f9;
+            border-radius: 6px;
+        }
+        
+        .language-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .language-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            background: white;
+        }
+        
+        .language-name {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 10px;
+        }
+        
+        .test-status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            margin: 2px;
+        }
+        
+        .status-available { background: #dcfce7; color: #166534; }
+        .status-unavailable { background: #fef2f2; color: #991b1b; }
+        .status-downloadable { background: #fef3c7; color: #92400e; }
+        .status-testing { background: #e0e7ff; color: #3730a3; }
+        .status-error { background: #fce7f3; color: #9d174d; }
+        
+        .summary {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .progress {
+            margin: 10px 0;
+            background: #f1f5f9;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 20px;
+            background: #3b82f6;
+            transition: width 0.3s ease;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+        
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        
+        button:hover {
+            background: #2563eb;
+        }
+        
+        button:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
+        }
+        
+        select {
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            margin: 0 10px;
+        }
+        
+        .matrix-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 12px;
+        }
+        
+        .matrix-table th,
+        .matrix-table td {
+            border: 1px solid #e2e8f0;
+            padding: 4px;
+            text-align: center;
+        }
+        
+        .matrix-table th {
+            background: #f8fafc;
+            font-weight: 600;
+        }
+        
+        .matrix-cell-available { background: #dcfce7; }
+        .matrix-cell-unavailable { background: #fef2f2; }
+        .matrix-cell-downloadable { background: #fef3c7; }
+        .matrix-cell-error { background: #fce7f3; }
+        .matrix-cell-same { background: #f1f5f9; }
+        
+        .export-section {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8fafc;
+            border-radius: 6px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Chrome Translator API Language Availability Test</h1>
+            <p>This tool tests the availability of language pairs using Chrome's built-in Translator API.</p>
+            <p><strong>Note:</strong> This requires Chrome 138+ and the feature may need to be enabled in chrome://flags</p>
+        </div>
+
+        <div class="controls">
+            <button id="testBtn">Start Language Pair Testing</button>
+            <button id="testSampleBtn">Test Sample Pairs</button>
+            <button id="clearBtn">Clear Results</button>
+            <label>
+                Source Language:
+                <select id="sourceSelect">
+                    <option value="auto">Auto-detect</option>
+                </select>
+            </label>
+            <label>
+                Target Language:
+                <select id="targetSelect">
+                    <option value="en">English</option>
+                </select>
+            </label>
+            <button id="testSingleBtn">Test Single Pair</button>
+        </div>
+
+        <div class="progress" id="progressContainer" style="display: none;">
+            <div class="progress-bar" id="progressBar">0%</div>
+        </div>
+
+        <div class="summary" id="summary" style="display: none;">
+            <h3>Test Summary</h3>
+            <div id="summaryContent"></div>
+        </div>
+
+        <div id="resultsContainer">
+            <div class="language-grid" id="languageGrid"></div>
+        </div>
+
+        <div class="export-section" style="display: none;" id="exportSection">
+            <h3>Export Results</h3>
+            <button id="exportJsonBtn">Export as JSON</button>
+            <button id="exportCsvBtn">Export as CSV</button>
+            <button id="showMatrixBtn">Show Compatibility Matrix</button>
+        </div>
+
+        <div id="matrixContainer" style="display: none;">
+            <h3>Language Compatibility Matrix</h3>
+            <div style="overflow-x: auto;">
+                <table class="matrix-table" id="matrixTable"></table>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Import language data from your repository
+        const LANGUAGE_NAMES = {
+            auto: "Auto-detected",
+            en: "English",
+            es: "Spanish",
+            fr: "French",
+            de: "German",
+            it: "Italian",
+            pt: "Portuguese",
+            ru: "Russian",
+            ja: "Japanese",
+            ko: "Korean",
+            zh: "Chinese",
+            "zh-CN": "Chinese (Simplified)",
+            "zh-TW": "Chinese (Traditional)",
+            ar: "Arabic",
+            hi: "Hindi",
+            tr: "Turkish",
+            nl: "Dutch",
+            pl: "Polish",
+            sv: "Swedish",
+            da: "Danish",
+            no: "Norwegian",
+            fi: "Finnish",
+            cs: "Czech",
+            sk: "Slovak",
+            hu: "Hungarian",
+            ro: "Romanian",
+            bg: "Bulgarian",
+            hr: "Croatian",
+            uk: "Ukrainian",
+            el: "Greek",
+            he: "Hebrew",
+            fa: "Persian",
+            th: "Thai",
+            vi: "Vietnamese",
+            id: "Indonesian",
+            ms: "Malay",
+            ur: "Urdu",
+            bn: "Bengali",
+            ta: "Tamil",
+            te: "Telugu",
+            ml: "Malayalam",
+            kn: "Kannada",
+            gu: "Gujarati",
+            pa: "Punjabi",
+            ne: "Nepali",
+            si: "Sinhala",
+            my: "Burmese",
+            km: "Khmer",
+            lo: "Lao",
+            ka: "Georgian",
+            am: "Amharic",
+            sw: "Swahili",
+            af: "Afrikaans",
+            sr: "Serbian",
+            sl: "Slovenian",
+            et: "Estonian",
+            lv: "Latvian",
+            lt: "Lithuanian",
+            be: "Belarusian",
+            mk: "Macedonian",
+            mt: "Maltese",
+            ca: "Catalan",
+            eu: "Basque",
+            gl: "Galician",
+            is: "Icelandic",
+            sq: "Albanian"
+        };
+
+        const COMMON_LANGUAGES = [
+            "en", "es", "fr", "de", "it", "pt", "ru", "ja", "ko", "zh",
+            "ar", "hi", "tr", "nl", "sv", "da", "no", "fi", "pl", "cs",
+            "sk", "hu", "ro", "bg", "hr", "uk", "el", "he", "fa", "th",
+            "vi", "id", "ms", "sw"
+        ];
+
+        let testResults = {};
+        let isTestingInProgress = false;
+
+        // Initialize the interface
+        function init() {
+            populateLanguageSelects();
+            bindEvents();
+            checkTranslatorSupport();
+        }
+
+        function checkTranslatorSupport() {
+            if (!('Translator' in self)) {
+                document.body.insertAdjacentHTML('afterbegin', 
+                    '<div style="background: #fef2f2; color: #991b1b; padding: 15px; margin-bottom: 20px; border-radius: 6px; border: 1px solid #fecaca;">' +
+                    '<strong>⚠️ Translator API Not Available</strong><br>' +
+                    'This browser does not support the Translator API. You need Chrome 138+ with the feature enabled.' +
+                    '</div>'
+                );
+            }
+        }
+
+        function populateLanguageSelects() {
+            const sourceSelect = document.getElementById('sourceSelect');
+            const targetSelect = document.getElementById('targetSelect');
+
+            Object.entries(LANGUAGE_NAMES).forEach(([code, name]) => {
+                if (code !== 'auto') {
+                    const option = new Option(`${name} (${code.toUpperCase()})`, code);
+                    sourceSelect.appendChild(option.cloneNode(true));
+                    targetSelect.appendChild(option);
+                }
+            });
+        }
+
+        function bindEvents() {
+            document.getElementById('testBtn').onclick = () => startFullTest();
+            document.getElementById('testSampleBtn').onclick = () => startSampleTest();
+            document.getElementById('clearBtn').onclick = () => clearResults();
+            document.getElementById('testSingleBtn').onclick = () => testSinglePair();
+            document.getElementById('exportJsonBtn').onclick = () => exportResults('json');
+            document.getElementById('exportCsvBtn').onclick = () => exportResults('csv');
+            document.getElementById('showMatrixBtn').onclick = () => toggleMatrix();
+        }
+
+        async function startFullTest() {
+            if (isTestingInProgress) return;
+            
+            const languages = Object.keys(LANGUAGE_NAMES).filter(code => code !== 'auto');
+            await runLanguageTests(languages, languages);
+        }
+
+        async function startSampleTest() {
+            if (isTestingInProgress) return;
+            
+            const sampleLanguages = ['en', 'es', 'fr', 'de', 'it', 'pt', 'ru', 'ja', 'ko', 'zh', 'ar'];
+            await runLanguageTests(sampleLanguages, sampleLanguages);
+        }
+
+        async function testSinglePair() {
+            const sourceCode = document.getElementById('sourceSelect').value;
+            const targetCode = document.getElementById('targetSelect').value;
+            
+            if (sourceCode === targetCode && sourceCode !== 'auto') {
+                alert('Source and target languages cannot be the same (unless using auto-detect)');
+                return;
+            }
+
+            const result = await testLanguagePair(sourceCode, targetCode);
+            
+            // Display single result
+            const grid = document.getElementById('languageGrid');
+            grid.innerHTML = createLanguageCard(sourceCode, targetCode, result);
+            
+            updateSummary({ [`${sourceCode}-${targetCode}`]: result });
+        }
+
+        async function runLanguageTests(sourceLanguages, targetLanguages) {
+            if (isTestingInProgress) return;
+            
+            isTestingInProgress = true;
+            testResults = {};
+            
+            const testBtn = document.getElementById('testBtn');
+            const sampleBtn = document.getElementById('testSampleBtn');
+            const singleBtn = document.getElementById('testSingleBtn');
+            
+            testBtn.disabled = true;
+            sampleBtn.disabled = true;
+            singleBtn.disabled = true;
+            testBtn.textContent = 'Testing...';
+            
+            const progressContainer = document.getElementById('progressContainer');
+            const progressBar = document.getElementById('progressBar');
+            
+            progressContainer.style.display = 'block';
+            
+            const totalTests = sourceLanguages.length * targetLanguages.length;
+            let completedTests = 0;
+            
+            const grid = document.getElementById('languageGrid');
+            grid.innerHTML = '';
+
+            for (const sourceCode of sourceLanguages) {
+                for (const targetCode of targetLanguages) {
+                    if (sourceCode === targetCode && sourceCode !== 'auto') {
+                        completedTests++;
+                        continue; // Skip same language pairs
+                    }
+
+                    const result = await testLanguagePair(sourceCode, targetCode);
+                    const pairKey = `${sourceCode}-${targetCode}`;
+                    testResults[pairKey] = result;
+                    
+                    // Add card to display
+                    grid.insertAdjacentHTML('beforeend', createLanguageCard(sourceCode, targetCode, result));
+                    
+                    completedTests++;
+                    const progress = (completedTests / totalTests) * 100;
+                    progressBar.style.width = `${progress}%`;
+                    progressBar.textContent = `${Math.round(progress)}% (${completedTests}/${totalTests})`;
+                    
+                    // Small delay to prevent overwhelming the API
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                }
+            }
+
+            progressContainer.style.display = 'none';
+            updateSummary(testResults);
+            document.getElementById('exportSection').style.display = 'block';
+            
+            testBtn.disabled = false;
+            sampleBtn.disabled = false;
+            singleBtn.disabled = false;
+            testBtn.textContent = 'Start Language Pair Testing';
+            isTestingInProgress = false;
+        }
+
+        async function testLanguagePair(sourceCode, targetCode) {
+            if (!('Translator' in self)) {
+                return { 
+                    status: 'error', 
+                    message: 'Translator API not available',
+                    timestamp: new Date().toISOString()
+                };
+            }
+
+            try {
+                // Test availability first
+                const availability = await Translator.availability({
+                    sourceLanguage: sourceCode,
+                    targetLanguage: targetCode
+                });
+
+                const result = {
+                    sourceCode,
+                    targetCode,
+                    sourceName: LANGUAGE_NAMES[sourceCode],
+                    targetName: LANGUAGE_NAMES[targetCode],
+                    status: availability,
+                    timestamp: new Date().toISOString()
+                };
+
+                // If available, try to create a translator and test with sample text
+                if (availability === 'available') {
+                    try {
+                        const translator = await Translator.create({
+                            sourceLanguage: sourceCode,
+                            targetLanguage: targetCode
+                        });
+                        
+                        const testText = sourceCode === 'en' ? 'Hello world' : 'Test';
+                        const translation = await translator.translate(testText);
+                        
+                        result.testTranslation = {
+                            input: testText,
+                            output: translation,
+                            success: true
+                        };
+                        
+                        // Clean up
+                        if (translator.destroy) {
+                            translator.destroy();
+                        }
+                    } catch (translationError) {
+                        result.testTranslation = {
+                            input: 'Test',
+                            success: false,
+                            error: translationError.message
+                        };
+                    }
+                }
+
+                return result;
+            } catch (error) {
+                return {
+                    sourceCode,
+                    targetCode,
+                    sourceName: LANGUAGE_NAMES[sourceCode],
+                    targetName: LANGUAGE_NAMES[targetCode],
+                    status: 'error',
+                    message: error.message,
+                    timestamp: new Date().toISOString()
+                };
+            }
+        }
+
+        function createLanguageCard(sourceCode, targetCode, result) {
+            const statusClass = `status-${result.status}`;
+            const translationInfo = result.testTranslation ? 
+                `<br><small>Test: "${result.testTranslation.input}" → "${result.testTranslation.output || 'Failed'}"</small>` : '';
+
+            return `
+                <div class="language-card">
+                    <div class="language-name">
+                        ${LANGUAGE_NAMES[sourceCode]} → ${LANGUAGE_NAMES[targetCode]}
+                    </div>
+                    <div class="test-status ${statusClass}">
+                        ${result.status.toUpperCase()}
+                    </div>
+                    <div style="font-size: 12px; color: #64748b; margin-top: 8px;">
+                        ${sourceCode} → ${targetCode}
+                        ${result.message ? `<br>Error: ${result.message}` : ''}
+                        ${translationInfo}
+                        <br>Tested: ${new Date(result.timestamp).toLocaleTimeString()}
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateSummary(results) {
+            const summary = document.getElementById('summary');
+            const content = document.getElementById('summaryContent');
+            
+            const stats = {
+                total: Object.keys(results).length,
+                available: 0,
+                downloadable: 0,
+                unavailable: 0,
+                error: 0
+            };
+
+            Object.values(results).forEach(result => {
+                stats[result.status] = (stats[result.status] || 0) + 1;
+            });
+
+            content.innerHTML = `
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
+                    <div><strong>Total Tested:</strong> ${stats.total}</div>
+                    <div><strong>Available:</strong> ${stats.available}</div>
+                    <div><strong>Downloadable:</strong> ${stats.downloadable}</div>
+                    <div><strong>Unavailable:</strong> ${stats.unavailable}</div>
+                    <div><strong>Errors:</strong> ${stats.error}</div>
+                </div>
+                <div style="margin-top: 15px;">
+                    <strong>Success Rate:</strong> ${((stats.available / stats.total) * 100).toFixed(1)}%
+                </div>
+            `;
+            
+            summary.style.display = 'block';
+        }
+
+        function clearResults() {
+            testResults = {};
+            document.getElementById('languageGrid').innerHTML = '';
+            document.getElementById('summary').style.display = 'none';
+            document.getElementById('exportSection').style.display = 'none';
+            document.getElementById('matrixContainer').style.display = 'none';
+            document.getElementById('progressContainer').style.display = 'none';
+        }
+
+        function exportResults(format) {
+            if (Object.keys(testResults).length === 0) {
+                alert('No test results to export');
+                return;
+            }
+
+            let content, filename, mimeType;
+            
+            if (format === 'json') {
+                content = JSON.stringify(testResults, null, 2);
+                filename = 'language-availability-test.json';
+                mimeType = 'application/json';
+            } else if (format === 'csv') {
+                const headers = ['Source Code', 'Target Code', 'Source Name', 'Target Name', 'Status', 'Message', 'Test Input', 'Test Output', 'Timestamp'];
+                const rows = Object.values(testResults).map(result => [
+                    result.sourceCode,
+                    result.targetCode,
+                    result.sourceName,
+                    result.targetName,
+                    result.status,
+                    result.message || '',
+                    result.testTranslation?.input || '',
+                    result.testTranslation?.output || '',
+                    result.timestamp
+                ]);
+                
+                content = [headers, ...rows].map(row => 
+                    row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')
+                ).join('\n');
+                
+                filename = 'language-availability-test.csv';
+                mimeType = 'text/csv';
+            }
+
+            const blob = new Blob([content], { type: mimeType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function toggleMatrix() {
+            const container = document.getElementById('matrixContainer');
+            if (container.style.display === 'none') {
+                generateMatrix();
+                container.style.display = 'block';
+                document.getElementById('showMatrixBtn').textContent = 'Hide Matrix';
+            } else {
+                container.style.display = 'none';
+                document.getElementById('showMatrixBtn').textContent = 'Show Compatibility Matrix';
+            }
+        }
+
+        function generateMatrix() {
+            const table = document.getElementById('matrixTable');
+            const languages = [...new Set([
+                ...Object.values(testResults).map(r => r.sourceCode),
+                ...Object.values(testResults).map(r => r.targetCode)
+            ])].sort();
+
+            // Generate table header
+            const header = ['', ...languages.map(lang => LANGUAGE_NAMES[lang] || lang)];
+            table.innerHTML = `
+                <thead>
+                    <tr>${header.map(h => `<th>${h}</th>`).join('')}</tr>
+                </thead>
+                <tbody></tbody>
+            `;
+
+            const tbody = table.querySelector('tbody');
+            
+            languages.forEach(sourceLang => {
+                const row = document.createElement('tr');
+                row.innerHTML = `<th>${LANGUAGE_NAMES[sourceLang] || sourceLang}</th>`;
+                
+                languages.forEach(targetLang => {
+                    const cell = document.createElement('td');
+                    const pairKey = `${sourceLang}-${targetLang}`;
+                    const result = testResults[pairKey];
+                    
+                    if (sourceLang === targetLang) {
+                        cell.className = 'matrix-cell-same';
+                        cell.textContent = '—';
+                    } else if (result) {
+                        cell.className = `matrix-cell-${result.status}`;
+                        cell.textContent = result.status.charAt(0).toUpperCase();
+                        cell.title = `${LANGUAGE_NAMES[sourceLang]} → ${LANGUAGE_NAMES[targetLang]}: ${result.status}`;
+                    } else {
+                        cell.textContent = '?';
+                        cell.title = 'Not tested';
+                    }
+                    
+                    row.appendChild(cell);
+                });
+                
+                tbody.appendChild(row);
+            });
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
