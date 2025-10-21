@@ -6,6 +6,22 @@
 const puppeteer = require("puppeteer");
 const path = require("path");
 
+// Custom logger that bypasses Jest's console capturing
+const logger = {
+  log: (message, ...args) => {
+    process.stdout.write(`📝 ${message}\n`);
+    if (args.length > 0) {
+      process.stdout.write(`   ${JSON.stringify(args)}\n`);
+    }
+  },
+  error: (message, ...args) => {
+    process.stderr.write(`❌ ${message}\n`);
+    if (args.length > 0) {
+      process.stderr.write(`   ${JSON.stringify(args)}\n`);
+    }
+  },
+};
+
 describe("Chrome Extension E2E Tests", () => {
   let browser;
   let extensionPage;
@@ -14,7 +30,7 @@ describe("Chrome Extension E2E Tests", () => {
   beforeAll(async () => {
     // Launch browser with extension loaded
     const extensionPath = path.resolve(__dirname, "../..");
-    console.log("Loading extension from path:", extensionPath);
+    logger.log("Loading extension from path:", extensionPath);
 
     try {
       browser = await puppeteer.launch({
@@ -36,7 +52,7 @@ describe("Chrome Extension E2E Tests", () => {
         ],
       });
     } catch (launchError) {
-      console.log(
+      logger.error(
         "Failed to launch browser with extension, trying fallback:",
         launchError.message
       );
@@ -47,7 +63,7 @@ describe("Chrome Extension E2E Tests", () => {
         args: ["--no-sandbox", "--disable-setuid-sandbox"],
       });
       extensionId = "fallback-mode";
-      console.log("Browser launched in fallback mode");
+      logger.log("Browser launched in fallback mode");
       return;
     }
 
@@ -86,9 +102,9 @@ describe("Chrome Extension E2E Tests", () => {
 
       if (extensionTarget) {
         extensionId = extensionTarget.url().split("/")[2];
-        console.log("Extension loaded with ID:", extensionId);
+        logger.log("🎉 Extension loaded with ID:", extensionId);
       } else {
-        console.log("Extension targets not found, using test mode");
+        logger.log("⚠️ Extension targets not found, using test mode");
         extensionId = "test-extension-mode";
       }
     } catch (targetError) {
@@ -903,7 +919,9 @@ describe("Chrome Extension E2E Tests", () => {
         expect(["BUTTON", "INPUT", "SELECT"]).toContain(activeElement2);
 
         // Check if page is still connected before Enter key test
-        const isConnected = await page.evaluate(() => document.readyState === "complete");
+        const isConnected = await page.evaluate(
+          () => document.readyState === "complete"
+        );
         if (!isConnected) {
           console.log("Page disconnected before Enter key test");
           return;
@@ -916,7 +934,7 @@ describe("Chrome Extension E2E Tests", () => {
             tagName: active.tagName,
             type: active.type || null,
             id: active.id || null,
-            className: active.className || null
+            className: active.className || null,
           };
         });
         console.log("Focused element before Enter:", focusedElement);
@@ -924,19 +942,28 @@ describe("Chrome Extension E2E Tests", () => {
         // Test Enter key activation with error handling
         try {
           // Only test Enter if the focused element won't cause navigation
-          if (focusedElement.tagName === "INPUT" ||
+          if (
+            focusedElement.tagName === "INPUT" ||
             (focusedElement.tagName === "BUTTON" &&
               !focusedElement.className.includes("close") &&
-              !focusedElement.id.includes("close"))) {
+              !focusedElement.id.includes("close"))
+          ) {
             await page.keyboard.press("Enter");
             // Short wait to see if page is still responsive
             await new Promise((resolve) => setTimeout(resolve, 100));
           } else {
-            console.log("Skipping Enter key test on potentially destructive element");
+            console.log(
+              "Skipping Enter key test on potentially destructive element"
+            );
           }
         } catch (error) {
-          if (error.message.includes("Target closed") || error.message.includes("Protocol error")) {
-            console.log("Enter key caused page/target to close, which is expected behavior");
+          if (
+            error.message.includes("Target closed") ||
+            error.message.includes("Protocol error")
+          ) {
+            console.log(
+              "Enter key caused page/target to close, which is expected behavior"
+            );
             // This is actually valid behavior if Enter triggered navigation or popup close
           } else {
             throw error; // Re-throw unexpected errors
