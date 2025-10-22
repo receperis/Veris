@@ -251,7 +251,6 @@ async function initializeVocabularyBrowser() {
         filteredVocabulary = allVocabulary.slice(0, 200);
       }
       renderVocabularyList();
-      attachEventDelegation();
     } else {
       console.error("Failed to load vocabulary:", response);
       showNoResults(
@@ -386,7 +385,6 @@ function toggleEditMode(enable) {
     editBtn.setAttribute("aria-pressed", editMode ? "true" : "false");
   }
   renderVocabularyList();
-  attachEventDelegation();
 
   // Toggle an editing class on the vocabulary list for CSS hooks and clarity
   const listEl = document.getElementById("vocabulary-list");
@@ -636,12 +634,7 @@ async function filterVocabulary() {
   }
 
   renderVocabularyList();
-  attachEventDelegation();
 }
-
-// HTML escaping function is now imported from shared/utils.js
-
-// normalizeId function is now imported from shared/utils.js
 
 // Toggle context panel visibility
 function toggleContextPanel(id) {
