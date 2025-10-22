@@ -17,8 +17,9 @@ class SearchIndex {
 
   buildIndex(vocabulary) {
     this.allWords = vocabulary;
-    this.sourceIndex.clear();
-    this.translationIndex.clear();
+
+    // Properly clear existing Sets in the Maps to prevent memory leaks
+    this.clearIndex();
 
     vocabulary.forEach((word, index) => {
       // Index source text
@@ -34,6 +35,23 @@ class SearchIndex {
         this.translationIndex
       );
     });
+  }
+
+  clearIndex() {
+    // Clear Sets stored as values in the Maps
+    for (const wordSet of this.sourceIndex.values()) {
+      if (wordSet instanceof Set) {
+        wordSet.clear();
+      }
+    }
+    for (const wordSet of this.translationIndex.values()) {
+      if (wordSet instanceof Set) {
+        wordSet.clear();
+      }
+    }
+
+    this.sourceIndex.clear();
+    this.translationIndex.clear();
   }
 
   indexText(text, wordIndex, index) {
@@ -142,6 +160,28 @@ class SearchIndex {
   }
 }
 
+// Global cleanup function to prevent memory leaks
+function cleanupResources() {
+  // Clear search index
+  if (window.searchIndex) {
+    window.searchIndex.clearIndex();
+  }
+
+  // Remove storage listeners
+  if (window.popupStorageListener) {
+    chrome.storage.onChanged.removeListener(window.popupStorageListener);
+    window.popupStorageListener = null;
+  }
+
+  // Clear vocabulary data
+  allVocabulary = [];
+  filteredVocabulary = [];
+}
+
+// Clean up when popup is about to close
+window.addEventListener("beforeunload", cleanupResources);
+window.addEventListener("unload", cleanupResources);
+
 document.addEventListener("DOMContentLoaded", async () => {
   // Initialize the vocabulary browser
   await initializeVocabularyBrowser();
@@ -196,6 +236,9 @@ async function initializeVocabularyBrowser() {
         ...new Set(allVocabulary.map((item) => item.sourceLanguage)),
       ].filter((lang) => lang);
 
+      // Clear existing search index to prevent memory accumulation
+      searchIndex.clearIndex();
+
       // Build search index for fast filtering
       searchIndex.buildIndex(allVocabulary);
 
@@ -204,9 +247,11 @@ async function initializeVocabularyBrowser() {
 
       // Initial display of all vocabulary (filterVocabulary might have been called in populateLanguageDropdown)
       if (filteredVocabulary.length === 0) {
-        filteredVocabulary = [...allVocabulary];
+        // Limit initial render to prevent excessive DOM nodes (show first 200 items)
+        filteredVocabulary = allVocabulary.slice(0, 200);
       }
       renderVocabularyList();
+      attachEventDelegation();
     } else {
       console.error("Failed to load vocabulary:", response);
       showNoResults(
@@ -259,21 +304,39 @@ function renderVocabularyList() {
     return;
   }
 
-  vocabularyList.innerHTML = filteredVocabulary
-    .map((item) => {
-      const id = item.id || "";
-      const hasContext =
-        (item.context && item.context.trim()) ||
-        (item.contextTranslation && item.contextTranslation.trim());
+  // Clear existing content more efficiently to prevent DOM node accumulation
+  while (vocabularyList.firstChild) {
+    vocabularyList.removeChild(vocabularyList.firstChild);
+  }
 
-      // Use template based on edit mode
-      if (editMode) {
-        return PopupTemplates.vocabularyItemEdit(item, id, hasContext);
-      } else {
-        return PopupTemplates.vocabularyItem(item, id, hasContext);
-      }
-    })
-    .join("");
+  // Use DocumentFragment for better performance and reduced reflows
+  const fragment = document.createDocumentFragment();
+
+  filteredVocabulary.forEach((item) => {
+    const id = item.id || "";
+    const hasContext =
+      (item.context && item.context.trim()) ||
+      (item.contextTranslation && item.contextTranslation.trim());
+
+    const itemDiv = document.createElement("div");
+    // Use template based on edit mode
+    if (editMode) {
+      itemDiv.innerHTML = PopupTemplates.vocabularyItemEdit(
+        item,
+        id,
+        hasContext
+      );
+    } else {
+      itemDiv.innerHTML = PopupTemplates.vocabularyItem(item, id, hasContext);
+    }
+
+    // Move the actual vocabulary item from wrapper to fragment
+    while (itemDiv.firstChild) {
+      fragment.appendChild(itemDiv.firstChild);
+    }
+  });
+
+  vocabularyList.appendChild(fragment);
 }
 
 // Toggle a single item into edit mode (inline) when user clicks pen icon
@@ -323,6 +386,7 @@ function toggleEditMode(enable) {
     editBtn.setAttribute("aria-pressed", editMode ? "true" : "false");
   }
   renderVocabularyList();
+  attachEventDelegation();
 
   // Toggle an editing class on the vocabulary list for CSS hooks and clarity
   const listEl = document.getElementById("vocabulary-list");
@@ -347,11 +411,13 @@ function attachEditModeListeners() {
   const list = document.getElementById("vocabulary-list");
   if (!list) return;
 
-  // Remove any previous delegated listeners to avoid duplicates
-  list.replaceWith(list.cloneNode(true));
-  const newList = document.getElementById("vocabulary-list");
+  // Don't replace the entire element - just remove existing event listener if it exists
+  const existingHandler = list._vocabularyClickHandler;
+  if (existingHandler) {
+    list.removeEventListener("click", existingHandler);
+  }
 
-  newList.addEventListener("click", async (e) => {
+  const clickHandler = async (e) => {
     const saveBtn = e.target.closest(".save-word");
     const deleteBtn = e.target.closest(".delete-word");
     const editIcon = e.target.closest(".icon-edit");
@@ -387,7 +453,11 @@ function attachEditModeListeners() {
       beginInlineEdit(id);
       return;
     }
-  });
+  };
+
+  // Store reference for future cleanup and add the listener
+  list._vocabularyClickHandler = clickHandler;
+  list.addEventListener("click", clickHandler);
 }
 
 async function handleSaveWord(id) {
@@ -566,6 +636,7 @@ async function filterVocabulary() {
   }
 
   renderVocabularyList();
+  attachEventDelegation();
 }
 
 // HTML escaping function is now imported from shared/utils.js
@@ -627,9 +698,15 @@ function setupEventListeners() {
   const sourceLangEl = document.getElementById("source-language");
   if (sourceLangEl) sourceLangEl.addEventListener("change", filterVocabulary);
 
-  // Search input
+  // Search input with debouncing to prevent excessive filtering
   const searchEl = document.getElementById("search-input");
-  if (searchEl) searchEl.addEventListener("input", filterVocabulary);
+  if (searchEl) {
+    let searchTimeout;
+    searchEl.addEventListener("input", () => {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(filterVocabulary, 300); // 300ms debounce
+    });
+  }
 
   // Exercise button
   const exerciseBtn = document.getElementById("start-exercise");
@@ -717,11 +794,20 @@ async function initExtensionToggle() {
   updateToggleUI(extensionEnabled);
 
   // Listen to changes in storage to reflect external updates
-  chrome.storage.onChanged.addListener((changes, area) => {
+  const storageChangeHandler = (changes, area) => {
     if (area === "sync" && changes.extensionEnabled) {
       updateToggleUI(changes.extensionEnabled.newValue);
     }
-  });
+  };
+
+  // Remove any existing listener to prevent duplicates
+  if (window.popupStorageListener) {
+    chrome.storage.onChanged.removeListener(window.popupStorageListener);
+  }
+
+  // Store reference for cleanup and add listener
+  window.popupStorageListener = storageChangeHandler;
+  chrome.storage.onChanged.addListener(storageChangeHandler);
 
   btn.addEventListener("click", async () => {
     // Toggle value

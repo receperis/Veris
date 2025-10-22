@@ -5,8 +5,11 @@ module.exports = {
   // Setup files to run before tests
   setupFilesAfterEnv: ["<rootDir>/tests/setup.js"],
 
-  // Test patterns - only E2E
-  testMatch: ["<rootDir>/tests/e2e/extension.test.js"],
+  // Test patterns - E2E tests
+  testMatch: [
+    "<rootDir>/tests/e2e/extension.test.js",
+    "<rootDir>/tests/e2e/user-journey.test.js",
+  ],
 
   // Module paths for extension files
   moduleNameMapper: {
