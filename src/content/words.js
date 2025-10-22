@@ -258,7 +258,6 @@ export async function handleSaveWords() {
       // Translate the context to target language if it exists and is different from the word
 
       if (context && context.trim() !== word.trim()) {
-        console.log("Translating context for word:", word, "Context:", context);
         try {
           contextTranslation = await translateTextWithAPI(
             context,
