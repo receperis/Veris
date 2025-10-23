@@ -228,30 +228,31 @@ body {
 
 /* Exercise Screen */
 .exercise-screen {
-    padding: 40px 30px;
+    padding: 20px 30px;
 }
 
 .flashcard {
     background: white;
     border-radius: 16px;
-    padding: 40px;
+    padding: 30px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-    max-width: 600px;
+    max-width: 650px;
     margin: 0 auto;
 }
 
 .word-context {
     background: #f8fafc;
-    padding: 15px;
-    border-radius: 8px;
-    margin-bottom: 30px;
+    padding: 20px;
+    border-radius: 12px;
+    margin: 20px 0 30px 0;
     border-left: 4px solid #4f46e5;
+    text-align: center;
 }
 
 .context-label {
     font-weight: 600;
     color: #4f46e5;
-    font-size: 12px;
+    font-size: 14px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
@@ -259,37 +260,41 @@ body {
 .context-text {
     display: block;
     color: #374151;
-    margin-top: 5px;
+    margin-top: 8px;
     font-style: italic;
+    font-size: 16px;
+    line-height: 1.4;
 }
 
 .original-word {
     text-align: center;
-    margin-bottom: 40px;
+    margin-bottom: 0px;
 }
 
 .word-display {
-    font-size: 48px;
+    font-size: 54px;
     font-weight: bold;
     color: #374151;
     margin-bottom: 15px;
+    line-height: 1.1;
 }
 
 .word-meta {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
-    font-size: 14px;
+    gap: 12px;
+    font-size: 16px;
     color: #6b7280;
 }
 
 .source-language,
 .target-language {
     background: #e5e7eb;
-    padding: 4px 8px;
-    border-radius: 4px;
+    padding: 6px 12px;
+    border-radius: 6px;
     font-weight: 600;
+    font-size: 14px;
 }
 
 .arrow {
@@ -300,24 +305,27 @@ body {
     text-align: center;
     color: #374151;
     margin-bottom: 25px;
-    font-size: 20px;
+    font-size: 22px;
+    font-weight: 600;
 }
 
 .answer-choices {
     display: grid;
-    gap: 12px;
+    gap: 14px;
     margin-bottom: 30px;
 }
 
 .answer-btn {
     background: white;
     border: 2px solid #e5e7eb;
-    padding: 15px 20px;
+    padding: 18px 24px;
     border-radius: 12px;
-    font-size: 16px;
+    font-size: 18px;
+    font-weight: 500;
     cursor: pointer;
     transition: all 0.2s ease;
     text-align: left;
+    line-height: 1.3;
 }
 
 .answer-btn:hover {
@@ -794,7 +802,20 @@ body {
     }
 
     .word-display {
-        font-size: 36px;
+        font-size: 42px;
+    }
+
+    .context-text {
+        font-size: 15px;
+    }
+
+    .answer-btn {
+        font-size: 16px;
+        padding: 16px 20px;
+    }
+
+    .translation-question h3 {
+        font-size: 20px;
     }
 
     .difficulty-options {
