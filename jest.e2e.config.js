@@ -9,6 +9,7 @@ module.exports = {
   testMatch: [
     "<rootDir>/tests/e2e/extension.test.js",
     "<rootDir>/tests/e2e/user-journey.test.js",
+    "<rootDir>/tests/e2e/first-install.test.js",
   ],
 
   // Module paths for extension files
