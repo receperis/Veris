@@ -14,10 +14,12 @@ tests/
 │   ├── database.service.test.js     # Database operations tests
 │   ├── exercise.service.test.js     # SRS and exercise tests
 │   ├── api.test.js                  # Translation API tests
-│   └── content-script.test.js       # Content script functionality
+│   ├── content-script.test.js       # Content script functionality
+│   └── exercise-settings-loading.test.js # Exercise settings loading tests
 ├── integration/           # Integration tests for UI components
 │   ├── popup.test.js               # Popup interface tests
-│   └── options.test.js             # Options page tests
+│   ├── options.test.js             # Options page tests
+│   └── exercise-settings.test.js   # Exercise settings integration tests
 └── e2e/                  # End-to-end tests with Puppeteer
     └── extension.test.js           # Complete user workflow tests
 ```
@@ -61,6 +63,15 @@ tests/
 - **Context Preservation**: Text context extraction
 - **Event Management**: Mouse/keyboard event handling
 
+#### Exercise Settings Loading Tests (`exercise-settings-loading.test.js`)
+
+- **loadExerciseSettings Method**: Settings loading from storage
+- **Questions Per Session Loading**: Custom question count handling
+- **Difficulty Loading**: User-defined difficulty settings
+- **Error Handling**: Storage failure graceful degradation
+- **Default Fallback**: Behavior when settings are missing
+- **UI Updates**: Difficulty button selection updates
+
 ### 2. Integration Tests
 
 #### Popup Integration Tests (`popup.test.js`)
@@ -80,6 +91,15 @@ tests/
 - **UI Interactions**: Form controls, responsive design
 - **Import/Export**: Data management operations
 - **Accessibility**: Keyboard navigation, ARIA support
+
+#### Exercise Settings Integration Tests (`exercise-settings.test.js`)
+
+- **Settings Loading**: User preference integration with exercise system
+- **Questions Per Session**: Custom question count validation
+- **Difficulty Settings**: User-defined difficulty persistence
+- **Fallback Behavior**: Default values when settings fail to load
+- **Mixed Difficulty**: Handling of user-selectable difficulty mode
+- **Storage Integration**: Chrome storage sync operations
 
 ### 3. End-to-End Tests
 

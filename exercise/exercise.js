@@ -5,6 +5,7 @@ import {
   ExerciseTemplates,
   TemplateUtils,
 } from "../templates/template-utils.js";
+import { getSettings, DEFAULT_SETTINGS } from "../src/shared/storage.js";
 
 class VocabularyExercise {
   constructor() {
@@ -33,6 +34,9 @@ class VocabularyExercise {
     // Setup event listeners
     this.setupEventListeners();
 
+    // Load exercise settings from storage
+    await this.loadExerciseSettings();
+
     // Load vocabulary language preference
     await this.loadLanguagePreference();
 
@@ -40,15 +44,48 @@ class VocabularyExercise {
     await this.loadWords();
   }
 
+  async loadExerciseSettings() {
+    try {
+      const settings = await getSettings(DEFAULT_SETTINGS);
+      const exerciseSettings =
+        settings.exerciseSettings || DEFAULT_SETTINGS.exerciseSettings;
+
+      // Update questions per exercise from user settings
+      this.questionsPerExercise = exerciseSettings.questionsPerSession || 10;
+
+      // Update difficulty if it's not 'mixed' (which means user selects during exercise)
+      if (
+        exerciseSettings.difficulty &&
+        exerciseSettings.difficulty !== "mixed"
+      ) {
+        this.difficulty = exerciseSettings.difficulty;
+      }
+
+      console.log("Loaded exercise settings:", {
+        questionsPerSession: this.questionsPerExercise,
+        difficulty: this.difficulty,
+      });
+    } catch (error) {
+      console.error("Failed to load exercise settings:", error);
+      // Keep defaults if loading fails
+      this.questionsPerExercise = 10;
+    }
+  }
+
   async loadLanguagePreference() {
     try {
-      const stored = await chrome.storage.sync.get(['selectedVocabularyLanguage']);
-      if (stored.selectedVocabularyLanguage && stored.selectedVocabularyLanguage !== 'all') {
+      const stored = await chrome.storage.sync.get([
+        "selectedVocabularyLanguage",
+      ]);
+      if (
+        stored.selectedVocabularyLanguage &&
+        stored.selectedVocabularyLanguage !== "all"
+      ) {
         this.selectedLanguage = stored.selectedVocabularyLanguage;
-        console.log('Loaded language preference:', this.selectedLanguage);
+        console.log("Loaded language preference:", this.selectedLanguage);
       }
     } catch (error) {
-      console.error('Failed to load language preference:', error);
+      console.error("Failed to load language preference:", error);
     }
   }
 
@@ -302,10 +339,10 @@ class VocabularyExercise {
       });
 
       // Set the dropdown to the loaded language preference
-      if (this.selectedLanguage && this.selectedLanguage !== 'all') {
+      if (this.selectedLanguage && this.selectedLanguage !== "all") {
         // Check if the loaded language exists in the dropdown
-        const optionExists = Array.from(select.options).some(option =>
-          option.value === this.selectedLanguage
+        const optionExists = Array.from(select.options).some(
+          (option) => option.value === this.selectedLanguage
         );
         if (optionExists) {
           select.value = this.selectedLanguage;
@@ -319,9 +356,11 @@ class VocabularyExercise {
 
           // Save the selected language preference for next time
           try {
-            chrome.storage.sync.set({ selectedVocabularyLanguage: select.value });
+            chrome.storage.sync.set({
+              selectedVocabularyLanguage: select.value,
+            });
           } catch (error) {
-            console.error('Failed to save language preference:', error);
+            console.error("Failed to save language preference:", error);
           }
 
           // Show loading state while switching languages
@@ -399,6 +438,31 @@ class VocabularyExercise {
 
     // Show welcome screen
     document.querySelector(".welcome-screen").style.display = "block";
+
+    // Update difficulty button selection based on loaded settings
+    this.updateDifficultySelection();
+  }
+
+  updateDifficultySelection() {
+    // Remove active class from all difficulty buttons
+    document.querySelectorAll(".difficulty-btn").forEach((btn) => {
+      btn.classList.remove("active");
+    });
+
+    // Set active based on current difficulty setting
+    const targetBtn = document.querySelector(
+      `[data-difficulty="${this.difficulty}"]`
+    );
+    if (targetBtn) {
+      targetBtn.classList.add("active");
+    } else {
+      // Fallback to medium if the saved difficulty doesn't match any button
+      const mediumBtn = document.querySelector('[data-difficulty="medium"]');
+      if (mediumBtn) {
+        mediumBtn.classList.add("active");
+        this.difficulty = "medium";
+      }
+    }
   }
 
   showLoadingScreen(
@@ -1019,7 +1083,7 @@ class VocabularyExercise {
       try {
         chrome.storage.sync.set({ selectedVocabularyLanguage: "all" });
       } catch (error) {
-        console.error('Failed to save language reset preference:', error);
+        console.error("Failed to save language reset preference:", error);
       }
     }
 
