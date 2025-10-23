@@ -60,11 +60,6 @@ class VocabularyExercise {
       ) {
         this.difficulty = exerciseSettings.difficulty;
       }
-
-      console.log("Loaded exercise settings:", {
-        questionsPerSession: this.questionsPerExercise,
-        difficulty: this.difficulty,
-      });
     } catch (error) {
       console.error("Failed to load exercise settings:", error);
       // Keep defaults if loading fails
@@ -82,7 +77,6 @@ class VocabularyExercise {
         stored.selectedVocabularyLanguage !== "all"
       ) {
         this.selectedLanguage = stored.selectedVocabularyLanguage;
-        console.log("Loaded language preference:", this.selectedLanguage);
       }
     } catch (error) {
       console.error("Failed to load language preference:", error);
@@ -423,12 +417,6 @@ class VocabularyExercise {
   }
 
   showWelcomeScreen() {
-    console.log(
-      "Showing welcome screen with",
-      this.words?.length || 0,
-      "words available"
-    );
-
     // Hide all other screens first
     document.querySelector(".loading-screen").style.display = "none";
     document.querySelector(".no-words-screen").style.display = "none";
@@ -502,13 +490,6 @@ class VocabularyExercise {
   }
 
   showNoWords(message, showLanguageFilter = false) {
-    console.log(
-      "Showing no words screen:",
-      message,
-      "showLanguageFilter:",
-      showLanguageFilter
-    );
-
     // Hide loading screen and other screens
     document.querySelector(".loading-screen").style.display = "none";
     document.querySelector(".welcome-screen").style.display = "none";
@@ -857,22 +838,33 @@ class VocabularyExercise {
     const state = this.answeredMap.get(this.currentQuestionIndex);
     const currentWord = this.words[this.currentQuestionIndex];
     const correctAnswer = currentWord.translation;
-    // Disable buttons & mark classes
+
+    // Disable all buttons and apply appropriate styling
     document.querySelectorAll(".answer-btn").forEach((btn) => {
       btn.classList.add("disabled");
-      if (btn.textContent.toLowerCase() === correctAnswer.toLowerCase()) {
+
+      // Always highlight the correct answer in green
+
+      if (
+        btn.textContent.toLowerCase().trim() ===
+        correctAnswer.toLowerCase().trim()
+      ) {
         btn.classList.add("correct");
       }
+
+      // If user selected a wrong answer, highlight it in red
+      // (applies to both incorrect answers and skipped questions with no selection)
       if (
+        !state.skipped &&
         !state.correct &&
         state.selected &&
-        btn.textContent === state.selected
+        btn.textContent.trim() === state.selected.trim()
       ) {
         btn.classList.add("incorrect");
       }
     });
-    // Inline feedback removed; existing button classes already applied above
-    // Ensure no auto-advance triggers when revisiting
+
+    // Ensure no auto-advance triggers when revisiting answered questions
     clearTimeout(this.pendingAdvance);
     this.updateNavButtons();
   }
