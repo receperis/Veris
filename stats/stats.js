@@ -465,17 +465,51 @@ async function exportData() {
         stats: statsData,
         exportDate: new Date().toISOString(),
       };
+      // Convert data to CSV format
+      function escapeCSV(value) {
+        if (value === null || value === undefined) return "";
+        const str = typeof value === "string" ? value : String(value);
+        // Escape double quotes by doubling them and wrap value in quotes
+        return `"${str.replace(/"/g, '""')}"`;
+      }
 
-      const blob = new Blob([JSON.stringify(data, null, 2)], {
-        type: "application/json",
+      // Build vocabulary CSV table (vocabulary-only CSV)
+      const vocabulary = response.data || [];
+      const headers = [
+        "id",
+        "originalWord",
+        "translatedWord",
+        "originalText",
+        "translatedText",
+        "sourceLanguage",
+        "targetLanguage",
+        "context",
+        "contextTranslation",
+        "timestamp",
+        "dateAdded",
+        "sessionId",
+        "domain",
+      ];
+
+      const rows = [];
+      rows.push(headers.map(escapeCSV).join(","));
+
+      vocabulary.forEach((entry) => {
+        const row = headers.map((h) => escapeCSV(entry[h]));
+        rows.push(row.join(","));
       });
+
+      // Vocabulary-only CSV content: header row + rows
+      const csvContent = rows.join("\r\n");
+
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
       const url = URL.createObjectURL(blob);
 
       const a = document.createElement("a");
       a.href = url;
       a.download = `veris-translator-data-${
         new Date().toISOString().split("T")[0]
-      }.json`;
+      }.csv`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -506,14 +540,106 @@ async function handleFileImport(event) {
     const fileContent = await readFileAsText(file);
     let importData;
 
-    try {
-      importData = JSON.parse(fileContent);
-    } catch (parseError) {
-      hideImportProgress();
-      showImportError(
-        "Invalid JSON file. Please select a valid vocabulary data file."
-      );
-      return;
+    // Helper: parse a single CSV row (handles quoted fields and doubled quotes)
+    function parseCSVRow(line) {
+      const result = [];
+      let cur = "";
+      let inQuotes = false;
+      for (let i = 0; i < line.length; i++) {
+        const ch = line[i];
+        if (ch === '"') {
+          if (inQuotes && line[i + 1] === '"') {
+            cur += '"';
+            i++; // skip escaped quote
+          } else {
+            inQuotes = !inQuotes;
+          }
+        } else if (ch === "," && !inQuotes) {
+          result.push(cur);
+          cur = "";
+        } else {
+          cur += ch;
+        }
+      }
+      result.push(cur);
+      return result.map((v) => (v === undefined ? "" : v));
+    }
+
+    // If CSV (by extension or mime), parse to the expected JSON import shape
+    const isCSV =
+      /\.csv$/i.test(file.name) || (file.type && file.type.includes("csv"));
+
+    if (isCSV) {
+      // Normalize line endings and split. Assume the first non-empty line is the header.
+      const lines = fileContent
+        .replace(/\r\n/g, "\n")
+        .replace(/\r/g, "\n")
+        .split("\n");
+
+      // Find first non-empty line as header
+      let headerLineIndex = 0;
+      while (
+        headerLineIndex < lines.length &&
+        lines[headerLineIndex].trim() === ""
+      ) {
+        headerLineIndex++;
+      }
+
+      console.log({ headerLineIndex });
+      console.log({ linesLength: lines.length });
+
+      if (headerLineIndex >= lines.length) {
+        hideImportProgress();
+        showImportError("CSV file appears empty or malformed.");
+        return;
+      }
+
+      const headerRow = parseCSVRow(lines[headerLineIndex]);
+      const headers = headerRow.map((h) => h.trim());
+
+      const vocabulary = [];
+
+      for (let i = headerLineIndex + 1; i < lines.length; i++) {
+        const line = lines[i];
+        if (!line || line.trim() === "") continue;
+        const values = parseCSVRow(line);
+        const obj = {};
+        for (let j = 0; j < headers.length; j++) {
+          const key = headers[j];
+          let val = values[j] === undefined ? "" : values[j];
+          // Trim surrounding whitespace
+          if (typeof val === "string") val = val.trim();
+          // Map common fields directly
+          obj[key] = val;
+        }
+
+        // Ensure minimal required fields exist
+        const nowIso = new Date().toISOString();
+        if (!obj.originalWord) obj.originalWord = obj.originalText || "";
+        if (!obj.translatedWord) obj.translatedWord = obj.translatedText || "";
+        if (!obj.timestamp) obj.timestamp = obj.timestamp || nowIso;
+        if (!obj.dateAdded) obj.dateAdded = obj.dateAdded || nowIso;
+        if (!obj.sessionId)
+          obj.sessionId = obj.sessionId || `import_${Date.now()}`;
+        if (!obj.domain) obj.domain = obj.domain || "imported";
+
+        vocabulary.push(obj);
+      }
+
+      importData = {
+        vocabulary,
+      };
+    } else {
+      // Try to parse JSON
+      try {
+        importData = JSON.parse(fileContent);
+      } catch (parseError) {
+        hideImportProgress();
+        showImportError(
+          "Invalid CSV or JSON file. Please select a valid vocabulary CSV file exported from this page."
+        );
+        return;
+      }
     }
 
     // Validate imported data structure
@@ -682,7 +808,6 @@ async function importVocabularyData(importData, mode) {
           dateAdded: entry.dateAdded || new Date().toISOString(),
           sessionId: entry.sessionId || `import_${Date.now()}`,
           domain: entry.domain || "imported",
-          confidence: entry.confidence || 0.9,
         };
 
         let response;
@@ -798,10 +923,13 @@ function showImportSuccess(message) {
   notification.innerHTML = StatsTemplates.successNotification(message);
 
   document.body.appendChild(notification);
+  // Ensure show animation runs
+  requestAnimationFrame(() => notification.classList.add("show"));
 
-  // Auto-remove after 5 seconds
+  // Auto-remove after 5 seconds: play fade-out then remove
   setTimeout(() => {
     if (notification.parentNode) {
+      notification.classList.remove("show");
       notification.classList.add("fade-out");
       setTimeout(() => {
         if (notification.parentNode) {
@@ -819,10 +947,13 @@ function showImportError(message) {
   notification.innerHTML = StatsTemplates.errorNotification(message);
 
   document.body.appendChild(notification);
+  // Ensure show animation runs
+  requestAnimationFrame(() => notification.classList.add("show"));
 
-  // Auto-remove after 8 seconds
+  // Auto-remove after 8 seconds: play fade-out then remove
   setTimeout(() => {
     if (notification.parentNode) {
+      notification.classList.remove("show");
       notification.classList.add("fade-out");
       setTimeout(() => {
         if (notification.parentNode) {
