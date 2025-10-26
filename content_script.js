@@ -732,6 +732,24 @@ function setupEventListeners() {
   chrome.storage.onChanged.addListener(handleStorageChange);
 }
 
+// Respond to popup/runtime pings so popup can detect whether the content
+// script is present on the page (used to detect whether file:// access is
+// enabled for this extension). If the content script is not injected on
+// a file:// page, popup's sendMessage will fail and the popup will show
+// instructions to the user on how to enable file URL access.
+try {
+  chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message && message.type === "PING_FOR_FILE_ACCESS") {
+      // Signal that the content script is active on this page
+      sendResponse({ ok: true });
+    }
+    // Indicate async response is not expected for other messages
+    return false;
+  });
+} catch (e) {
+  console.warn("Failed to register runtime message listener:", e);
+}
+
 /**
  * Set up periodic URL checking for SPAs
  * @private
