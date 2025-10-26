@@ -7,6 +7,8 @@ import { escapeHtml, normalizeId } from "./src/shared/utils.js";
 import { getLanguageDisplayName } from "./src/shared/languages.js";
 import { saveSetting, getSetting } from "./src/shared/storage.js";
 
+import "./styles/popup.css";
+
 // Performance optimization classes
 class SearchIndex {
   constructor() {
@@ -193,6 +195,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // Check if it's exercise time
   await checkExerciseTime();
+  // If current active tab is a file:// URL, verify the content script is
+  // actually present (user must enable "Allow access to file URLs" for the
+  // extension). If not present, show a banner with instructions.
+  await checkFileUrlAccess();
 
   // Focus the search input so user can immediately type
   const searchEl = document.getElementById("search-input");
@@ -683,6 +689,119 @@ async function checkExerciseTime() {
     }
   } catch (error) {
     console.error("Error checking exercise time:", error);
+  }
+}
+
+/**
+ * Check whether the extension can access the current active tab when it's a file:// URL.
+ * The popup attempts to ping the content script in the active tab. If the ping
+ * fails (no receiver / runtime.lastError), we assume the content script wasn't
+ * injected (file access not enabled) and show instructions to the user.
+ */
+async function checkFileUrlAccess() {
+  try {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      const tab = tabs && tabs[0];
+      if (!tab || !tab.url) return;
+
+      if (!tab.url.startsWith("file://")) return;
+
+      // Try to message the content script. If it responds, we have access.
+      chrome.tabs.sendMessage(
+        tab.id,
+        { type: "PING_FOR_FILE_ACCESS" },
+        (resp) => {
+          const lastError = chrome.runtime.lastError;
+          if (lastError || !resp || !resp.ok) {
+            // No content script response — likely file URL access is disabled
+            showFileAccessWarning(tab);
+          }
+        }
+      );
+    });
+  } catch (e) {
+    console.error("checkFileUrlAccess error:", e);
+  }
+}
+
+/**
+ * Show an inline banner in the popup explaining how to enable file:// access
+ * for this extension and provide a button to open the Extensions page.
+ */
+function showFileAccessWarning(tab) {
+  try {
+    // If a toast already exists, don't add another
+    if (document.getElementById("file-access-warning")) return;
+
+    const toast = document.createElement("div");
+    toast.id = "file-access-warning";
+    toast.className = "file-access-toast";
+
+    toast.innerHTML = `
+      <div class="file-access-toast-header">
+        <div class="file-access-toast-content">
+          <div class="file-access-toast-title">Turn on access for local files</div>
+          <div class="file-access-toast-message">To use the extension on local files (file://), enable "Allow access to file URLs" for this extension.</div>
+        </div>
+        <button id="file-access-close" class="file-access-close-btn" aria-label="Close">✕</button>
+      </div>
+      <div class="file-access-toast-actions">
+        <button id="learn-more-file-btn" class="file-access-btn">How to enable</button>
+        <button id="open-extensions-btn" class="file-access-btn primary">Open Extensions</button>
+      </div>
+      <div id="file-access-steps" class="file-access-steps"></div>
+    `;
+
+    // Append to body
+    document.body.appendChild(toast);
+
+    // Trigger fade-in animation
+    requestAnimationFrame(() => {
+      toast.classList.add("show");
+    });
+
+    // Close button behavior
+    toast.querySelector("#file-access-close").addEventListener("click", () => {
+      toast.classList.remove("show");
+      setTimeout(() => toast.remove(), 300);
+    });
+
+    // Open Extensions button
+    toast
+      .querySelector("#open-extensions-btn")
+      .addEventListener("click", () => {
+        try {
+          chrome.tabs.create({
+            url: `chrome://extensions/?id=${chrome.runtime.id}`,
+          });
+        } catch (err) {
+          chrome.tabs.create({ url: "chrome://extensions/" });
+        }
+      });
+
+    // Learn more button toggles step details
+    const learnBtn = toast.querySelector("#learn-more-file-btn");
+    const steps = toast.querySelector("#file-access-steps");
+    learnBtn.addEventListener("click", () => {
+      if (!steps.classList.contains("show")) {
+        steps.classList.add("show");
+        steps.innerHTML = `
+          <div class="file-access-steps-title">Enable file URL access</div>
+          <ol>
+            <li>Open the Extensions page (opens a new tab).</li>
+            <li>Find "Veris" in the list and click "Details".</li>
+            <li>Toggle "Allow access to file URLs" to ON.</li>
+            <li>Reopen this local file and try the extension again.</li>
+          </ol>
+        `;
+        learnBtn.textContent = "Hide steps";
+      } else {
+        steps.classList.remove("show");
+        learnBtn.textContent = "How to enable";
+      }
+    });
+  } catch (err) {
+    console.error("Failed to show file access warning:", err);
   }
 }
 
