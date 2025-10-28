@@ -2,7 +2,7 @@
 
 // IndexedDB Configuration
 const DB_NAME = "VocabularyExtension";
-const DB_VERSION = 2; // Incremented for new context and contextTranslation indexes
+const DB_VERSION = 3; // Incremented to remove unused indexes (originalText, sessionId)
 const STORE_NAME = "vocabulary";
 
 class VocabularyDB {
@@ -66,14 +66,20 @@ class VocabularyDB {
           timestamp: "timestamp",
           sourceLanguage: "sourceLanguage",
           targetLanguage: "targetLanguage",
-          originalText: "originalText",
           originalWord: "originalWord",
           translatedWord: "translatedWord",
           context: "context",
           contextTranslation: "contextTranslation",
-          sessionId: "sessionId",
           domain: "domain",
         };
+
+        // Remove deprecated indexes if they exist (migration from v2)
+        const deprecatedIndexes = ["originalText", "sessionId"];
+        for (const indexName of deprecatedIndexes) {
+          if (store.indexNames.contains(indexName)) {
+            store.deleteIndex(indexName);
+          }
+        }
 
         // Add missing indexes
         for (const [indexName, keyPath] of Object.entries(requiredIndexes)) {
@@ -356,27 +362,6 @@ class VocabularyDB {
     });
   }
 
-  async getWordsBySession(sessionId) {
-    if (!this.db) {
-      await this.init();
-    }
-
-    return new Promise((resolve, reject) => {
-      const transaction = this.db.transaction([STORE_NAME], "readonly");
-      const store = transaction.objectStore(STORE_NAME);
-      const index = store.index("sessionId");
-      const request = index.getAll(sessionId);
-
-      request.onsuccess = () => {
-        resolve(request.result);
-      };
-
-      request.onerror = () => {
-        reject(request.error);
-      };
-    });
-  }
-
   async getWordsByDomain(domain) {
     if (!this.db) {
       await this.init();
@@ -406,7 +391,6 @@ class VocabularyDB {
       const uniqueWords = new Set();
       const languagePairs = new Set();
       const domains = new Set();
-      const sessions = new Set();
 
       all.forEach((entry) => {
         if (entry.originalWord) {
@@ -415,14 +399,12 @@ class VocabularyDB {
             `${entry.sourceLanguage} → ${entry.targetLanguage}`
           );
           domains.add(entry.domain);
-          if (entry.sessionId) sessions.add(entry.sessionId);
         }
       });
 
       const stats = {
         totalEntries: all.length,
         uniqueWords: uniqueWords.size,
-        totalSessions: sessions.size,
         languagePairs: Array.from(languagePairs),
         domains: Array.from(domains),
         dateRange:
