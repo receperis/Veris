@@ -154,12 +154,8 @@ export const PopupTemplates = {
   `,
 };
 
-// Helper function for HTML escaping (needs to be available in the module that imports this)
-function escapeHtml(text) {
-  const div = document.createElement("div");
-  div.textContent = text;
-  return div.innerHTML;
-}
+// Import shared utilities
+import { escapeHtml } from "../src/shared/utils.js";
 
 // Make escapeHtml available for templates
 PopupTemplates.escapeHtml = escapeHtml;
