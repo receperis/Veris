@@ -10,16 +10,9 @@ import * as ui from "./src/content/ui.js";
 import * as words from "./src/content/words.js";
 import { translateTextWithAPI } from "./src/content/api.js";
 import { showLoadingToast, showInfoToast } from "./src/content/toast.js";
+import { languageDetector } from "./src/shared/language-detection.js";
 
 import "./content_script.css";
-
-// Language detection cache and timing
-let languageCache = {
-  language: null,
-  timestamp: 0,
-  url: null,
-};
-const LANGUAGE_CACHE_DURATION = 30000; // 30 seconds
 
 /**
  * Initialize extension state from storage
@@ -33,116 +26,13 @@ function initializeExtensionState() {
 }
 
 /**
- * Check if language cache is valid for current URL
- * @private
- * @param {string} currentUrl - The current page URL
- * @param {number} now - Current timestamp
- * @returns {boolean} True if cache is valid
- */
-function isLanguageCacheValid(currentUrl, now) {
-  return (
-    languageCache.language &&
-    languageCache.url === currentUrl &&
-    now - languageCache.timestamp < LANGUAGE_CACHE_DURATION
-  );
-}
-
-/**
- * Update language cache with new values
- * @private
- * @param {string} language - Detected language code
- * @param {string} url - Current URL
- * @param {number} timestamp - Current timestamp
- */
-function updateLanguageCache(language, url, timestamp) {
-  languageCache = {
-    language,
-    timestamp,
-    url,
-  };
-}
-
-/**
- * Get source language from storage
- * @private
- * @returns {Promise<string|null>} Language code or null if not found
- */
-async function getSourceLanguageFromStorage() {
-  try {
-    const storageResult = await chrome.storage.sync.get(["sourceLanguage"]);
-    if (
-      storageResult.sourceLanguage &&
-      storageResult.sourceLanguage !== "und"
-    ) {
-      return storageResult.sourceLanguage;
-    }
-  } catch (err) {
-    console.warn("Could not get source language from storage:", err);
-  }
-  return null;
-}
-
-/**
- * Detect language using background script
- * @private
- * @returns {Promise<string|null>} Detected language code or null if failed
- */
-async function detectLanguageViaBackground() {
-  try {
-    const response = await chrome.runtime.sendMessage({
-      type: "DETECT_PAGE_LANGUAGE",
-    });
-
-    if (
-      response &&
-      response.ok &&
-      response.language &&
-      response.language !== "und"
-    ) {
-      return response.language;
-    }
-  } catch (err) {
-    console.warn("Direct language detection failed:", err);
-  }
-  return null;
-}
-
-/**
  * Robust language detection with caching and fallback
  * @param {boolean} fallbackToAuto - Whether to fallback to 'auto' if detection fails
  * @returns {Promise<string|null>} Detected language code
  */
 async function getSourceLanguage(fallbackToAuto = true) {
   const currentUrl = window.location.href;
-  const now = Date.now();
-
-  // Check if we have a fresh cache for this URL
-  if (isLanguageCacheValid(currentUrl, now)) {
-    return languageCache.language;
-  }
-
-  // First, try to get from storage (set by background script)
-  const storageLanguage = await getSourceLanguageFromStorage();
-  if (storageLanguage) {
-    updateLanguageCache(storageLanguage, currentUrl, now);
-    return storageLanguage;
-  }
-
-  // If no language in storage, try direct detection via background script
-  const detectedLanguage = await detectLanguageViaBackground();
-  if (detectedLanguage) {
-    updateLanguageCache(detectedLanguage, currentUrl, now);
-    return detectedLanguage;
-  }
-
-  // Fallback to 'auto' if detection fails
-  if (fallbackToAuto) {
-    const fallbackLang = "auto";
-    updateLanguageCache(fallbackLang, currentUrl, now);
-    return fallbackLang;
-  }
-
-  return null;
+  return await languageDetector.detect(currentUrl, fallbackToAuto);
 }
 
 /**
@@ -642,7 +532,7 @@ function checkForUrlChange() {
   const currentUrl = window.location.href;
   if (currentUrl !== lastUrl) {
     // URL changed, clear the language cache
-    languageCache = { language: null, timestamp: 0, url: null };
+    languageDetector.clearCache();
     lastUrl = currentUrl;
   }
 }

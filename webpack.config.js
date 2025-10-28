@@ -61,6 +61,7 @@ module.exports = (env, argv) => {
           { from: "service", to: "service" },
           { from: "styles", to: "styles" },
           { from: "templates", to: "templates" },
+          { from: "src", to: "src" },
         ],
       }),
     ],
