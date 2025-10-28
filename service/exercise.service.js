@@ -431,7 +431,7 @@ const ExerciseService = (() => {
             translatedWord: w.translatedWord,
             sourceLanguage: w.sourceLanguage,
             targetLanguage: w.targetLanguage,
-            context: w.context || w.sentence || "",
+            context: w.context || "",
             srs: { boxIndex: w.srs.boxIndex, dueAt: w.srs.dueAt },
           })),
           //TODO: consider returning stats for the selection only

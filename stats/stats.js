@@ -479,8 +479,6 @@ async function exportData() {
         "id",
         "originalWord",
         "translatedWord",
-        "originalText",
-        "translatedText",
         "sourceLanguage",
         "targetLanguage",
         "context",
@@ -798,8 +796,6 @@ async function importVocabularyData(importData, mode) {
         const vocabularyEntry = {
           originalWord: entry.originalWord,
           translatedWord: entry.translatedWord,
-          originalText: entry.originalText || entry.originalWord,
-          translatedText: entry.translatedText || entry.translatedWord,
           sourceLanguage: entry.sourceLanguage,
           targetLanguage: entry.targetLanguage,
           context: entry.context || "",
