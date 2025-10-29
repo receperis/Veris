@@ -2,12 +2,28 @@
 
 // IndexedDB Configuration
 const DB_NAME = "VocabularyExtension";
-const DB_VERSION = 3; // Incremented to remove unused indexes (originalText, sessionId)
+const DB_VERSION = 3;
 const STORE_NAME = "vocabulary";
 
 class VocabularyDB {
   constructor() {
     this.db = null;
+  }
+
+  // Helper to ensure database connection
+  async ensureConnection() {
+    if (!this.db || this.db.version === undefined) {
+      await this.init();
+    }
+  }
+
+  // Helper to create transaction with error handling
+  createTransaction(mode) {
+    const transaction = this.db.transaction([STORE_NAME], mode);
+    transaction.onerror = () => {
+      console.error("Transaction failed:", transaction.error);
+    };
+    return transaction;
   }
 
   async init() {
@@ -92,104 +108,31 @@ class VocabularyDB {
   }
 
   async saveVocabularyEntry(vocabularyData) {
-    // Ensure database is connected and ready
-    if (!this.db || this.db.version === undefined) {
-      await this.init();
-    }
+    await this.ensureConnection();
 
-    return new Promise(async (resolve, reject) => {
-      try {
-        // Double-check connection before creating transaction
-        if (!this.db || this.db.version === undefined) {
-          await this.init();
-        }
+    return new Promise((resolve, reject) => {
+      const transaction = this.createTransaction("readwrite");
+      const store = transaction.objectStore(STORE_NAME);
+      const request = store.add(vocabularyData);
 
-        const transaction = this.db.transaction([STORE_NAME], "readwrite");
-        const store = transaction.objectStore(STORE_NAME);
-
-        transaction.onerror = () => {
-          console.error("Transaction failed:", transaction.error);
-          reject(transaction.error);
-        };
-
-        transaction.onabort = () => {
-          console.error("Transaction aborted");
-          reject(new Error("Transaction aborted"));
-        };
-
-        const request = store.add(vocabularyData);
-
-        request.onsuccess = () => {
-          resolve(request.result);
-        };
-
-        request.onerror = () => {
-          console.error("Failed to save vocabulary:", request.error);
-          reject(request.error);
-        };
-      } catch (error) {
-        console.error("Error creating transaction:", error);
-        // Try to reinitialize database and retry once
-        try {
-          await this.init();
-          const transaction = this.db.transaction([STORE_NAME], "readwrite");
-          const store = transaction.objectStore(STORE_NAME);
-          const request = store.add(vocabularyData);
-
-          request.onsuccess = () => resolve(request.result);
-          request.onerror = () => reject(request.error);
-        } catch (retryError) {
-          reject(retryError);
-        }
-      }
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => {
+        console.error("Failed to save vocabulary:", request.error);
+        reject(request.error);
+      };
     });
   }
 
   async getAllVocabulary() {
-    // Ensure database is connected and ready
-    if (!this.db || this.db.version === undefined) {
-      await this.init();
-    }
+    await this.ensureConnection();
 
-    return new Promise(async (resolve, reject) => {
-      try {
-        // Double-check connection before creating transaction
-        if (!this.db || this.db.version === undefined) {
-          await this.init();
-        }
+    return new Promise((resolve, reject) => {
+      const transaction = this.createTransaction("readonly");
+      const store = transaction.objectStore(STORE_NAME);
+      const request = store.getAll();
 
-        const transaction = this.db.transaction([STORE_NAME], "readonly");
-        const store = transaction.objectStore(STORE_NAME);
-
-        transaction.onerror = () => {
-          console.error("Transaction failed:", transaction.error);
-          reject(transaction.error);
-        };
-
-        const request = store.getAll();
-
-        request.onsuccess = () => {
-          resolve(request.result);
-        };
-
-        request.onerror = () => {
-          reject(request.error);
-        };
-      } catch (error) {
-        console.error("Error creating transaction:", error);
-        // Try to reinitialize database and retry once
-        try {
-          await this.init();
-          const transaction = this.db.transaction([STORE_NAME], "readonly");
-          const store = transaction.objectStore(STORE_NAME);
-          const request = store.getAll();
-
-          request.onsuccess = () => resolve(request.result);
-          request.onerror = () => reject(request.error);
-        } catch (retryError) {
-          reject(retryError);
-        }
-      }
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
     });
   }
 
@@ -216,82 +159,57 @@ class VocabularyDB {
   }
 
   async deleteVocabularyEntry(id) {
-    if (!this.db) {
-      await this.init();
-    }
+    await this.ensureConnection();
 
     return new Promise((resolve, reject) => {
-      const transaction = this.db.transaction([STORE_NAME], "readwrite");
+      const transaction = this.createTransaction("readwrite");
       const store = transaction.objectStore(STORE_NAME);
       const request = store.delete(id);
 
-      request.onsuccess = () => {
-        resolve();
-      };
-
-      request.onerror = () => {
-        reject(request.error);
-      };
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(request.error);
     });
   }
 
   async deleteAllVocabulary() {
-    if (!this.db) {
-      await this.init();
-    }
+    await this.ensureConnection();
 
     return new Promise((resolve, reject) => {
-      const transaction = this.db.transaction([STORE_NAME], "readwrite");
+      const transaction = this.createTransaction("readwrite");
       const store = transaction.objectStore(STORE_NAME);
       const request = store.clear();
 
-      request.onsuccess = () => {
-        resolve(request.result);
-      };
-
-      request.onerror = () => {
-        reject(request.error);
-      };
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
     });
   }
 
   async updateVocabularyEntry(id, updatedData) {
-    if (!this.db) {
-      await this.init();
-    }
+    await this.ensureConnection();
 
     return new Promise((resolve, reject) => {
-      const transaction = this.db.transaction([STORE_NAME], "readwrite");
+      const transaction = this.createTransaction("readwrite");
       const store = transaction.objectStore(STORE_NAME);
-
-      // First get the existing entry
       const getRequest = store.get(id);
 
       getRequest.onsuccess = () => {
         const existingData = getRequest.result;
-        if (existingData) {
-          // Merge the updated data with existing data
-          const mergedData = { ...existingData, ...updatedData, id: id };
-
-          const putRequest = store.put(mergedData);
-
-          putRequest.onsuccess = () => {
-            console.log("Vocabulary updated with ID:", id);
-            resolve(putRequest.result);
-          };
-
-          putRequest.onerror = () => {
-            console.error("Failed to update vocabulary:", putRequest.error);
-            reject(putRequest.error);
-          };
-        } else {
+        if (!existingData) {
           reject(new Error("Entry not found"));
+          return;
         }
+
+        const mergedData = { ...existingData, ...updatedData, id };
+        const putRequest = store.put(mergedData);
+
+        putRequest.onsuccess = () => resolve(putRequest.result);
+        putRequest.onerror = () => {
+          console.error("Failed to update vocabulary:", putRequest.error);
+          reject(putRequest.error);
+        };
       };
 
-      getRequest.onerror = () => {
-        reject(getRequest.error);
-      };
+      getRequest.onerror = () => reject(getRequest.error);
     });
   }
 

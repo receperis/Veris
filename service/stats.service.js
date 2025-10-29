@@ -2,62 +2,61 @@
 
 // Service works with importScripts - no import needed, DatabaseService is global
 
-const StatsService = {
-  async updateVocabularyStats() {
-    try {
-      // Get real stats from IndexedDB
-      const dbStats = await DatabaseService.getStats();
+const StatsService = (() => {
+  const { error } = createLogger("[StatsService]");
 
-      // Get exercise stats from storage
-      const result = await chrome.storage.local.get(["vocabularyStats"]);
-      let exerciseStats = result.vocabularyStats || {
-        lastExercise: null,
-        exercisesCompleted: 0,
-        averageScore: 0,
-        totalScore: 0,
-      };
+  // Default stats object
+  const defaultStats = {
+    totalWords: 0,
+    uniqueWords: 0,
+    lastExercise: null,
+    exercisesCompleted: 0,
+    averageScore: 0,
+    totalScore: 0,
+  };
 
-      // Combine database stats with exercise stats
-      const combinedStats = {
-        totalWords: dbStats ? dbStats.totalEntries : 0,
-        uniqueWords: dbStats ? dbStats.uniqueWords : 0,
-        lastExercise: exerciseStats.lastExercise,
-        exercisesCompleted: exerciseStats.exercisesCompleted,
-        averageScore: exerciseStats.averageScore,
-        totalScore: exerciseStats.totalScore,
-      };
+  return {
+    async updateVocabularyStats() {
+      try {
+        const dbStats = await DatabaseService.getStats();
+        const result = await chrome.storage.local.get(["vocabularyStats"]);
+        const exerciseStats = result.vocabularyStats || {};
 
-      // Update storage with current vocabulary count
-      await chrome.storage.local.set({ vocabularyStats: combinedStats });
+        const combinedStats = {
+          totalWords: dbStats?.totalEntries || 0,
+          uniqueWords: dbStats?.uniqueWords || 0,
+          lastExercise: exerciseStats.lastExercise,
+          exercisesCompleted: exerciseStats.exercisesCompleted || 0,
+          averageScore: exerciseStats.averageScore || 0,
+          totalScore: exerciseStats.totalScore || 0,
+        };
 
-      return combinedStats;
-    } catch (error) {
-      console.error("Error updating vocabulary stats:", error);
-      return {
-        totalWords: 0,
-        uniqueWords: 0,
-        lastExercise: null,
-        exercisesCompleted: 0,
-        averageScore: 0,
-        totalScore: 0,
-      };
-    }
-  },
+        await chrome.storage.local.set({ vocabularyStats: combinedStats });
+        return combinedStats;
+      } catch (e) {
+        error("updateVocabularyStats", e);
+        return defaultStats;
+      }
+    },
 
-  async getDetailedStats() {
-    try {
-      const dbStats = await DatabaseService.getStats();
-      const storageResult = await chrome.storage.local.get(["vocabularyStats"]);
-      const exerciseStats = storageResult.vocabularyStats || {};
+    async getDetailedStats() {
+      try {
+        const [dbStats, storageResult] = await Promise.all([
+          DatabaseService.getStats(),
+          chrome.storage.local.get(["vocabularyStats"]),
+        ]);
 
-      return {
-        database: dbStats,
-        exercises: exerciseStats,
-        combined: await this.updateVocabularyStats(),
-      };
-    } catch (error) {
-      console.error("Error getting detailed stats:", error);
-      return null;
-    }
-  },
-};
+        return {
+          database: dbStats,
+          exercises: storageResult.vocabularyStats || {},
+          combined: await this.updateVocabularyStats(),
+        };
+      } catch (e) {
+        error("getDetailedStats", e);
+        return null;
+      }
+    },
+  };
+})();
+
+self.StatsService = StatsService;
