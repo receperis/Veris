@@ -1,396 +1,98 @@
-/*
- * Veris Extension Unified Theme
- * Based on the quick-action-btn hover color from popup.html
- * 
- * Primary Theme Colors:
- * - Teal/Turquoise: #14b8a6 (main), #0d9488 (dark), #5eead4 (light)
- * - Background Gradients: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%)
- * - Text Colors: #134e4a (dark), #0d9488 (medium)
- * - Shadow: rgba(20, 184, 166, 0.15)
- */
+/*/* 
 
-/* CSS Custom Properties for Unified Theme */
-:root {
-  --veris-primary: #14b8a6;
-  --veris-primary-dark: #0d9488;
-  --veris-primary-light: #5eead4;
-  --veris-primary-bg: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%);
-  --veris-text-dark: #134e4a;
-  --veris-text-medium: #0d9488;
-  --veris-shadow: rgba(20, 184, 166, 0.15);
-  --veris-shadow-strong: rgba(20, 184, 166, 0.4);
-  
-  /* Additional colors for consistency */
-  --veris-success: #10b981;
-  --veris-success-bg: #d1fae5;
-  --veris-success-text: #065f46;
-  --veris-error: #ef4444;
-  --veris-error-bg: #fee2e2;
-  --veris-error-text: #991b1b;
-  --veris-warning: #f59e0b;
-  --veris-warning-bg: #fef3c7;
-  --veris-warning-text: #92400e;
-  
-  /* Neutral colors */
-  --veris-gray-50: #f9fafb;
-  --veris-gray-100: #f3f4f6;
-  --veris-gray-200: #e5e7eb;
-  --veris-gray-300: #d1d5db;
-  --veris-gray-400: #9ca3af;
-  --veris-gray-500: #6b7280;
-  --veris-gray-600: #4b5563;
-  --veris-gray-700: #374151;
-  --veris-gray-800: #1f2937;
-  --veris-gray-900: #111827;
-}
+ * Veris Extension Unified Theme * Veris Extension Unified Theme 
 
-/* Unified Button Styles */
-.veris-btn {
-  padding: 12px 24px;
-  border: 1px solid var(--veris-gray-200);
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  background: white;
-  color: var(--veris-gray-700);
-}
+ * CSS Custom Properties (Variables) used across the extension * CSS Custom Properties (Variables) used across the extension 
 
-.veris-btn:hover {
-  background: var(--veris-primary-bg);
-  border-color: var(--veris-primary-light);
-  color: var(--veris-text-dark);
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px var(--veris-shadow);
-}
+ *  * 
 
-.veris-btn:focus {
-  outline: 2px solid var(--veris-primary);
-  outline-offset: 2px;
-}
+ * Primary Theme Colors: * Primary Theme Colors: 
 
-.veris-btn:active {
-  transform: translateY(0);
-}
+ * - Teal/Turquoise: #14b8a6 (main), #0d9488 (dark), #5eead4 (light) * - Teal/Turquoise: #14b8a6 (main), #0d9488 (dark), #5eead4 (light) 
 
-/* Primary Button Variant */
-.veris-btn-primary {
-  background: var(--veris-primary);
-  color: white;
-  border-color: var(--veris-primary-dark);
-}
+ * - Background Gradients: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%) * - Background Gradients: linear-gradient(135deg, #f0fdfa 0%%, #ccfbf1 100%%) 
 
-.veris-btn-primary:hover {
-  background: var(--veris-primary-dark);
-  border-color: var(--veris-primary-dark);
-  color: white;
-  box-shadow: 0 4px 12px var(--veris-shadow-strong);
-}
+ * - Text Colors: #134e4a (dark), #0d9488 (medium) * - Text Colors: #134e4a (dark), #0d9488 (medium) 
 
-/* Secondary Button Variant */
-.veris-btn-secondary {
-  background: var(--veris-gray-100);
-  color: var(--veris-gray-700);
-  border-color: var(--veris-gray-200);
-}
+ * - Shadow: rgba(20, 184, 166, 0.15) * - Shadow: rgba(20, 184, 166, 0.15) 
 
-.veris-btn-secondary:hover {
-  background: var(--veris-primary-bg);
-  border-color: var(--veris-primary-light);
-  color: var(--veris-text-dark);
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px var(--veris-shadow);
-}
+ *  * 
 
-/* Success Button Variant */
-.veris-btn-success {
-  background: var(--veris-success);
-  color: white;
-  border-color: var(--veris-success);
-}
+ * Note: Utility classes (.veris-btn, .veris-input, etc.) were removed as they were not being used. * Note: Utility classes (.veris-btn, .veris-input, etc.) were removed as they were not being used. 
 
-.veris-btn-success:hover {
-  background: #059669;
-  border-color: #059669;
-  color: white;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
-}
+ * Only the CSS custom properties remain since they ARE actively used in dynamic-ui.css, stats.css, and options.css. * Only the CSS custom properties remain since they ARE actively used in dynamic-ui.css, stats.css, and options.css. 
 
-/* Error Button Variant */
-.veris-btn-error {
-  background: var(--veris-error);
-  color: white;
-  border-color: var(--veris-error);
-}
+ */ */ 
 
-.veris-btn-error:hover {
-  background: #dc2626;
-  border-color: #dc2626;
-  color: white;
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
-}
+ 
 
-/* Small Button Variant */
-.veris-btn-sm {
-  padding: 8px 16px;
-  font-size: 12px;
-  border-radius: 6px;
-}
+/* CSS Custom Properties for Unified Theme *//* CSS Custom Properties for Unified Theme */ 
 
-/* Large Button Variant */
-.veris-btn-lg {
-  padding: 15px 30px;
-  font-size: 16px;
-  border-radius: 12px;
-}
+:root {:root { 
 
-/* Unified Input Styles */
-.veris-input {
-  width: 100%;
-  padding: 12px 16px;
-  border: 2px solid var(--veris-gray-200);
-  border-radius: 8px;
-  font-size: 14px;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-  box-sizing: border-box;
-  background: white;
-  color: var(--veris-gray-700);
-}
+  /* Primary theme colors */  /* Primary theme colors */ 
 
-.veris-input:focus {
-  outline: none;
-  border-color: var(--veris-primary);
-  box-shadow: 0 0 0 3px var(--veris-shadow);
-}
+  --veris-primary: #14b8a6;  --veris-primary: #14b8a6; 
 
-.veris-input::placeholder {
-  color: var(--veris-gray-400);
-}
+  --veris-primary-dark: #0d9488;  --veris-primary-dark: #0d9488; 
 
-/* Unified Select Styles */
-.veris-select {
-  width: 100%;
-  padding: 12px 16px;
-  border: 2px solid var(--veris-gray-200);
-  border-radius: 8px;
-  font-size: 14px;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-  box-sizing: border-box;
-  background: white;
-  color: var(--veris-gray-700);
-  appearance: none;
-  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234b5563' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
-  background-repeat: no-repeat;
-  background-position: right 12px center;
-  background-size: 16px;
-  padding-right: 40px;
-  cursor: pointer;
-}
+  --veris-primary-light: #5eead4;  --veris-primary-light: #5eead4; 
 
-.veris-select:focus {
-  outline: none;
-  border-color: var(--veris-primary);
-  box-shadow: 0 0 0 3px var(--veris-shadow);
-}
+  --veris-primary-bg: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%);  --veris-primary-bg: linear-gradient(135deg, #f0fdfa 0%%, #ccfbf1 100%%); 
 
-/* Unified Search Bar Styles */
-.veris-search {
-  position: relative;
-  display: inline-block;
-  width: 100%;
-}
+  --veris-text-dark: #134e4a;  --veris-text-dark: #134e4a; 
 
-.veris-search input {
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid var(--veris-gray-200);
-  border-radius: 6px;
-  font-size: 12px;
-  box-sizing: border-box;
-  background: white;
-  color: var(--veris-gray-700);
-}
+  --veris-text-medium: #0d9488;  --veris-text-medium: #0d9488; 
 
-.veris-search input:focus {
-  outline: none;
-  border-color: var(--veris-primary);
-  box-shadow: 0 0 0 2px var(--veris-shadow);
-}
+  --veris-shadow: rgba(20, 184, 166, 0.15);  --veris-shadow: rgba(20, 184, 166, 0.15); 
 
-.veris-search input::placeholder {
-  color: var(--veris-gray-400);
-}
+  --veris-shadow-strong: rgba(20, 184, 166, 0.4);  --veris-shadow-strong: rgba(20, 184, 166, 0.4); 
 
-/* Unified Notification Styles */
-.veris-notification {
-  padding: 12px 18px;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 500;
-  border: 1px solid;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
+   
 
-.veris-notification-success {
-  background: var(--veris-success-bg);
-  color: var(--veris-success-text);
-  border-color: #a7f3d0;
-}
+  /* Status colors */  /* Status colors */ 
 
-.veris-notification-error {
-  background: var(--veris-error-bg);
-  color: var(--veris-error-text);
-  border-color: #fecaca;
-}
+  --veris-success: #10b981;  --veris-success: #10b981; 
 
-.veris-notification-warning {
-  background: var(--veris-warning-bg);
-  color: var(--veris-warning-text);
-  border-color: #fcd34d;
-}
+  --veris-success-bg: #d1fae5;  --veris-success-bg: #d1fae5; 
 
-.veris-notification-info {
-  background: var(--veris-primary-bg);
-  color: var(--veris-text-dark);
-  border-color: var(--veris-primary-light);
-}
+  --veris-success-text: #065f46;  --veris-success-text: #065f46; 
 
-/* Unified Toast Styles */
-.veris-toast {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  max-width: 400px;
-  padding: 12px 18px;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 500;
-  z-index: 10001;
-  opacity: 0;
-  transform: translateY(-20px);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  border: 1px solid;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
+  --veris-error: #ef4444;  --veris-error: #ef4444; 
 
-.veris-toast.show {
-  opacity: 1;
-  transform: translateY(0);
-}
+  --veris-error-bg: #fee2e2;  --veris-error-bg: #fee2e2; 
 
-.veris-toast-success {
-  background: var(--veris-success-bg);
-  color: var(--veris-success-text);
-  border-color: #a7f3d0;
-}
+  --veris-error-text: #991b1b;  --veris-error-text: #991b1b; 
 
-.veris-toast-error {
-  background: var(--veris-error-bg);
-  color: var(--veris-error-text);
-  border-color: #fecaca;
-}
+  --veris-warning: #f59e0b;  --veris-warning: #f59e0b; 
 
-.veris-toast-warning {
-  background: var(--veris-warning-bg);
-  color: var(--veris-warning-text);
-  border-color: #fcd34d;
-}
+  --veris-warning-bg: #fef3c7;  --veris-warning-bg: #fef3c7; 
 
-.veris-toast-info {
-  background: var(--veris-primary-bg);
-  color: var(--veris-text-dark);
-  border-color: var(--veris-primary-light);
-}
+  --veris-warning-text: #92400e;  --veris-warning-text: #92400e; 
 
-/* Unified Card Styles */
-.veris-card {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  border: 1px solid var(--veris-gray-200);
-  overflow: hidden;
-}
+   
 
-.veris-card-header {
-  padding: 20px;
-  border-bottom: 1px solid var(--veris-gray-200);
-  background: var(--veris-gray-50);
-}
+  /* Neutral colors */  /* Neutral colors */ 
 
-.veris-card-body {
-  padding: 20px;
-}
+  --veris-gray-50: #f9fafb;  --veris-gray-50: #f9fafb; 
 
-.veris-card-footer {
-  padding: 15px 20px;
-  border-top: 1px solid var(--veris-gray-200);
-  background: var(--veris-gray-50);
-}
+  --veris-gray-100: #f3f4f6;  --veris-gray-100: #f3f4f6; 
 
-/* Hover States for Interactive Elements */
-.veris-hover:hover {
-  background: var(--veris-primary-bg);
-  border-color: var(--veris-primary-light);
-  color: var(--veris-text-dark);
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px var(--veris-shadow);
-}
+  --veris-gray-200: #e5e7eb;  --veris-gray-200: #e5e7eb; 
 
-/* Focus States for Accessibility */
-.veris-focus:focus-visible {
-  outline: 2px solid var(--veris-primary);
-  outline-offset: 2px;
-}
+  --veris-gray-300: #d1d5db;  --veris-gray-300: #d1d5db; 
 
-/* Animation Utilities */
-.veris-transition {
-  transition: all 0.2s ease;
-}
+  --veris-gray-400: #9ca3af;  --veris-gray-400: #9ca3af; 
 
-.veris-transition-slow {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
+  --veris-gray-500: #6b7280;  --veris-gray-500: #6b7280; 
 
-/* Responsive Design Utilities */
-@media (max-width: 768px) {
-  .veris-btn {
-    padding: 10px 20px;
-  }
-  
-  .veris-btn-lg {
-    padding: 12px 24px;
-    font-size: 14px;
-  }
-  
-  .veris-toast {
-    left: 10px;
-    right: 10px;
-    max-width: none;
-  }
-}
+  --veris-gray-600: #4b5563;  --veris-gray-600: #4b5563; 
 
-/* Loading States */
-.veris-loading {
-  opacity: 0.6;
-  pointer-events: none;
-}
+  --veris-gray-700: #374151;  --veris-gray-700: #374151; 
 
-.veris-spinner {
-  width: 20px;
-  height: 20px;
-  border: 2px solid var(--veris-gray-200);
-  border-top: 2px solid var(--veris-primary);
-  border-radius: 50%;
-  animation: veris-spin 1s linear infinite;
-}
+  --veris-gray-800: #1f2937;  --veris-gray-800: #1f2937; 
 
-@keyframes veris-spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
+  --veris-gray-900: #111827;  --veris-gray-900: #111827; 
+
+}}
+
