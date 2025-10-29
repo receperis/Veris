@@ -33,6 +33,7 @@ function showToast(message, type = "info") {
 
     toast.textContent = icon + " " + message;
     toast.style.background = background;
+    toast.style.whiteSpace = "pre";
     toast.style.color = "#fff";
     toast.style.padding = "8px 14px";
     toast.style.fontSize = "13px";

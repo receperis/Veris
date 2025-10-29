@@ -124,8 +124,8 @@ async function performTranslation(text, rect) {
       sourceLanguage
     );
   } catch (err) {
-    console.error("Translation failed:", err);
-    translated = "Translation not available: " + err.message;
+    translated =
+      "Translation seems not working currently. Try refreshing the page.";
   }
 
   if (state.bubbleEl) {

@@ -2,7 +2,8 @@ import { showInfoToast } from "./toast.js";
 
 export async function translateTextWithAPI(text, targetLang, sourceLanguage) {
   if (targetLang === sourceLanguage) {
-    showInfoToast("Target and source languages are the same"); // If the target language is the same as the source language, no translation is needed
+    showInfoToast(`Target and source languages seem the same
+      If not try refreshing the page`); // If the target language is the same as the source language, no translation is needed
     return text;
   }
   try {

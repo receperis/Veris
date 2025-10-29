@@ -29,7 +29,6 @@ export async function getSettings(defaults = DEFAULT_SETTINGS) {
     const stored = await chrome.storage.sync.get(defaults);
     return stored;
   } catch (error) {
-    console.error("Failed to get settings from storage:", error);
     return defaults;
   }
 }

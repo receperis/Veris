@@ -3,6 +3,8 @@
  * Provides unified language detection functionality for both content scripts and service workers
  */
 
+import { showLoadingToast } from "../content/toast";
+
 /**
  * LanguageDetector class for managing language detection with caching
  */
@@ -69,7 +71,7 @@ export class LanguageDetector {
         return storageResult.sourceLanguage;
       }
     } catch (err) {
-      console.warn("Could not get source language from storage:", err);
+      console.log("Could not get source language from storage:", err);
     }
     return null;
   }
@@ -93,7 +95,8 @@ export class LanguageDetector {
         return response.language;
       }
     } catch (err) {
-      console.warn("Language detection via background failed:", err);
+      showLoadingToast(`You were really quick!
+        Extension loading. Try refreshing the page`);
     }
     return null;
   }
