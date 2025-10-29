@@ -5,6 +5,7 @@
 ## ✨ Core Features
 
 ### 🌍 Translation System
+
 - **Chrome Translation API Integration**: Leverages Chrome's built-in Translation API for offline translation
 - **Inline Translation Bubble**: Translations appear directly next to selected text
 - **Word-Level Breakdown**: Click individual words to see their translations
@@ -13,6 +14,7 @@
 - **Hotkey & Trigger Modes**: Flexible activation options for different workflows
 
 ### 📚 Vocabulary Management
+
 - **Persistent Storage**: Saves vocabulary to IndexedDB with full context
 - **Smart Organization**: Filter and search by language, date, and more
 - **Rich Metadata**: Stores source text, translations, URL, domain, and timestamps
@@ -21,6 +23,7 @@
 - **Duplicate Detection**: Prevents saving the same word multiple times
 
 ### 🧠 Spaced Repetition System (SRS)
+
 - **Leitner Box Algorithm**: Scientifically-proven spaced repetition method
 - **6-Box System**: Progressive difficulty levels with increasing intervals (1, 3, 7, 14, 30 days)
 - **Smart Scheduling**: Automatic calculation of due dates based on performance
@@ -29,12 +32,14 @@
 - **Progress Tracking**: Detailed statistics on learning progress and word mastery
 
 ### 📊 Statistics & Analytics
+
 - **Performance Metrics**: Track correct/incorrect answers, streaks, and progress
 - **Visual Dashboard**: Charts and graphs showing learning trends
 - **Per-Language Stats**: Monitor progress for each language you're learning
 - **SRS Box Distribution**: See how your vocabulary is distributed across difficulty levels
 
 ### 🎨 Modern UI/UX
+
 - **Clean, Intuitive Design**: Elegant interface that doesn't get in the way
 - **Dark Mode Support**: Comfortable viewing in any lighting condition
 - **Responsive Layout**: Works seamlessly on all screen sizes
@@ -116,17 +121,20 @@
 ### Development Installation
 
 1. **Clone the repository**
+
    ```cmd
    git clone https://github.com/receperis/SRS-Training.git
    cd SRS-Training
    ```
 
 2. **Install dependencies**
+
    ```cmd
    npm install
    ```
 
 3. **Build the extension**
+
    ```cmd
    npm run build
    ```
@@ -140,6 +148,7 @@
 ### Development Mode with Auto-Rebuild
 
 For active development with automatic rebuilding:
+
 ```cmd
 npm run dev
 ```
@@ -149,6 +158,7 @@ This watches for file changes and rebuilds automatically. You'll need to reload 
 ## 📖 Usage Guide
 
 ### 1. Translating Text
+
 1. Select text on any webpage
 2. A translation bubble appears automatically with the full translation
 3. View language indicators showing source → target language
@@ -156,12 +166,14 @@ This watches for file changes and rebuilds automatically. You'll need to reload 
 5. Click the close button or press `Esc` to dismiss
 
 ### 2. Saving Vocabulary
+
 1. After translating, word pills appear below the translation
 2. Click on words to mark them for saving (they turn green with a checkmark)
 3. Click the "Save Selected" button to store them to your vocabulary
 4. Access saved vocabulary via the extension popup (click the extension icon)
 
 ### 3. Managing Vocabulary (Popup)
+
 - **Browse**: Click the extension icon to view all saved vocabulary
 - **Search**: Use the search bar to filter by word or translation
 - **Filter by Language**: Select a specific language from the dropdown
@@ -170,6 +182,7 @@ This watches for file changes and rebuilds automatically. You'll need to reload 
 - **Statistics**: View your learning progress and SRS box distribution
 
 ### 4. Spaced Repetition Exercises
+
 1. Click "Start Exercise" in the popup to begin an SRS session
 2. Choose difficulty level (Easy, Medium, Hard, or Mixed)
 3. Set the number of questions per session (5-50)
@@ -177,12 +190,14 @@ This watches for file changes and rebuilds automatically. You'll need to reload 
 5. System automatically schedules reviews based on your performance
 
 ### 5. Tracking Progress (Statistics Page)
+
 - View total vocabulary count and words due for review
 - See performance metrics (correct/incorrect, streaks)
 - Monitor language-specific statistics
 - Track SRS box distribution showing mastery levels
 
 ### 6. Configuration (Options Page)
+
 - Set your target translation language
 - Configure exercise preferences (questions per session, difficulty)
 - Adjust hotkey and trigger settings
@@ -192,6 +207,7 @@ This watches for file changes and rebuilds automatically. You'll need to reload 
 ## ⚙️ Technical Architecture
 
 ### Built With
+
 - **Manifest V3**: Modern Chrome Extension API
 - **Vanilla JavaScript**: No framework dependencies for optimal performance
 - **ES6 Modules**: Clean, modular code organization
@@ -203,18 +219,21 @@ This watches for file changes and rebuilds automatically. You'll need to reload 
 ### Key Technologies
 
 #### Frontend
+
 - **Modular Architecture**: Separated concerns across content, service, and UI layers
 - **Template System**: Reusable HTML templates for consistent UI
 - **CSS Variables**: Dynamic theming with unified design system
 - **Shadow DOM**: Isolated styling for content script UI elements
 
 #### Backend Services
+
 - **Service Worker**: Background processing and message handling
 - **DatabaseService**: Abstracted IndexedDB operations with transaction management
 - **LeitnerService**: Pure SRS algorithm implementation with configurable intervals
 - **LanguageDetection**: Cached detection with fallback mechanisms
 
 #### Data Flow
+
 ```
 Content Script → Message Passing → Background Service Worker
                                           ↓
@@ -224,6 +243,7 @@ Content Script → Message Passing → Background Service Worker
 ```
 
 ### Performance Optimizations
+
 - Lazy loading of modules
 - Efficient DOM manipulation with minimal reflows
 - Debounced search and filtering
@@ -233,6 +253,7 @@ Content Script → Message Passing → Background Service Worker
 ## 💾 Data Storage
 
 ### Vocabulary Entry Structure
+
 The extension stores vocabulary data locally in IndexedDB with this comprehensive structure:
 
 ```javascript
@@ -247,7 +268,7 @@ The extension stores vocabulary data locally in IndexedDB with this comprehensiv
   translatedContext: "translated sentence",
   url: "https://example.com/page",
   domain: "example.com",
-  
+
   // SRS (Spaced Repetition) metadata
   srs: {
     boxIndex: 0,              // Leitner box (0-5)
@@ -265,6 +286,7 @@ The extension stores vocabulary data locally in IndexedDB with this comprehensiv
 ```
 
 ### SRS Scheduling (Leitner System)
+
 - **Box 0**: New words (2-minute cooldown, immediate review)
 - **Box 1**: 1-day interval
 - **Box 2**: 3-day interval
@@ -317,6 +339,7 @@ npm run test:debug        # Debug tests with Node inspector
 - **Statements**: 70%+ (targeting 85%+)
 
 Critical components have higher coverage:
+
 - Translation flow: 95%
 - Data persistence: 90%
 - SRS algorithm: 85%
@@ -388,6 +411,7 @@ npm run test:watch
 ## 🐛 Troubleshooting
 
 ### Translation Not Working
+
 - **Check Chrome Version**: Ensure you're using Chrome 120+ for Translation API support
 - **Enable Translation API**: The feature may be experimental in your Chrome version
 - **Check Browser Console**: Look for error messages (F12 → Console tab)
@@ -395,6 +419,7 @@ npm run test:watch
 - **Reload Page**: Some pages require a refresh after extension installation
 
 ### Popup Not Appearing
+
 - **Text Selection**: Make sure you're selecting text (not just clicking)
 - **Minimum Length**: Try selecting longer text (at least 2-3 characters)
 - **Extension Enabled**: Check that the extension toggle is on in the options
@@ -402,22 +427,26 @@ npm run test:watch
 - **Clear Bubble**: Press `Esc` to clear any stuck bubbles
 
 ### Vocabulary Not Saving
+
 - **IndexedDB Support**: Ensure your browser supports IndexedDB
 - **Storage Quota**: Check if you've exceeded browser storage limits
 - **Private/Incognito Mode**: Some storage features may be limited
 - **Check Console**: Look for database errors in the console
 
 ### Exercises Not Loading
+
 - **Vocabulary Required**: Save at least 4 words before starting exercises
 - **Database Access**: Ensure IndexedDB is accessible
 - **Service Worker**: Check background service worker status in `chrome://extensions/`
 
 ### Performance Issues
+
 - **Large Vocabulary**: Exercise performance may degrade with 10,000+ words
 - **Memory Usage**: Close and reopen popup if it feels sluggish
 - **Clear Cache**: Try clearing browser cache and reloading the extension
 
 ### Build Errors
+
 - **Node Version**: Use Node.js 18+ for best compatibility
 - **Clean Install**: Delete `node_modules` and run `npm install` again
 - **Clear Dist**: Delete the `dist` folder and rebuild
@@ -451,6 +480,7 @@ Contributions are welcome! Whether it's bug fixes, new features, documentation i
 ### Ideas for Contributions
 
 #### Features
+
 - [ ] Additional language pair support
 - [ ] Keyboard shortcuts customization
 - [ ] Flashcard export formats (Anki, Quizlet)
@@ -462,6 +492,7 @@ Contributions are welcome! Whether it's bug fixes, new features, documentation i
 - [ ] Gamification elements (streaks, achievements)
 
 #### Improvements
+
 - [ ] Performance optimizations for large vocabularies
 - [ ] Better error messages and user feedback
 - [ ] Accessibility enhancements
@@ -471,6 +502,7 @@ Contributions are welcome! Whether it's bug fixes, new features, documentation i
 - [ ] Export/import formats (CSV, Excel)
 
 #### Bug Fixes
+
 - Check [GitHub Issues](https://github.com/receperis/SRS-Training/issues) for reported bugs
 - Test edge cases and unusual scenarios
 - Improve error handling
@@ -497,6 +529,7 @@ This project is open source and available under the MIT License. Feel free to us
 ### Reporting Issues
 
 When reporting bugs, please include:
+
 - Chrome version
 - Extension version
 - Steps to reproduce
@@ -507,6 +540,7 @@ When reporting bugs, please include:
 ### Feature Requests
 
 Have an idea? Open an issue with:
+
 - Clear description of the feature
 - Use cases and benefits
 - Potential implementation approach (optional)
@@ -536,4 +570,4 @@ Have an idea? Open an issue with:
 
 **Built with ❤️ for language learners**
 
-*Note: This extension uses Chrome's Translation API, which may be experimental. API availability and language support vary by Chrome version and system configuration.*
+_Note: This extension uses Chrome's Translation API, which may be experimental. API availability and language support vary by Chrome version and system configuration._
