@@ -16,7 +16,7 @@ describe("Options Page Integration Tests", () => {
     // Read the actual options HTML file
     try {
       optionsHTML = fs.readFileSync(
-        path.join(process.cwd(), "options.html"),
+        path.join(process.cwd(), "src", "pages", "options.html"),
         "utf8"
       );
     } catch (e) {

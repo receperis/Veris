@@ -60,7 +60,14 @@ generate-key.js
 
 # Misc
 coverage/
+packed files/
+packed versions/
+promo-site/
+SS/
+branding/
+requirements.md
 coverage-final.json
+
 
 # Lockfiles for optional package managers
 pnpm-lock.yaml

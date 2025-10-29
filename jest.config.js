@@ -16,14 +16,13 @@ module.exports = {
 
   // Collect coverage from these files
   collectCoverageFrom: [
-    "service/**/*.js",
-    "src/**/*.js",
-    "popup.js",
-    "background.js",
-    "content_script.js",
-    "options.js",
-    "exercise/**/*.js",
-    "stats/**/*.js",
+    "src/service/**/*.js",
+    "src/shared/**/*.js",
+    "src/content/**/*.js",
+    "src/pages/**/*.js",
+    "src/exercise/**/*.js",
+    "src/stats/**/*.js",
+    "src/templates/**/*.js",
     "!**/node_modules/**",
     "!**/tests/**",
   ],

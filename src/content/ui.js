@@ -5,7 +5,7 @@ import {
   getFullLanguageName,
   buildLanguageList,
 } from "./utils.js";
-import { ContentTemplates } from "../../templates/template-utils.js";
+import { ContentTemplates } from "../templates/template-utils.js";
 
 // Note: some functions reference other modules; import cycles are avoided by keeping DOM-only helpers here.
 
@@ -61,6 +61,7 @@ export function createBubbleAtRect(
   languageInfo = null
 ) {
   removeBubble();
+  console.log({ rect });
   const bubble = document.createElement("div");
   bubble.className =
     "__translator_bubble" + (isLoading ? " __translator_loading" : "");
@@ -76,10 +77,24 @@ export function createBubbleAtRect(
 
   const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
   const scrollY = window.pageYOffset || document.documentElement.scrollTop;
-  const left = rect.left + scrollX;
-  const top = rect.bottom + scrollY + 5;
-  bubble.style.left = left + "px";
-  bubble.style.top = top + "px";
+
+  const rectHasZero = [rect.left, rect.right, rect.top, rect.bottom].some(
+    (v) => v === 0
+  );
+
+  // If any rect value is 0, position bubble under the browser extensions area (top-right)
+  if (rectHasZero) {
+    bubble.style.position = "absolute";
+    bubble.style.left = "auto";
+    bubble.style.right = "12px"; // small gap from right edge
+    bubble.style.top = window.scrollY + 5 + "px"; // place slightly below top bar
+  } else {
+    const left = rect.left + scrollX;
+    const top = rect.bottom + scrollY + 5;
+    bubble.style.left = left + "px";
+    bubble.style.top = top + "px";
+  }
+
   document.body.appendChild(bubble);
   state.bubbleEl = bubble;
 

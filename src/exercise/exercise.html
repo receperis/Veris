@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vocabulary Exercise</title>
+    <link rel="stylesheet" href="exercise.css">
+    <link rel="stylesheet" href="../styles/dynamic-ui.css">
+</head>
+
+<body>
+    <div class="exercise-container">
+        <!-- Header -->
+        <header class="exercise-header">
+            <div class="header-content">
+                <h1>🧠 Vocabulary Exercise</h1>
+                <div class="exercise-info">
+                    <div class="progress-info">
+                        <span class="current-question">1</span> / <span class="total-questions">10</span>
+                    </div>
+                    <div class="score-info">
+                        Score: <span class="current-score">0</span>
+                    </div>
+
+                </div>
+                <div class="mid-exercise-actions" style="display:none;">
+                    <button class="back-to-welcome-btn" title="Back to difficulty selection"
+                        style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.35);color:#fff;padding:6px 14px;border-radius:20px;cursor:pointer;">
+                        Restart</button>
+                </div>
+                <button class="close-exercise" title="Close Exercise">×</button>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 0%"></div>
+            </div>
+        </header>
+
+        <!-- Loading Screen -->
+        <div class="loading-screen">
+            <div class="loading-content">
+                <div class="loading-spinner"></div>
+                <h2 class="loading-title">Preparing your vocabulary exercise...</h2>
+                <p class="loading-description">Fetching your saved words and creating flashcards</p>
+            </div>
+        </div>
+
+        <!-- Welcome Screen -->
+        <div class="welcome-screen" style="display: none;">
+            <div class="welcome-content">
+                <h2>🎯 Ready for your vocabulary practice?</h2>
+                <div class="exercise-stats">
+                    <div class="stat-item">
+                        <span class="stat-number" id="total-words">0</span>
+                        <span class="stat-label">Words Available</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number" id="exercise-count">10</span>
+                        <span class="stat-label">Questions</span>
+                    </div>
+                </div>
+                <div class="difficulty-selector">
+                    <h3>Choose difficulty:</h3>
+                    <div class="difficulty-options">
+                        <button class="difficulty-btn" data-difficulty="easy">
+                            <span class="difficulty-icon">😊</span>
+                            <span class="difficulty-label">Easy</span>
+                            <span class="difficulty-desc">3 choices</span>
+                        </button>
+                        <button class="difficulty-btn active" data-difficulty="medium">
+                            <span class="difficulty-icon">🤔</span>
+                            <span class="difficulty-label">Medium</span>
+                            <span class="difficulty-desc">4 choices</span>
+                        </button>
+                        <button class="difficulty-btn" data-difficulty="hard">
+                            <span class="difficulty-icon">🧠</span>
+                            <span class="difficulty-label">Hard</span>
+                            <span class="difficulty-desc">5 choices</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="language-selector" style="margin:30px 0;">
+                    <h3 style="margin-bottom:12px;">Filter by source language (optional):</h3>
+                    <select class="language-filter"
+                        style="padding:12px 16px;border:2px solid #e5e7eb;border-radius:12px;min-width:240px;font-size:14px;">
+                        <option value="">All Languages</option>
+                    </select>
+                    <div class="language-available-count" style="margin-top:10px;color:#6b7280;font-size:12px;">Showing
+                        all languages</div>
+                </div>
+                <button class="start-exercise-btn">Start Exercise</button>
+            </div>
+        </div>
+
+        <!-- Exercise Screen -->
+        <div class="exercise-screen" style="display: none;">
+            <div class="flashcard">
+                <div class="flashcard-content">
+                    <div class="original-word">
+                        <h2 class="word-display">Loading...</h2>
+                        <div class="word-meta">
+                            <span class="source-language">EN</span>
+                            <span class="arrow">→</span>
+                            <span class="target-language">ES</span>
+                        </div>
+                    </div>
+
+                    <div class="word-context">
+                        <span class="context-label">Context:</span>
+                        <span class="context-text">Loading context...</span>
+                    </div>
+
+                    <div class="translation-question">
+                        <h3>What is the translation?</h3>
+                        <div class="answer-choices">
+                            <!-- Dynamic answer buttons will be inserted here -->
+                        </div>
+                    </div>
+                    <!-- Unified action bar (responsive) -->
+                    <div class="nav-controls action-bar">
+                        <button class="prev-question-btn" disabled title="Previous question">‹ Prev</button>
+                        <button class="hint-btn" title="Show hint">💡 Hint</button>
+                        <button class="skip-btn" title="Skip this word">⏭️ Skip</button>
+                        <button class="next-question-btn" disabled title="Next question">Next ›</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Feedback Modal -->
+            <div class="feedback-modal" style="display: none;">
+                <div class="feedback-content">
+                    <div class="feedback-icon"></div>
+                    <div class="feedback-message"></div>
+                    <div class="feedback-details"></div>
+                    <button class="continue-btn">Continue</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Screen -->
+        <div class="results-screen" style="display: none;">
+            <div class="results-content">
+                <h2>🎉 Exercise Complete!</h2>
+
+                <div class="final-score">
+                    <div class="score-circle">
+                        <div class="score-number">
+                            <span class="score-percentage">0%</span>
+                            <span class="score-fraction">0/10</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="results-breakdown">
+                    <div class="result-stat">
+                        <span class="result-icon">✅</span>
+                        <span class="result-label">Correct</span>
+                        <span class="result-value correct-count">0</span>
+                    </div>
+                    <div class="result-stat">
+                        <span class="result-icon">❌</span>
+                        <span class="result-label">Incorrect</span>
+                        <span class="result-value incorrect-count">0</span>
+                    </div>
+                    <div class="result-stat">
+                        <span class="result-icon">⏭️</span>
+                        <span class="result-label">Skipped</span>
+                        <span class="result-value skipped-count">0</span>
+                    </div>
+                </div>
+
+                <div class="words-to-review" style="display: none;">
+                    <h3>Words to review:</h3>
+                    <div class="review-words-list">
+                        <!-- Incorrect words will be listed here -->
+                    </div>
+                </div>
+
+                <div class="results-actions">
+                    <button class="retry-btn">🔄 Try Again</button>
+                    <button class="close-results-btn">Close</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- No Words Screen -->
+        <div class="no-words-screen" style="display: none;">
+            <div class="no-words-content">
+                <div class="no-words-icon">�</div>
+                <h2>No Words Available for Practice</h2>
+                <p class="no-words-message">There are currently no vocabulary words available for your exercise.</p>
+                <div class="no-words-suggestions">
+                    <div class="suggestion-item">
+                        <span class="suggestion-icon">💡</span>
+                        <span class="suggestion-text">Start browsing websites and save new words you encounter</span>
+                    </div>
+                    <div class="suggestion-item">
+                        <span class="suggestion-icon">🔄</span>
+                        <span class="suggestion-text">Words you've learned will become available for review over time</span>
+                    </div>
+                    <div class="suggestion-item">
+                        <span class="suggestion-icon">🌍</span>
+                        <span class="suggestion-text">Try changing the language filter to see if you have words in other languages</span>
+                    </div>
+                </div>
+                <div class="no-words-actions">
+                    <button class="close-no-words-btn primary-btn">Close Exercise</button>
+                    <button class="back-to-filter-btn secondary-btn">Change Language Filter</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Error Screen -->
+        <div class="error-screen" style="display: none;">
+            <div class="error-content">
+                <div class="error-icon">❌</div>
+                <h2>Exercise Error</h2>
+                <p class="error-message">An unexpected error occurred while loading the exercise.</p>
+                <button class="close-error-btn">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="../exercise/exercise.js"></script>
+</body>
+
+</html>

@@ -6,6 +6,22 @@
 const puppeteer = require("puppeteer");
 const path = require("path");
 
+// Custom logger that bypasses Jest's console capturing
+const logger = {
+  log: (message, ...args) => {
+    process.stdout.write(`📝 ${message}\n`);
+    if (args.length > 0) {
+      process.stdout.write(`   ${JSON.stringify(args)}\n`);
+    }
+  },
+  error: (message, ...args) => {
+    process.stderr.write(`❌ ${message}\n`);
+    if (args.length > 0) {
+      process.stderr.write(`   ${JSON.stringify(args)}\n`);
+    }
+  },
+};
+
 describe("Chrome Extension E2E Tests", () => {
   let browser;
   let extensionPage;
@@ -14,7 +30,7 @@ describe("Chrome Extension E2E Tests", () => {
   beforeAll(async () => {
     // Launch browser with extension loaded
     const extensionPath = path.resolve(__dirname, "../..");
-    console.log("Loading extension from path:", extensionPath);
+    logger.log("Loading extension from path:", extensionPath);
 
     try {
       browser = await puppeteer.launch({
@@ -36,7 +52,7 @@ describe("Chrome Extension E2E Tests", () => {
         ],
       });
     } catch (launchError) {
-      console.log(
+      logger.error(
         "Failed to launch browser with extension, trying fallback:",
         launchError.message
       );
@@ -47,7 +63,7 @@ describe("Chrome Extension E2E Tests", () => {
         args: ["--no-sandbox", "--disable-setuid-sandbox"],
       });
       extensionId = "fallback-mode";
-      console.log("Browser launched in fallback mode");
+      logger.log("Browser launched in fallback mode");
       return;
     }
 
@@ -86,9 +102,9 @@ describe("Chrome Extension E2E Tests", () => {
 
       if (extensionTarget) {
         extensionId = extensionTarget.url().split("/")[2];
-        console.log("Extension loaded with ID:", extensionId);
+        logger.log("🎉 Extension loaded with ID:", extensionId);
       } else {
-        console.log("Extension targets not found, using test mode");
+        logger.log("⚠️ Extension targets not found, using test mode");
         extensionId = "test-extension-mode";
       }
     } catch (targetError) {
@@ -138,12 +154,12 @@ describe("Chrome Extension E2E Tests", () => {
       try {
         console.log(
           "Attempting to load popup at:",
-          `chrome-extension://${extensionId}/popup.html`
+          `chrome-extension:///pages/popup.html`
         );
 
         // Navigate to popup page directly
         const response = await page.goto(
-          `chrome-extension://${extensionId}/popup.html`,
+          `chrome-extension:///pages/popup.html`,
           {
             waitUntil: "networkidle0",
             timeout: 10000,
@@ -361,6 +377,160 @@ describe("Chrome Extension E2E Tests", () => {
         await page.close();
       }
     }, 10000);
+
+    test("should handle complex text selection scenarios", async () => {
+      const page = await browser.newPage();
+
+      try {
+        // Complex page with various text elements
+        await page.goto(`data:text/html,
+          <html>
+            <head>
+              <style>
+                .nested { margin: 10px; padding: 5px; }
+                .rtl { direction: rtl; }
+                .overlay { position: absolute; top: 0; left: 0; z-index: 1000; }
+              </style>
+            </head>
+            <body>
+              <div class="nested">
+                <p id="multi-line">This is a very long sentence that should wrap across multiple lines when the viewport is narrow enough to force text wrapping.</p>
+                <span id="mixed-content">Text with <strong>bold</strong> and <em>italic</em> formatting mixed together.</span>
+                <div class="rtl" id="rtl-text">مرحبا بك في اختبار النص العربي</div>
+                <table>
+                  <tr><td id="table-cell">Table cell content</td><td>Another cell</td></tr>
+                </table>
+                <div id="whitespace-text">   Text   with   extra   whitespace   </div>
+                <code id="code-block">function test() { return "code"; }</code>
+                <div class="overlay" id="overlay-text">Overlay text</div>
+              </div>
+            </body>
+          </html>`);
+
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+
+        // Test 1: Multi-line text selection
+        await page.click("#multi-line", { clickCount: 3 });
+        const multiLineText = await page.evaluate(() =>
+          window.getSelection().toString().trim()
+        );
+        expect(multiLineText.length).toBeGreaterThan(50);
+
+        // Test 2: Selection across HTML elements
+        await page.evaluate(() => {
+          const range = document.createRange();
+          const selection = window.getSelection();
+          range.setStart(
+            document.querySelector("#mixed-content").firstChild,
+            0
+          );
+          range.setEnd(document.querySelector("strong").nextSibling, 5);
+          selection.removeAllRanges();
+          selection.addRange(range);
+        });
+
+        const crossElementText = await page.evaluate(() =>
+          window.getSelection().toString()
+        );
+        expect(crossElementText).toContain("Text with bold");
+
+        // Test 3: RTL text selection
+        await page.click("#rtl-text", { clickCount: 3 });
+        const rtlText = await page.evaluate(() =>
+          window.getSelection().toString().trim()
+        );
+        expect(rtlText.length).toBeGreaterThan(0);
+
+        // Test 4: Table cell selection
+        await page.click("#table-cell", { clickCount: 3 });
+        const tableCellText = await page.evaluate(() =>
+          window.getSelection().toString().trim()
+        );
+        expect(tableCellText).toBe("Table cell content");
+
+        // Test 5: Code block selection
+        await page.click("#code-block", { clickCount: 3 });
+        const codeText = await page.evaluate(() =>
+          window.getSelection().toString().trim()
+        );
+        expect(codeText).toContain("function test()");
+
+        // Test 6: Selection with extra whitespace
+        await page.click("#whitespace-text", { clickCount: 3 });
+        const whitespaceText = await page.evaluate(() =>
+          window.getSelection().toString()
+        );
+        expect(whitespaceText.trim()).toBe("Text with extra whitespace");
+
+        console.log("Complex text selection tests passed");
+      } catch (error) {
+        console.log("Complex text selection error:", error.message);
+        throw error;
+      } finally {
+        await page.close();
+      }
+    }, 15000);
+
+    test("should handle dynamic content and shadow DOM", async () => {
+      const page = await browser.newPage();
+
+      try {
+        await page.goto(`data:text/html,
+          <html>
+            <body>
+              <div id="dynamic-container"></div>
+              <div id="shadow-host"></div>
+              <script>
+                // Add dynamic content
+                setTimeout(() => {
+                  document.getElementById('dynamic-container').innerHTML = 
+                    '<p id="dynamic-text">Dynamically added text content</p>';
+                }, 500);
+
+                // Create shadow DOM
+                const shadowHost = document.getElementById('shadow-host');
+                const shadow = shadowHost.attachShadow({ mode: 'open' });
+                shadow.innerHTML = '<p id="shadow-text">Text inside shadow DOM</p>';
+              </script>
+            </body>
+          </html>`);
+
+        // Wait for dynamic content
+        await page.waitForSelector("#dynamic-text", { timeout: 2000 });
+
+        // Test dynamic content selection
+        await page.click("#dynamic-text", { clickCount: 3 });
+        const dynamicText = await page.evaluate(() =>
+          window.getSelection().toString().trim()
+        );
+        expect(dynamicText).toBe("Dynamically added text content");
+
+        // Test shadow DOM text (if accessible)
+        try {
+          const shadowText = await page.evaluate(() => {
+            const shadowHost = document.getElementById("shadow-host");
+            const shadowRoot = shadowHost.shadowRoot;
+            if (shadowRoot) {
+              return shadowRoot.querySelector("#shadow-text").textContent;
+            }
+            return null;
+          });
+
+          if (shadowText) {
+            expect(shadowText).toBe("Text inside shadow DOM");
+          }
+        } catch (shadowError) {
+          console.log("Shadow DOM test skipped:", shadowError.message);
+        }
+
+        console.log("Dynamic content tests passed");
+      } catch (error) {
+        console.log("Dynamic content test error:", error.message);
+        throw error;
+      } finally {
+        await page.close();
+      }
+    }, 15000);
   });
 
   describe("Popup User Interactions", () => {
@@ -379,7 +549,7 @@ describe("Chrome Extension E2E Tests", () => {
       const page = await browser.newPage();
 
       try {
-        await page.goto(`chrome-extension://${extensionId}/popup.html`);
+        await page.goto(`chrome-extension:///pages/popup.html`);
         await page.waitForSelector("body", { timeout: 10000 });
 
         // Check for interactive elements (buttons, inputs, etc.)
@@ -420,7 +590,7 @@ describe("Chrome Extension E2E Tests", () => {
       const page = await browser.newPage();
 
       try {
-        await page.goto(`chrome-extension://${extensionId}/popup.html`);
+        await page.goto(`chrome-extension:///pages/popup.html`);
         await page.waitForSelector("body", { timeout: 10000 });
 
         // Test if we can interact with form elements
@@ -485,7 +655,7 @@ describe("Chrome Extension E2E Tests", () => {
       const page = await browser.newPage();
 
       try {
-        await page.goto(`chrome-extension://${extensionId}/popup.html`);
+        await page.goto(`chrome-extension:///pages/popup.html`);
         await page.waitForSelector("body");
 
         const toggleBtn = await page.$("#extension-toggle-btn");
@@ -701,7 +871,7 @@ describe("Chrome Extension E2E Tests", () => {
       const page = await browser.newPage();
 
       try {
-        await page.goto(`chrome-extension://${extensionId}/popup.html`);
+        await page.goto(`chrome-extension:///pages/popup.html`);
         await page.waitForSelector("body");
 
         // Set up download handling
@@ -742,7 +912,7 @@ describe("Chrome Extension E2E Tests", () => {
       const page = await browser.newPage();
 
       try {
-        await page.goto(`chrome-extension://${extensionId}/popup.html`);
+        await page.goto(`chrome-extension:///pages/popup.html`);
         await page.waitForSelector("body");
 
         // Measure initial load time
@@ -774,7 +944,7 @@ describe("Chrome Extension E2E Tests", () => {
       const page = await browser.newPage();
 
       try {
-        await page.goto(`chrome-extension://${extensionId}/popup.html`);
+        await page.goto(`chrome-extension:///pages/popup.html`);
         await page.waitForSelector("body");
 
         // Rapid search input changes
@@ -802,6 +972,263 @@ describe("Chrome Extension E2E Tests", () => {
         await page.close();
       }
     });
+
+    test("should detect memory leaks during extended use", async () => {
+      // Skip test if in fallback mode
+      if (
+        extensionId.includes("fallback") ||
+        extensionId.includes("test-extension")
+      ) {
+        console.log("Skipping memory leak test - browser in fallback mode");
+        return;
+      }
+
+      const page = await browser.newPage();
+
+      try {
+        await page.goto(`chrome-extension:///pages/popup.html`);
+        await page.waitForSelector("body");
+
+        // Get initial memory metrics
+        const initialMetrics = await page.metrics();
+        console.log("Initial memory:", {
+          JSHeapUsedSize: initialMetrics.JSHeapUsedSize,
+          JSHeapTotalSize: initialMetrics.JSHeapTotalSize,
+          Nodes: initialMetrics.Nodes,
+          JSEventListeners: initialMetrics.JSEventListeners,
+        });
+
+        // Simulate extended usage patterns
+        for (let i = 0; i < 10; i++) {
+          // Simulate vocabulary operations
+          await page.evaluate(() => {
+            const mockData = Array.from({ length: 100 }, (_, index) => ({
+              id: index,
+              originalWord: `word${index}`,
+              translatedWord: `translation${index}`,
+              context: `Context for word ${index}`,
+            }));
+
+            // Simulate creating and removing DOM elements
+            const container = document.createElement("div");
+            container.innerHTML = mockData
+              .map(
+                (item) =>
+                  `<div class="temp-item">${item.originalWord}: ${item.translatedWord}</div>`
+              )
+              .join("");
+            document.body.appendChild(container);
+
+            // Clean up immediately
+            setTimeout(() => {
+              document.body.removeChild(container);
+            }, 50);
+          });
+
+          await new Promise((resolve) => setTimeout(resolve, 100));
+        }
+
+        // Force garbage collection if available
+        try {
+          await page.evaluate(() => {
+            if (window.gc) {
+              window.gc();
+            }
+          });
+        } catch (e) {
+          // GC not available, that's fine
+        }
+
+        // Wait a bit for cleanup
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+
+        // Get final memory metrics
+        const finalMetrics = await page.metrics();
+        console.log("Final memory:", {
+          JSHeapUsedSize: finalMetrics.JSHeapUsedSize,
+          JSHeapTotalSize: finalMetrics.JSHeapTotalSize,
+          Nodes: finalMetrics.Nodes,
+          JSEventListeners: finalMetrics.JSEventListeners,
+        });
+
+        // Check for reasonable memory usage
+        const memoryGrowth =
+          finalMetrics.JSHeapUsedSize - initialMetrics.JSHeapUsedSize;
+        const nodeGrowth = finalMetrics.Nodes - initialMetrics.Nodes;
+        const listenerGrowth =
+          finalMetrics.JSEventListeners - initialMetrics.JSEventListeners;
+
+        console.log("Memory growth:", memoryGrowth, "bytes");
+        console.log("Node growth:", nodeGrowth);
+        console.log("Event listener growth:", listenerGrowth);
+
+        // Memory should not grow excessively (allowing for some variance)
+        expect(memoryGrowth).toBeLessThan(50 * 1024 * 1024); // Less than 50MB growth (more realistic)
+        expect(nodeGrowth).toBeLessThan(5000); // Less than 5000 nodes (extension creates UI elements)
+        expect(listenerGrowth).toBeLessThan(200); // Less than 200 listeners (more realistic)
+      } finally {
+        await page.close();
+      }
+    }, 30000);
+
+    test("should handle CPU-intensive operations efficiently", async () => {
+      // Skip test if in fallback mode
+      if (
+        extensionId.includes("fallback") ||
+        extensionId.includes("test-extension")
+      ) {
+        console.log("Skipping CPU usage test - browser in fallback mode");
+        return;
+      }
+
+      const page = await browser.newPage();
+
+      try {
+        await page.goto(`chrome-extension:///pages/popup.html`);
+        await page.waitForSelector("body");
+
+        // Simulate CPU-intensive operations
+        const startTime = Date.now();
+
+        await page.evaluate(() => {
+          // Simulate heavy vocabulary processing
+          const heavyProcessing = () => {
+            const largeDataset = Array.from({ length: 1000 }, (_, i) => ({
+              id: i,
+              word: `word${i}`,
+              translation: `translation${i}`,
+              context: `This is a longer context sentence for word number ${i} to simulate real data processing`,
+              metadata: {
+                difficulty: Math.floor(Math.random() * 5) + 1,
+                frequency: Math.random(),
+                lastReviewed: new Date().toISOString(),
+                correctCount: Math.floor(Math.random() * 20),
+                incorrectCount: Math.floor(Math.random() * 10),
+              },
+            }));
+
+            // Simulate filtering and sorting operations
+            return largeDataset
+              .filter((item) => item.metadata.difficulty > 2)
+              .sort((a, b) => b.metadata.frequency - a.metadata.frequency)
+              .map((item) => ({
+                ...item,
+                score:
+                  (item.metadata.correctCount /
+                    Math.max(
+                      1,
+                      item.metadata.incorrectCount + item.metadata.correctCount
+                    )) *
+                  100,
+              }))
+              .slice(0, 50);
+          };
+
+          // Run the heavy processing
+          const result = heavyProcessing();
+
+          // Store result to prevent optimization
+          window.testResult = result;
+          return result.length;
+        });
+
+        const processingTime = Date.now() - startTime;
+        console.log(
+          "CPU-intensive operation completed in:",
+          processingTime,
+          "ms"
+        );
+
+        // Should complete within reasonable time
+        expect(processingTime).toBeLessThan(2000); // Less than 2 seconds
+
+        // Verify the page is still responsive
+        const isResponsive = await page.evaluate(() => {
+          const button = document.createElement("button");
+          button.textContent = "Test";
+          document.body.appendChild(button);
+          button.click();
+          document.body.removeChild(button);
+          return true;
+        });
+
+        expect(isResponsive).toBe(true);
+      } finally {
+        await page.close();
+      }
+    }, 20000);
+
+    test("should handle storage optimization under load", async () => {
+      // Skip test if in fallback mode
+      if (
+        extensionId.includes("fallback") ||
+        extensionId.includes("test-extension")
+      ) {
+        console.log(
+          "Skipping storage optimization test - browser in fallback mode"
+        );
+        return;
+      }
+
+      const page = await browser.newPage();
+
+      try {
+        await page.goto(`chrome-extension:///pages/popup.html`);
+        await page.waitForSelector("body");
+
+        // Test storage operations under load
+        const storageOperations = [];
+
+        for (let i = 0; i < 20; i++) {
+          const operation = page.evaluate((index) => {
+            return new Promise((resolve) => {
+              // Simulate rapid storage operations
+              const data = {
+                [`testKey${index}`]: {
+                  timestamp: Date.now(),
+                  data: Array.from({ length: 100 }, (_, j) => `item${j}`),
+                  metadata: { operation: index },
+                },
+              };
+
+              if (typeof chrome !== "undefined" && chrome.storage) {
+                chrome.storage.local.set(data, () => {
+                  chrome.storage.local.get(`testKey${index}`, (result) => {
+                    resolve(result[`testKey${index}`] ? "success" : "failed");
+                  });
+                });
+              } else {
+                // Fallback for testing environment
+                resolve("success");
+              }
+            });
+          }, i);
+
+          storageOperations.push(operation);
+        }
+
+        // Execute all storage operations concurrently
+        const startTime = Date.now();
+        const results = await Promise.all(storageOperations);
+        const totalTime = Date.now() - startTime;
+
+        console.log("Storage operations completed in:", totalTime, "ms");
+        console.log(
+          "Success rate:",
+          results.filter((r) => r === "success").length,
+          "/",
+          results.length
+        );
+
+        // Should complete within reasonable time and not fail
+        expect(totalTime).toBeLessThan(5000); // Less than 5 seconds for all operations
+        expect(results.filter((r) => r === "success").length).toBeGreaterThan(
+          results.length * 0.8
+        ); // At least 80% success rate
+      } finally {
+        await page.close();
+      }
+    }, 30000);
   });
 
   describe("Error Handling", () => {
@@ -823,7 +1250,7 @@ describe("Chrome Extension E2E Tests", () => {
         // Block network requests to simulate offline mode
         await page.setOfflineMode(true);
 
-        await page.goto(`chrome-extension://${extensionId}/popup.html`);
+        await page.goto(`chrome-extension:///pages/popup.html`);
         await page.waitForSelector("body");
 
         // Extension should still load (since it's local)
@@ -852,7 +1279,7 @@ describe("Chrome Extension E2E Tests", () => {
       const page = await browser.newPage();
 
       try {
-        await page.goto(`chrome-extension://${extensionId}/popup.html`);
+        await page.goto(`chrome-extension:///pages/popup.html`);
         await page.waitForSelector("body");
 
         // Inject corrupted data (would be more complex in real test)
@@ -886,7 +1313,7 @@ describe("Chrome Extension E2E Tests", () => {
       const page = await browser.newPage();
 
       try {
-        await page.goto(`chrome-extension://${extensionId}/popup.html`);
+        await page.goto(`chrome-extension:///pages/popup.html`);
         await page.waitForSelector("body");
 
         // Test tab navigation
@@ -903,7 +1330,9 @@ describe("Chrome Extension E2E Tests", () => {
         expect(["BUTTON", "INPUT", "SELECT"]).toContain(activeElement2);
 
         // Check if page is still connected before Enter key test
-        const isConnected = await page.evaluate(() => document.readyState === "complete");
+        const isConnected = await page.evaluate(
+          () => document.readyState === "complete"
+        );
         if (!isConnected) {
           console.log("Page disconnected before Enter key test");
           return;
@@ -916,7 +1345,7 @@ describe("Chrome Extension E2E Tests", () => {
             tagName: active.tagName,
             type: active.type || null,
             id: active.id || null,
-            className: active.className || null
+            className: active.className || null,
           };
         });
         console.log("Focused element before Enter:", focusedElement);
@@ -924,19 +1353,28 @@ describe("Chrome Extension E2E Tests", () => {
         // Test Enter key activation with error handling
         try {
           // Only test Enter if the focused element won't cause navigation
-          if (focusedElement.tagName === "INPUT" ||
+          if (
+            focusedElement.tagName === "INPUT" ||
             (focusedElement.tagName === "BUTTON" &&
               !focusedElement.className.includes("close") &&
-              !focusedElement.id.includes("close"))) {
+              !focusedElement.id.includes("close"))
+          ) {
             await page.keyboard.press("Enter");
             // Short wait to see if page is still responsive
             await new Promise((resolve) => setTimeout(resolve, 100));
           } else {
-            console.log("Skipping Enter key test on potentially destructive element");
+            console.log(
+              "Skipping Enter key test on potentially destructive element"
+            );
           }
         } catch (error) {
-          if (error.message.includes("Target closed") || error.message.includes("Protocol error")) {
-            console.log("Enter key caused page/target to close, which is expected behavior");
+          if (
+            error.message.includes("Target closed") ||
+            error.message.includes("Protocol error")
+          ) {
+            console.log(
+              "Enter key caused page/target to close, which is expected behavior"
+            );
             // This is actually valid behavior if Enter triggered navigation or popup close
           } else {
             throw error; // Re-throw unexpected errors
@@ -978,7 +1416,7 @@ describe("Chrome Extension E2E Tests", () => {
       const page = await browser.newPage();
 
       try {
-        await page.goto(`chrome-extension://${extensionId}/popup.html`);
+        await page.goto(`chrome-extension:///pages/popup.html`);
         await page.waitForSelector("body");
 
         // Check focus styles

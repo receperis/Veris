@@ -5,7 +5,8 @@
     "test": "jest",
     "test:unit": "jest tests/unit",
     "test:integration": "jest tests/integration",
-    "test:e2e": "jest tests/e2e",
+    "test:e2e": "node node_modules/jest/bin/jest.js --config=jest.e2e.config.js --runInBand",
+    "test:first-install": "node node_modules/jest/bin/jest.js --config=jest.e2e.config.js tests/e2e/first-install.test.js --runInBand --verbose",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "test:debug": "node --inspect-brk node_modules/.bin/jest --runInBand"

@@ -1,0 +1,50 @@
+/*
+ * Veris Extension Unified Theme
+ * CSS Custom Properties (Variables) used across the extension
+ * 
+ * Primary Theme Colors:
+ * - Teal/Turquoise: #14b8a6 (main), #0d9488 (dark), #5eead4 (light)
+ * - Background Gradients: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%)
+ * - Text Colors: #134e4a (dark), #0d9488 (medium)
+ * - Shadow: rgba(20, 184, 166, 0.15)
+ * 
+ * Note: Utility classes (.veris-btn, .veris-input, etc.) were removed as they were not being used.
+ * Only the CSS custom properties remain since they ARE actively used in dynamic-ui.css, stats.css, and options.css.
+ */
+
+/* CSS Custom Properties for Unified Theme */
+:root {
+  /* Primary theme colors */
+  --veris-primary: #14b8a6;
+  --veris-primary-dark: #0d9488;
+  --veris-primary-light: #5eead4;
+  --veris-primary-bg: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%);
+  --veris-text-dark: #134e4a;
+  --veris-text-medium: #0d9488;
+  --veris-shadow: rgba(20, 184, 166, 0.15);
+  --veris-shadow-strong: rgba(20, 184, 166, 0.4);
+  
+  /* Status colors */
+  --veris-success: #10b981;
+  --veris-success-bg: #d1fae5;
+  --veris-success-text: #065f46;
+  --veris-error: #ef4444;
+  --veris-error-bg: #fee2e2;
+  --veris-error-text: #991b1b;
+  --veris-warning: #f59e0b;
+  --veris-warning-bg: #fef3c7;
+  --veris-warning-text: #92400e;
+  
+  /* Neutral colors */
+  --veris-gray-50: #f9fafb;
+  --veris-gray-100: #f3f4f6;
+  --veris-gray-200: #e5e7eb;
+  --veris-gray-300: #d1d5db;
+  --veris-gray-400: #9ca3af;
+  --veris-gray-500: #6b7280;
+  --veris-gray-600: #4b5563;
+  --veris-gray-700: #374151;
+  --veris-gray-800: #1f2937;
+  --veris-gray-900: #111827;
+}
+

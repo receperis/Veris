@@ -21,9 +21,8 @@ export const state = {
   skipNextSelection: false,
 };
 
-export const defaultSettings = {
-  target_lang: "en",
-  bubbleMode: "auto",
-  bubbleIconDelay: 450,
-  bubbleHotkey: "",
-};
+// Import shared default settings
+import { DEFAULT_SETTINGS } from "../shared/storage.js";
+
+// Use shared default settings
+export const defaultSettings = DEFAULT_SETTINGS;

@@ -18,8 +18,14 @@ global.NotificationService = {
   sendDailyExerciseNotification: jest.fn(),
 };
 
+// Import logger service first (required by exercise.service.js)
+require("../../src/service/logger.service.js");
+
+// Import leitner service (required by exercise.service.js)
+require("../../src/service/leitner.service.js");
+
 // Import the service
-require("../../service/exercise.service.js");
+require("../../src/service/exercise.service.js");
 
 describe("ExerciseService", () => {
   let ExerciseService;
