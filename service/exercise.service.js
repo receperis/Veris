@@ -2,23 +2,13 @@
 // Works in service worker (importScripts) context
 
 const ExerciseService = (() => {
-  const LOG_PREFIX = "[ExerciseService]";
+  const { log, warn, error } = createLogger("[ExerciseService]");
   const DAILY_ALARM = "daily-exercise";
   const META_KEY = "exerciseAlarmInfo";
   // Leitner configuration (A:y -> keep random fallback when due < limit; B:drop-one penalty; C: box0 cooldown minutes=2)
   const LEITNER_INTERVALS_DAYS = [0, 1, 3, 7, 14, 30];
   const BOX0_COOLDOWN_MINUTES = 2;
   const MAX_BOX = LEITNER_INTERVALS_DAYS.length - 1;
-
-  function log(...args) {
-    console.log(LOG_PREFIX, ...args);
-  }
-  function warn(...args) {
-    console.warn(LOG_PREFIX, ...args);
-  }
-  function error(...args) {
-    console.error(LOG_PREFIX, ...args);
-  }
 
   function defaultSettings() {
     return {

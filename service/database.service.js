@@ -295,94 +295,6 @@ class VocabularyDB {
     });
   }
 
-  async getVocabularyByLanguagePair(sourceLanguage, targetLanguage) {
-    if (!this.db) {
-      await this.init();
-    }
-
-    return new Promise((resolve, reject) => {
-      const transaction = this.db.transaction([STORE_NAME], "readonly");
-      const store = transaction.objectStore(STORE_NAME);
-      const request = store.getAll();
-
-      request.onsuccess = () => {
-        const filtered = request.result.filter(
-          (entry) =>
-            entry.sourceLanguage === sourceLanguage &&
-            entry.targetLanguage === targetLanguage
-        );
-        resolve(filtered);
-      };
-
-      request.onerror = () => {
-        reject(request.error);
-      };
-    });
-  }
-
-  async getWordsByOriginal(originalWord) {
-    if (!this.db) {
-      await this.init();
-    }
-
-    return new Promise((resolve, reject) => {
-      const transaction = this.db.transaction([STORE_NAME], "readonly");
-      const store = transaction.objectStore(STORE_NAME);
-      const index = store.index("originalWord");
-      const request = index.getAll(originalWord);
-
-      request.onsuccess = () => {
-        resolve(request.result);
-      };
-
-      request.onerror = () => {
-        reject(request.error);
-      };
-    });
-  }
-
-  async getWordsByTranslation(translatedWord) {
-    if (!this.db) {
-      await this.init();
-    }
-
-    return new Promise((resolve, reject) => {
-      const transaction = this.db.transaction([STORE_NAME], "readonly");
-      const store = transaction.objectStore(STORE_NAME);
-      const index = store.index("translatedWord");
-      const request = index.getAll(translatedWord);
-
-      request.onsuccess = () => {
-        resolve(request.result);
-      };
-
-      request.onerror = () => {
-        reject(request.error);
-      };
-    });
-  }
-
-  async getWordsByDomain(domain) {
-    if (!this.db) {
-      await this.init();
-    }
-
-    return new Promise((resolve, reject) => {
-      const transaction = this.db.transaction([STORE_NAME], "readonly");
-      const store = transaction.objectStore(STORE_NAME);
-      const index = store.index("domain");
-      const request = index.getAll(domain);
-
-      request.onsuccess = () => {
-        resolve(request.result);
-      };
-
-      request.onerror = () => {
-        reject(request.error);
-      };
-    });
-  }
-
   async getStats() {
     try {
       const all = await this.getAllVocabulary();
@@ -426,43 +338,6 @@ class VocabularyDB {
       return null;
     }
   }
-
-  async getRandomWords(count = 10, difficulty = "mixed") {
-    try {
-      const allWords = await this.getAllVocabulary();
-
-      if (allWords.length === 0) {
-        return [];
-      }
-
-      let availableWords = [...allWords];
-
-      // Filter by difficulty
-      if (difficulty === "easy") {
-        // Recent words (last 30 days)
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-        availableWords = availableWords.filter(
-          (word) => new Date(word.timestamp) >= thirtyDaysAgo
-        );
-      } else if (difficulty === "hard") {
-        // Older words (more than 30 days)
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-        availableWords = availableWords.filter(
-          (word) => new Date(word.timestamp) < thirtyDaysAgo
-        );
-      }
-      // 'mixed' uses all words
-
-      // Shuffle and return random selection
-      const shuffled = availableWords.sort(() => 0.5 - Math.random());
-      return shuffled.slice(0, Math.min(count, shuffled.length));
-    } catch (error) {
-      console.error("Failed to get random words:", error);
-      return [];
-    }
-  }
 }
 
 // Create global instance
@@ -477,18 +352,10 @@ if (typeof self !== "undefined") {
     saveVocabulary: (data) => self.vocabularyDB.saveVocabularyEntry(data),
     getAllVocabulary: () => self.vocabularyDB.getAllVocabulary(),
     getStats: () => self.vocabularyDB.getStats(),
-    getRandomWords: (count, difficulty) =>
-      self.vocabularyDB.getRandomWords(count, difficulty),
     deleteVocabulary: (id) => self.vocabularyDB.deleteVocabularyEntry(id),
     deleteAllVocabulary: () => self.vocabularyDB.deleteAllVocabulary(),
     updateVocabulary: (id, updates) =>
       self.vocabularyDB.updateVocabularyEntry(id, updates),
-    getWordsByLanguage: (sourceLanguage, targetLanguage) =>
-      self.vocabularyDB.getVocabularyByLanguagePair(
-        sourceLanguage,
-        targetLanguage
-      ),
-    getWordsByDomain: (domain) => self.vocabularyDB.getWordsByDomain(domain),
 
     // Initialize database
     init: () => self.vocabularyDB.init(),

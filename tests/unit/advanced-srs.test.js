@@ -15,6 +15,9 @@ global.DatabaseService = {
   getStats: jest.fn(),
 };
 
+// Import logger service first (required by exercise.service.js)
+require("../../service/logger.service.js");
+
 // Import the service
 require("../../service/exercise.service.js");
 

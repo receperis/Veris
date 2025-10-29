@@ -2,23 +2,13 @@
 // Compatible with service worker (importScripts) environment
 
 const NotificationService = (() => {
-  const LOG_PREFIX = "[NotificationService]";
+  const { log, warn, error } = createLogger("[NotificationService]");
   const DAILY_ID = "daily-exercise";
   const TEST_ID = "test-notification";
   // Fallback icon must be a packaged resource (data URIs are not supported by Chrome notifications)
   const FALLBACK_ICON = "icons/icon128.png";
 
   let initialized = false;
-
-  function log(...args) {
-    console.log(LOG_PREFIX, ...args);
-  }
-  function warn(...args) {
-    console.warn(LOG_PREFIX, ...args);
-  }
-  function error(...args) {
-    console.error(LOG_PREFIX, ...args);
-  }
 
   async function ensureAPI() {
     if (!chrome || !chrome.notifications) {

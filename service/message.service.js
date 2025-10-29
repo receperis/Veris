@@ -26,13 +26,6 @@ const MessageService = {
         return true;
       }
 
-      if (request.type === "GET_RANDOM_WORDS") {
-        const { count = 10, difficulty = "mixed" } = request.data || {};
-        const result = await DatabaseService.getRandomWords(count, difficulty);
-        sendResponse({ success: true, words: result });
-        return true;
-      }
-
       // Leitner session preparation
       if (request.type === "PREPARE_LEITNER_SESSION") {
         const { limit = 10, selectedLanguage = null } = request.data || {};
@@ -68,23 +61,6 @@ const MessageService = {
           request.data.updates
         );
         sendResponse({ success: true, id: result });
-        return true;
-      }
-
-      if (request.type === "GET_WORDS_BY_LANGUAGE") {
-        const result = await DatabaseService.getWordsByLanguage(
-          request.data.sourceLanguage,
-          request.data.targetLanguage
-        );
-        sendResponse({ success: true, words: result });
-        return true;
-      }
-
-      if (request.type === "GET_WORDS_BY_DOMAIN") {
-        const result = await DatabaseService.getWordsByDomain(
-          request.data.domain
-        );
-        sendResponse({ success: true, words: result });
         return true;
       }
 
@@ -166,16 +142,25 @@ const MessageService = {
           // Detect language for the specific tab
           chrome.tabs.detectLanguage(tabId, (language) => {
             if (chrome.runtime.lastError) {
-              console.warn('Language detection error:', chrome.runtime.lastError.message);
-              sendResponse({ ok: false, error: chrome.runtime.lastError.message });
-            } else if (language && language !== 'und') {
+              console.warn(
+                "Language detection error:",
+                chrome.runtime.lastError.message
+              );
+              sendResponse({
+                ok: false,
+                error: chrome.runtime.lastError.message,
+              });
+            } else if (language && language !== "und") {
               // Store the detected language for future use
               chrome.storage.sync.set({ sourceLanguage: language }, () => {
                 sendResponse({ ok: true, language: language });
               });
             } else {
               // If language detection returns 'und' (undetermined) or null, fallback
-              sendResponse({ ok: false, error: "Language could not be determined" });
+              sendResponse({
+                ok: false,
+                error: "Language could not be determined",
+              });
             }
           });
           return true; // Will respond asynchronously
