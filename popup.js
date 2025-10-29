@@ -7,8 +7,6 @@ import { escapeHtml, normalizeId } from "./src/shared/utils.js";
 import { getLanguageDisplayName } from "./src/shared/languages.js";
 import { saveSetting, getSetting } from "./src/shared/storage.js";
 
-import "./styles/popup.css";
-
 // Performance optimization classes
 class SearchIndex {
   constructor() {

@@ -97,52 +97,11 @@ export function hotkeyModifiersMatch(spec, e) {
  * @param {Element} container - Optional container to append to
  * @returns {Element} The created element
  */
-export function createElement(templateString, container = null) {
-  const temp = document.createElement("div");
-  temp.innerHTML = templateString.trim();
-  const element = temp.firstElementChild;
-
-  if (container) {
-    container.appendChild(element);
-  }
-
-  return element;
-}
-
-/**
- * Update element content with template string
- * @param {Element} element - Element to update
- * @param {string} templateString - New HTML content
- * @returns {Element|null} The updated element or null if element not found
- */
-export function updateElement(element, templateString) {
-  if (!element) return null;
-  element.innerHTML = templateString;
-  return element;
-}
-
-/**
- * Remove all elements with a specific class name
- * @param {string} className - Class name to remove
- */
-export function removeElements(className) {
-  const elements = document.querySelectorAll(`.${className}`);
-  elements.forEach((el) => el.remove());
-}
-
-/**
- * Inject CSS content into the page if not already present
- * @param {string} cssId - Unique ID for the style element
- * @param {string} cssContent - CSS content to inject
- */
-export function injectCSS(cssId, cssContent) {
-  if (document.getElementById(cssId)) return;
-
-  const style = document.createElement("style");
-  style.id = cssId;
-  style.textContent = cssContent;
-  document.head.appendChild(style);
-}
+// Note: DOM helper `createElement` is implemented in `templates/template-utils.js` and
+// TemplateUtils is used across the UI. The shared module no longer provides a global
+// `createElement` export to avoid duplication. If a shared DOM helper is needed in
+// multiple modules in the future, consider moving a single implementation into
+// `templates/template-utils.js` or a dedicated `dom-utils.js` and import from there.
 
 /**
  * Format a date for relative display (e.g., "2 hours ago", "yesterday")
@@ -170,50 +129,4 @@ export function formatRelativeDate(date) {
   } else {
     return targetDate.toLocaleDateString();
   }
-}
-
-/**
- * Debounce function calls
- * @param {Function} func - Function to debounce
- * @param {number} wait - Wait time in milliseconds
- * @param {boolean} immediate - Execute on leading edge
- * @returns {Function} Debounced function
- */
-export function debounce(func, wait, immediate = false) {
-  let timeout;
-  return function executedFunction(...args) {
-    const later = () => {
-      timeout = null;
-      if (!immediate) func.apply(this, args);
-    };
-    const callNow = immediate && !timeout;
-    clearTimeout(timeout);
-    timeout = setTimeout(later, wait);
-    if (callNow) func.apply(this, args);
-  };
-}
-
-/**
- * Throttle function calls
- * @param {Function} func - Function to throttle
- * @param {number} limit - Time limit in milliseconds
- * @returns {Function} Throttled function
- */
-export function throttle(func, limit) {
-  let lastFunc;
-  let lastRan;
-  return function executedFunction(...args) {
-    if (!lastRan) {
-      func.apply(this, args);
-      lastRan = Date.now();
-    } else {
-      clearTimeout(lastFunc);
-      lastFunc = setTimeout(() => {
-        if (Date.now() - lastRan >= limit) {
-          func.apply(this, args);
-          lastRan = Date.now();
-        }
-      }, limit - (Date.now() - lastRan));
-    }
-  };
 }
