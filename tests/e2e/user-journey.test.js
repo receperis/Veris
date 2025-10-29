@@ -116,7 +116,7 @@ describe("User Journey & Workflow Tests", () => {
 
       try {
         // Simulate fresh install by clearing storage
-        await page.goto(`chrome-extension://${extensionId}/popup.html`);
+        await page.goto(`chrome-extension:///pages/popup.html`);
         await page.waitForSelector("body");
 
         // Clear any existing data to simulate first run
@@ -241,7 +241,7 @@ describe("User Journey & Workflow Tests", () => {
       const page = await browser.newPage();
 
       try {
-        await page.goto(`chrome-extension://${extensionId}/options.html`);
+        await page.goto(`chrome-extension:///pages/options.html`);
         await page.waitForSelector("body");
 
         // Test initial configuration options
@@ -500,7 +500,7 @@ describe("User Journey & Workflow Tests", () => {
       const page = await browser.newPage();
 
       try {
-        await page.goto(`chrome-extension://${extensionId}/popup.html`);
+        await page.goto(`chrome-extension:///pages/popup.html`);
         await page.waitForSelector("body");
 
         // Simulate typical vocabulary management tasks
@@ -639,7 +639,7 @@ describe("User Journey & Workflow Tests", () => {
           }
 
           // Simulate review session
-          await page.goto(`chrome-extension://${extensionId}/popup.html`);
+          await page.goto(`chrome-extension:///pages/popup.html`);
           await page.waitForSelector("body");
 
           // Quick review simulation
@@ -687,7 +687,7 @@ describe("User Journey & Workflow Tests", () => {
       const page = await browser.newPage();
 
       try {
-        await page.goto(`chrome-extension://${extensionId}/popup.html`);
+        await page.goto(`chrome-extension:///pages/popup.html`);
         await page.waitForSelector("body");
 
         // Check for re-engagement features
@@ -828,7 +828,7 @@ describe("User Journey & Workflow Tests", () => {
         const page = await browser.newPage();
 
         try {
-          await page.goto(`chrome-extension://${extensionId}/popup.html`);
+          await page.goto(`chrome-extension:///pages/popup.html`);
           await page.waitForSelector("body", { timeout: 3000 });
 
           // Very brief interaction
@@ -848,7 +848,7 @@ describe("User Journey & Workflow Tests", () => {
       // Final check that everything still works
       const finalPage = await browser.newPage();
       try {
-        await finalPage.goto(`chrome-extension://${extensionId}/popup.html`);
+        await finalPage.goto(`chrome-extension:///pages/popup.html`);
         await finalPage.waitForSelector("body");
 
         const isWorking = await finalPage.evaluate(() => {
@@ -924,8 +924,8 @@ describe("User Journey & Workflow Tests", () => {
       try {
         // Navigate all pages to different extension pages simultaneously
         const navigationPromises = [
-          pages[0].goto(`chrome-extension://${extensionId}/popup.html`),
-          pages[1].goto(`chrome-extension://${extensionId}/options.html`),
+          pages[0].goto(`chrome-extension:///pages/popup.html`),
+          pages[1].goto(`chrome-extension:///pages/options.html`),
           pages[2].goto(
             `chrome-extension://${extensionId}/exercise/exercise.html`
           ),
@@ -980,7 +980,7 @@ describe("User Journey & Workflow Tests", () => {
       const page = await browser.newPage();
 
       try {
-        await page.goto(`chrome-extension://${extensionId}/popup.html`);
+        await page.goto(`chrome-extension:///pages/popup.html`);
         await page.waitForSelector("body");
 
         // Simulate storage corruption/errors
@@ -1095,7 +1095,7 @@ describe("User Journey & Workflow Tests", () => {
       const page = await browser.newPage();
 
       try {
-        await page.goto(`chrome-extension://${extensionId}/popup.html`);
+        await page.goto(`chrome-extension:///pages/popup.html`);
         await page.waitForSelector("body");
 
         // Corrupt extension state
@@ -1154,7 +1154,7 @@ describe("User Journey & Workflow Tests", () => {
       const page = await browser.newPage();
 
       try {
-        await page.goto(`chrome-extension://${extensionId}/popup.html`);
+        await page.goto(`chrome-extension:///pages/popup.html`);
         await page.waitForSelector("body");
 
         // Simulate various error conditions and check for user feedback

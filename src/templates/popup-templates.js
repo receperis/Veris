@@ -155,7 +155,7 @@ export const PopupTemplates = {
 };
 
 // Import shared utilities
-import { escapeHtml } from "../src/shared/utils.js";
+import { escapeHtml } from "../shared/utils.js";
 
 // Make escapeHtml available for templates
 PopupTemplates.escapeHtml = escapeHtml;

@@ -154,12 +154,12 @@ describe("Chrome Extension E2E Tests", () => {
       try {
         console.log(
           "Attempting to load popup at:",
-          `chrome-extension://${extensionId}/popup.html`
+          `chrome-extension:///pages/popup.html`
         );
 
         // Navigate to popup page directly
         const response = await page.goto(
-          `chrome-extension://${extensionId}/popup.html`,
+          `chrome-extension:///pages/popup.html`,
           {
             waitUntil: "networkidle0",
             timeout: 10000,
@@ -549,7 +549,7 @@ describe("Chrome Extension E2E Tests", () => {
       const page = await browser.newPage();
 
       try {
-        await page.goto(`chrome-extension://${extensionId}/popup.html`);
+        await page.goto(`chrome-extension:///pages/popup.html`);
         await page.waitForSelector("body", { timeout: 10000 });
 
         // Check for interactive elements (buttons, inputs, etc.)
@@ -590,7 +590,7 @@ describe("Chrome Extension E2E Tests", () => {
       const page = await browser.newPage();
 
       try {
-        await page.goto(`chrome-extension://${extensionId}/popup.html`);
+        await page.goto(`chrome-extension:///pages/popup.html`);
         await page.waitForSelector("body", { timeout: 10000 });
 
         // Test if we can interact with form elements
@@ -655,7 +655,7 @@ describe("Chrome Extension E2E Tests", () => {
       const page = await browser.newPage();
 
       try {
-        await page.goto(`chrome-extension://${extensionId}/popup.html`);
+        await page.goto(`chrome-extension:///pages/popup.html`);
         await page.waitForSelector("body");
 
         const toggleBtn = await page.$("#extension-toggle-btn");
@@ -871,7 +871,7 @@ describe("Chrome Extension E2E Tests", () => {
       const page = await browser.newPage();
 
       try {
-        await page.goto(`chrome-extension://${extensionId}/popup.html`);
+        await page.goto(`chrome-extension:///pages/popup.html`);
         await page.waitForSelector("body");
 
         // Set up download handling
@@ -912,7 +912,7 @@ describe("Chrome Extension E2E Tests", () => {
       const page = await browser.newPage();
 
       try {
-        await page.goto(`chrome-extension://${extensionId}/popup.html`);
+        await page.goto(`chrome-extension:///pages/popup.html`);
         await page.waitForSelector("body");
 
         // Measure initial load time
@@ -944,7 +944,7 @@ describe("Chrome Extension E2E Tests", () => {
       const page = await browser.newPage();
 
       try {
-        await page.goto(`chrome-extension://${extensionId}/popup.html`);
+        await page.goto(`chrome-extension:///pages/popup.html`);
         await page.waitForSelector("body");
 
         // Rapid search input changes
@@ -986,7 +986,7 @@ describe("Chrome Extension E2E Tests", () => {
       const page = await browser.newPage();
 
       try {
-        await page.goto(`chrome-extension://${extensionId}/popup.html`);
+        await page.goto(`chrome-extension:///pages/popup.html`);
         await page.waitForSelector("body");
 
         // Get initial memory metrics
@@ -1084,7 +1084,7 @@ describe("Chrome Extension E2E Tests", () => {
       const page = await browser.newPage();
 
       try {
-        await page.goto(`chrome-extension://${extensionId}/popup.html`);
+        await page.goto(`chrome-extension:///pages/popup.html`);
         await page.waitForSelector("body");
 
         // Simulate CPU-intensive operations
@@ -1173,7 +1173,7 @@ describe("Chrome Extension E2E Tests", () => {
       const page = await browser.newPage();
 
       try {
-        await page.goto(`chrome-extension://${extensionId}/popup.html`);
+        await page.goto(`chrome-extension:///pages/popup.html`);
         await page.waitForSelector("body");
 
         // Test storage operations under load
@@ -1250,7 +1250,7 @@ describe("Chrome Extension E2E Tests", () => {
         // Block network requests to simulate offline mode
         await page.setOfflineMode(true);
 
-        await page.goto(`chrome-extension://${extensionId}/popup.html`);
+        await page.goto(`chrome-extension:///pages/popup.html`);
         await page.waitForSelector("body");
 
         // Extension should still load (since it's local)
@@ -1279,7 +1279,7 @@ describe("Chrome Extension E2E Tests", () => {
       const page = await browser.newPage();
 
       try {
-        await page.goto(`chrome-extension://${extensionId}/popup.html`);
+        await page.goto(`chrome-extension:///pages/popup.html`);
         await page.waitForSelector("body");
 
         // Inject corrupted data (would be more complex in real test)
@@ -1313,7 +1313,7 @@ describe("Chrome Extension E2E Tests", () => {
       const page = await browser.newPage();
 
       try {
-        await page.goto(`chrome-extension://${extensionId}/popup.html`);
+        await page.goto(`chrome-extension:///pages/popup.html`);
         await page.waitForSelector("body");
 
         // Test tab navigation
@@ -1416,7 +1416,7 @@ describe("Chrome Extension E2E Tests", () => {
       const page = await browser.newPage();
 
       try {
-        await page.goto(`chrome-extension://${extensionId}/popup.html`);
+        await page.goto(`chrome-extension:///pages/popup.html`);
         await page.waitForSelector("body");
 
         // Check focus styles

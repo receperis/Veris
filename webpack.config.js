@@ -13,12 +13,27 @@ module.exports = (env, argv) => {
 
     // Multiple entry points for the extension
     entry: {
-      content_script: path.resolve(__dirname, "content_script.js"),
-      background: path.resolve(__dirname, "background.js"),
-      popup: path.resolve(__dirname, "popup.js"),
-      options: path.resolve(__dirname, "options.js"),
-      "exercise/exercise": path.resolve(__dirname, "exercise", "exercise.js"),
-      "stats/stats": path.resolve(__dirname, "stats", "stats.js"),
+      "pages/content_script": path.resolve(
+        __dirname,
+        "src",
+        "pages",
+        "content_script.js"
+      ),
+      "pages/background": path.resolve(
+        __dirname,
+        "src",
+        "pages",
+        "background.js"
+      ),
+      "pages/popup": path.resolve(__dirname, "src", "pages", "popup.js"),
+      "pages/options": path.resolve(__dirname, "src", "pages", "options.js"),
+      "exercise/exercise": path.resolve(
+        __dirname,
+        "src",
+        "exercise",
+        "exercise.js"
+      ),
+      "stats/stats": path.resolve(__dirname, "src", "stats", "stats.js"),
     },
 
     output: {
@@ -53,15 +68,16 @@ module.exports = (env, argv) => {
       new CopyPlugin({
         patterns: [
           { from: "manifest.json", to: "." },
-          { from: "popup.html", to: "." },
-          { from: "options.html", to: "." },
-          { from: "exercise/exercise.html", to: "exercise/" },
-          { from: "stats/stats.html", to: "stats/" },
+          { from: "src/pages/popup.html", to: "pages/" },
+          { from: "src/pages/options.html", to: "pages/" },
+          { from: "src/exercise/exercise.html", to: "exercise/" },
+          { from: "src/stats/stats.html", to: "stats/" },
           { from: "icons", to: "icons" },
-          { from: "service", to: "service" },
-          { from: "styles", to: "styles" },
-          { from: "templates", to: "templates" },
-          { from: "src", to: "src" },
+          { from: "src/service", to: "service" },
+          { from: "src/styles", to: "styles" },
+          { from: "src/templates", to: "templates" },
+          { from: "src/shared", to: "shared" },
+          { from: "src/content", to: "content" },
         ],
       }),
     ],

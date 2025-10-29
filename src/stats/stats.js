@@ -3,8 +3,8 @@
 import "./stats.css";
 import { StatsTemplates, TemplateUtils } from "../templates/template-utils.js";
 // Import shared utilities
-import { formatRelativeDate } from "../src/shared/utils.js";
-import { getLanguageDisplayName } from "../src/shared/languages.js";
+import { formatRelativeDate } from "../shared/utils.js";
+import { getLanguageDisplayName } from "../shared/languages.js";
 
 document.addEventListener("DOMContentLoaded", async () => {
   await initializeStatsPage();

@@ -79,7 +79,7 @@ describe("First-Time User Installation E2E Tests", () => {
 
       try {
         // Clear storage to simulate fresh installation
-        await page.goto(`chrome-extension://${extensionId}/popup.html`);
+        await page.goto(`chrome-extension:///pages/popup.html`);
         await page.waitForSelector("body");
 
         // Clear any existing data to simulate first install
@@ -164,7 +164,7 @@ describe("First-Time User Installation E2E Tests", () => {
       const page = await browser.newPage();
 
       try {
-        await page.goto(`chrome-extension://${extensionId}/popup.html`);
+        await page.goto(`chrome-extension:///pages/popup.html`);
         await page.waitForSelector("body");
 
         // Clear storage to simulate fresh installation
@@ -232,7 +232,7 @@ describe("First-Time User Installation E2E Tests", () => {
       const page = await browser.newPage();
 
       try {
-        await page.goto(`chrome-extension://${extensionId}/options.html`);
+        await page.goto(`chrome-extension:///pages/options.html`);
         await page.waitForSelector("body");
 
         // Check for initial setup elements in options
@@ -515,7 +515,7 @@ describe("First-Time User Installation E2E Tests", () => {
       const page = await browser.newPage();
 
       try {
-        await page.goto(`chrome-extension://${extensionId}/popup.html`);
+        await page.goto(`chrome-extension:///pages/popup.html`);
         await page.waitForSelector("body");
 
         // Clear storage to simulate fresh installation
@@ -644,7 +644,7 @@ describe("First-Time User Installation E2E Tests", () => {
       const page = await browser.newPage();
 
       try {
-        await page.goto(`chrome-extension://${extensionId}/popup.html`);
+        await page.goto(`chrome-extension:///pages/popup.html`);
         await page.waitForSelector("body");
 
         // Check extension status indicator for new users
@@ -694,7 +694,7 @@ describe("First-Time User Installation E2E Tests", () => {
       const page = await browser.newPage();
 
       try {
-        await page.goto(`chrome-extension://${extensionId}/popup.html`);
+        await page.goto(`chrome-extension:///pages/popup.html`);
         await page.waitForSelector("body");
 
         // Verify storage handling with completely empty storage
@@ -762,7 +762,7 @@ describe("First-Time User Installation E2E Tests", () => {
       const page = await browser.newPage();
 
       try {
-        await page.goto(`chrome-extension://${extensionId}/options.html`);
+        await page.goto(`chrome-extension:///pages/options.html`);
         await page.waitForSelector("body");
 
         // Check if default settings are applied for new users
@@ -833,7 +833,7 @@ describe("First-Time User Installation E2E Tests", () => {
           }
         });
 
-        await page.goto(`chrome-extension://${extensionId}/popup.html`);
+        await page.goto(`chrome-extension:///pages/popup.html`);
         await page.waitForSelector("body");
 
         // Clear storage to simulate new user
@@ -876,7 +876,7 @@ describe("First-Time User Installation E2E Tests", () => {
       const page = await browser.newPage();
 
       try {
-        await page.goto(`chrome-extension://${extensionId}/popup.html`);
+        await page.goto(`chrome-extension:///pages/popup.html`);
         await page.waitForSelector("body");
 
         // Simulate various error conditions that new users might encounter

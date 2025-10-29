@@ -137,8 +137,8 @@ export const ExerciseTemplates = {
 };
 
 // Import shared utilities
-import { escapeHtml } from "../src/shared/utils.js";
-import { getLanguageDisplayName } from "../src/shared/languages.js";
+import { escapeHtml } from "../shared/utils.js";
+import { getLanguageDisplayName } from "../shared/languages.js";
 
 // Set the imported functions
 ExerciseTemplates.languageName = getLanguageDisplayName;

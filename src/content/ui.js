@@ -5,7 +5,7 @@ import {
   getFullLanguageName,
   buildLanguageList,
 } from "./utils.js";
-import { ContentTemplates } from "../../templates/template-utils.js";
+import { ContentTemplates } from "../templates/template-utils.js";
 
 // Note: some functions reference other modules; import cycles are avoided by keeping DOM-only helpers here.
 

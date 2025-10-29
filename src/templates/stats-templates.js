@@ -97,7 +97,7 @@ export const StatsTemplates = {
 
 // Helper function for HTML escaping
 // Import shared escapeHtml function
-import { escapeHtml } from "../src/shared/utils.js";
+import { escapeHtml } from "../shared/utils.js";
 
 // Make escapeHtml available for templates
 StatsTemplates.escapeHtml = escapeHtml;

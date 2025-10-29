@@ -12,17 +12,17 @@
   "permissions": ["storage", "tabs", "notifications", "alarms"],
   "action": {
     "default_title": "Veris",
-    "default_popup": "popup.html"
+    "default_popup": "pages/popup.html"
   },
-  "options_page": "options.html",
+  "options_page": "pages/options.html",
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "pages/background.js"
   },
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["content_script.js"],
-      "css": ["content_script.css", "styles/dynamic-ui.css"]
+      "js": ["pages/content_script.js"],
+      "css": ["pages/content_script.css", "styles/dynamic-ui.css"]
     }
   ]
 }

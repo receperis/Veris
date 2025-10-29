@@ -1,11 +1,11 @@
 /* Popup JavaScript - Vocabulary Browser */
 
 // Import templates and utilities
-import { PopupTemplates, TemplateUtils } from "./templates/template-utils.js";
+import { PopupTemplates, TemplateUtils } from "../templates/template-utils.js";
 // Import shared utilities and constants
-import { escapeHtml, normalizeId } from "./src/shared/utils.js";
-import { getLanguageDisplayName } from "./src/shared/languages.js";
-import { saveSetting, getSetting } from "./src/shared/storage.js";
+import { escapeHtml, normalizeId } from "../shared/utils.js";
+import { getLanguageDisplayName } from "../shared/languages.js";
+import { saveSetting, getSetting } from "../shared/storage.js";
 
 // Simple search function - filters vocabulary by search term
 function searchVocabulary(vocabulary, searchTerm, maxResults = 1000) {

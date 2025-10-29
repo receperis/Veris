@@ -7,10 +7,10 @@
 import {
   createElement as domCreateElement,
   injectCSS as domInjectCSS,
-} from "../src/shared/dom-utils.js";
+} from "../shared/dom-utils.js";
 
 // Import shared HTML utilities
-import { escapeHtml as sharedEscapeHtml } from "../src/shared/utils.js";
+import { escapeHtml as sharedEscapeHtml } from "../shared/utils.js";
 
 // Re-export all template modules for easy access
 export { PopupTemplates } from "./popup-templates.js";

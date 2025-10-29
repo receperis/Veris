@@ -5,7 +5,7 @@ import {
   ExerciseTemplates,
   TemplateUtils,
 } from "../templates/template-utils.js";
-import { getSettings, DEFAULT_SETTINGS } from "../src/shared/storage.js";
+import { getSettings, DEFAULT_SETTINGS } from "../shared/storage.js";
 import { ExerciseStateManager } from "./state-manager.js";
 import { QuestionGenerator } from "./question-generator.js";
 import { UIController } from "./ui-controller.js";

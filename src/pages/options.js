@@ -1,13 +1,13 @@
 // options.js — save and restore settings
 
 import "./options.css";
-import { TemplateUtils } from "./templates/template-utils.js";
+import { TemplateUtils } from "../templates/template-utils.js";
 // Import shared utilities and constants
 import {
   getSettings,
   saveSettings,
   DEFAULT_SETTINGS,
-} from "./src/shared/storage.js";
+} from "../shared/storage.js";
 
 // Use shared default settings
 const defaultSettings = DEFAULT_SETTINGS;

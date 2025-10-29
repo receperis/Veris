@@ -19,13 +19,13 @@ global.NotificationService = {
 };
 
 // Import logger service first (required by exercise.service.js)
-require("../../service/logger.service.js");
+require("../../src/service/logger.service.js");
 
 // Import leitner service (required by exercise.service.js)
-require("../../service/leitner.service.js");
+require("../../src/service/leitner.service.js");
 
 // Import the service
-require("../../service/exercise.service.js");
+require("../../src/service/exercise.service.js");
 
 describe("ExerciseService", () => {
   let ExerciseService;

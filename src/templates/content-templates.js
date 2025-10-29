@@ -160,11 +160,11 @@ export const ContentTemplates = {
 };
 
 // Import shared utilities
-import { escapeHtml } from "../src/shared/utils.js";
+import { escapeHtml } from "../shared/utils.js";
 import {
   getLanguageName,
   getLanguageDisplayName,
-} from "../src/shared/languages.js";
+} from "../shared/languages.js";
 
 // Set the imported functions
 ContentTemplates.getLanguageName = getLanguageName;

@@ -1,17 +1,17 @@
 // Content script (ES module) - clean entrypoint that wires modularized implementation
-import { state, defaultSettings } from "./src/content/state.js";
+import { state, defaultSettings } from "../content/state.js";
 import {
   parseHotkeyString,
   findBlockAncestor,
   escapeHtml,
   getLanguageName,
-} from "./src/content/utils.js";
-import * as ui from "./src/content/ui.js";
-import * as words from "./src/content/words.js";
-import { translateTextWithAPI } from "./src/content/api.js";
-import { showLoadingToast, showInfoToast } from "./src/content/toast.js";
-import { languageDetector } from "./src/shared/language-detection.js";
-import { getSetting, getSettings } from "./src/shared/storage.js";
+} from "../content/utils.js";
+import * as ui from "../content/ui.js";
+import * as words from "../content/words.js";
+import { translateTextWithAPI } from "../content/api.js";
+import { showLoadingToast, showInfoToast } from "../content/toast.js";
+import { languageDetector } from "../shared/language-detection.js";
+import { getSetting, getSettings } from "../shared/storage.js";
 
 import "./content_script.css";
 
