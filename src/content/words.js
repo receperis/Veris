@@ -7,17 +7,15 @@ import {
 import { showSaveToast } from "./toast.js";
 import { translateTextWithAPI } from "./api.js";
 import { clearTriggerIcon, openLanguageMenu } from "./ui.js";
+import { getSetting, getSettings } from "../../src/shared/storage.js";
 
 // Helper function to get source language reliably
 async function getSourceLanguageForSaving() {
   try {
     // First try to get from storage (set by background script)
-    const storageResult = await chrome.storage.sync.get(["sourceLanguage"]);
-    if (
-      storageResult.sourceLanguage &&
-      storageResult.sourceLanguage !== "und"
-    ) {
-      return storageResult.sourceLanguage;
+    const sourceLanguage = await getSetting("sourceLanguage");
+    if (sourceLanguage && sourceLanguage !== "und") {
+      return sourceLanguage;
     }
 
     // If not in storage, try direct detection
@@ -85,16 +83,11 @@ export async function handlePillClick(word, pillElement) {
       addWordTranslationToDisplay(word, "Punctuation", false);
       return;
     }
-    const currentSettings = await chrome.storage.sync.get({
-      target_lang: "en",
-    });
-    // Use temporary target language if set, otherwise use stored settings
-    const targetLang = state.tempTargetLang || currentSettings.target_lang;
+    const targetLang =
+      state.tempTargetLang || (await getSetting("target_lang", "en"));
     let sourceLanguage = "auto";
     try {
-      const storageResult = await chrome.storage.sync.get(["sourceLanguage"]);
-      if (storageResult.sourceLanguage)
-        sourceLanguage = storageResult.sourceLanguage;
+      sourceLanguage = (await getSetting("sourceLanguage")) || "auto";
     } catch (err) {
       console.warn("Could not get source language for word translation:", err);
     }
@@ -511,9 +504,7 @@ export async function handleSaveCombination(combinedPhrase, translation) {
   try {
     let detectedSourceLanguage = "";
     try {
-      const storageResult = await chrome.storage.sync.get(["sourceLanguage"]);
-      if (storageResult.sourceLanguage)
-        detectedSourceLanguage = storageResult.sourceLanguage;
+      detectedSourceLanguage = (await getSetting("sourceLanguage")) || "";
     } catch (err) {
       console.warn("Could not get detected source language:", err);
     }
@@ -609,16 +600,11 @@ export async function showInstantCombinedTranslation() {
     combinedPhrase
   )}"</span>\n      <span class="word-translated">Translating...</span>\n    </div>\n  `;
   try {
-    const currentSettings = await chrome.storage.sync.get({
-      target_lang: "en",
-    });
-    // Use temporary target language if set, otherwise use stored settings
-    const targetLang = state.tempTargetLang || currentSettings.target_lang;
+    const targetLang =
+      state.tempTargetLang || (await getSetting("target_lang", "en"));
     let sourceLanguage = "auto";
     try {
-      const storageResult = await chrome.storage.sync.get(["sourceLanguage"]);
-      if (storageResult.sourceLanguage)
-        sourceLanguage = storageResult.sourceLanguage;
+      sourceLanguage = (await getSetting("sourceLanguage")) || "auto";
     } catch (err) {
       console.warn(
         "Could not get source language for instant combination translation:",
@@ -704,18 +690,14 @@ export async function retranslateExistingWords() {
   if (!wordTranslationDiv) return;
 
   // Get current target language (temporary or stored)
-  const currentSettings = await chrome.storage.sync.get({
-    target_lang: "en",
-  });
-  const targetLang = state.tempTargetLang || currentSettings.target_lang;
+  const targetLang =
+    state.tempTargetLang || (await getSetting("target_lang", "en"));
 
   // Get source language
   let sourceLanguage = state.tempSourceLang || "auto";
   if (sourceLanguage === "auto") {
     try {
-      const storageResult = await chrome.storage.sync.get(["sourceLanguage"]);
-      if (storageResult.sourceLanguage)
-        sourceLanguage = storageResult.sourceLanguage;
+      sourceLanguage = (await getSetting("sourceLanguage")) || "auto";
     } catch (err) {
       console.warn("Could not get source language for retranslation:", err);
     }

@@ -11,6 +11,7 @@ import * as words from "./src/content/words.js";
 import { translateTextWithAPI } from "./src/content/api.js";
 import { showLoadingToast, showInfoToast } from "./src/content/toast.js";
 import { languageDetector } from "./src/shared/language-detection.js";
+import { getSetting, getSettings } from "./src/shared/storage.js";
 
 import "./content_script.css";
 
@@ -18,11 +19,8 @@ import "./content_script.css";
  * Initialize extension state from storage
  * @private
  */
-function initializeExtensionState() {
-  chrome.storage.sync.get({ extensionEnabled: true }, (res) => {
-    state.extensionEnabled =
-      res.extensionEnabled === undefined ? true : !!res.extensionEnabled;
-  });
+async function initializeExtensionState() {
+  state.extensionEnabled = await getSetting("extensionEnabled", true);
 }
 
 /**
@@ -112,7 +110,7 @@ function setupBubbleInteractions(text) {
  */
 async function performTranslation(text, rect) {
   ui.createBubbleAtRect(rect, text, "Translating...", true);
-  state.settings = await chrome.storage.sync.get(defaultSettings);
+  state.settings = await getSettings(defaultSettings);
   state.hotkeySpec = parseHotkeyString(state.settings.bubbleHotkey);
 
   // Use the improved language detection
@@ -318,7 +316,7 @@ function getSelectionInfo(selection) {
  * @param {DOMRect} rect - Selection rectangle
  */
 async function handleSelectionByMode(text, rect) {
-  state.settings = await chrome.storage.sync.get(defaultSettings);
+  state.settings = await getSettings(defaultSettings);
   state.hotkeySpec = parseHotkeyString(state.settings.bubbleHotkey);
 
   if (state.settings.bubbleMode === "auto") {
@@ -587,7 +585,7 @@ function handleStorageChange(changes, area) {
     changes.bubbleHotkey ||
     changes.target_lang
   ) {
-    chrome.storage.sync.get(defaultSettings, (s) => {
+    getSettings(defaultSettings).then((s) => {
       state.settings = s;
       state.hotkeySpec = parseHotkeyString(state.settings.bubbleHotkey);
     });
