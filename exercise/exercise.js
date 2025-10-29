@@ -43,9 +43,9 @@ class VocabularyExercise {
       const exerciseSettings =
         settings.exerciseSettings || DEFAULT_SETTINGS.exerciseSettings;
 
-      this.state.setQuestionsPerExercise(
-        exerciseSettings.questionsPerSession || 10
-      );
+      const preferredCount = exerciseSettings.questionsPerSession || 10;
+      this.state.setQuestionsPerExercise(preferredCount);
+      this.state.setUserPreferredQuestions(preferredCount);
 
       if (
         exerciseSettings.difficulty &&
@@ -209,7 +209,7 @@ class VocabularyExercise {
       const response = await chrome.runtime.sendMessage({
         type: "PREPARE_LEITNER_SESSION",
         data: {
-          limit: this.state.questionsPerExercise,
+          limit: this.state.getUserPreferredQuestions(),
           selectedLanguage: this.state.selectedLanguage || null,
         },
       });
@@ -260,14 +260,16 @@ class VocabularyExercise {
       );
 
       this.state.setWords([...this.state.allWords]);
-      
-      // Restore the desired count before limiting by available words
-      this.state.questionsPerExercise = Math.min(
-        this.state.desiredQuestionsPerExercise,
-        this.state.words.length
+
+      // Use user's preferred count, limited by available words
+      this.state.setQuestionsPerExercise(
+        Math.min(
+          this.state.getUserPreferredQuestions(),
+          this.state.words.length
+        )
       );
 
-      this.ui.updateExerciseCount(this.state.questionsPerExercise);
+      this.ui.updateExerciseCount(this.state.getQuestionsPerExercise());
       this.ui.updateTotalWords(this.state.words.length);
       this.ui.updateLanguageInfo(
         this.state.selectedLanguage,
@@ -357,7 +359,7 @@ class VocabularyExercise {
     // Shuffle words and select subset for exercise
     QuestionGenerator.shuffleArray(this.state.words);
     this.state.setWords(
-      this.state.words.slice(0, this.state.questionsPerExercise)
+      this.state.words.slice(0, this.state.getQuestionsPerExercise())
     );
 
     this.state.resetExerciseState();

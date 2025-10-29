@@ -44,6 +44,10 @@ export class UIController {
     this.hideAllScreens();
     document.querySelector(".welcome-screen").style.display = "block";
 
+    // Hide progress info on landing page
+    const progressInfo = document.querySelector(".progress-info");
+    if (progressInfo) progressInfo.style.display = "none";
+
     if (difficulty) {
       this.updateDifficultySelection(difficulty);
     }
@@ -66,6 +70,10 @@ export class UIController {
   showExerciseScreen() {
     this.hideAllScreens();
     document.querySelector(".exercise-screen").style.display = "block";
+
+    // Show progress info during exercise
+    const progressInfo = document.querySelector(".progress-info");
+    if (progressInfo) progressInfo.style.display = "block";
 
     const midActions = document.querySelector(".mid-exercise-actions");
     if (midActions) midActions.style.display = "block";

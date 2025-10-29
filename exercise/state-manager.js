@@ -32,6 +32,7 @@ export class ExerciseStateManager {
     // Settings state
     this.difficulty = "medium";
     this.questionsPerExercise = 10;
+    this.userPreferredQuestions = 10; // User's original preference, never reduced
     this.selectedLanguage = "";
     this.targetLanguage = null;
     this.isTranslatingBulk = false;
@@ -126,6 +127,18 @@ export class ExerciseStateManager {
 
   setQuestionsPerExercise(count) {
     this.questionsPerExercise = count;
+  }
+
+  getQuestionsPerExercise() {
+    return this.questionsPerExercise;
+  }
+
+  setUserPreferredQuestions(count) {
+    this.userPreferredQuestions = count;
+  }
+
+  getUserPreferredQuestions() {
+    return this.userPreferredQuestions;
   }
 
   setSelectedLanguage(language) {
