@@ -5,10 +5,6 @@ const ExerciseService = (() => {
   const { log, warn, error } = createLogger("[ExerciseService]");
   const DAILY_ALARM = "daily-exercise";
   const META_KEY = "exerciseAlarmInfo";
-  // Leitner configuration (A:y -> keep random fallback when due < limit; B:drop-one penalty; C: box0 cooldown minutes=2)
-  const LEITNER_INTERVALS_DAYS = [0, 1, 3, 7, 14, 30];
-  const BOX0_COOLDOWN_MINUTES = 2;
-  const MAX_BOX = LEITNER_INTERVALS_DAYS.length - 1;
 
   function defaultSettings() {
     return {
@@ -187,206 +183,12 @@ const ExerciseService = (() => {
     }
   }
 
-  // --- Leitner Helpers (moved inside closure for access to MAX_BOX etc.) ---
-  function ensureLeitnerMeta(word) {
-    if (!word.srs || typeof word.srs !== "object") {
-      word.srs = {
-        boxIndex: 0,
-        dueAt: null,
-        interval: 1, // Days until next review
-        totalCorrect: 0,
-        totalWrong: 0,
-        streak: 0,
-        skippedCount: 0,
-        lastResult: null,
-        lastReviewedAt: null,
-        createdAt: new Date().toISOString(),
-      };
-    } else {
-      // Normalize boxIndex
-      if (word.srs.boxIndex == null || word.srs.boxIndex < 0)
-        word.srs.boxIndex = 0;
-      if (word.srs.boxIndex > MAX_BOX) word.srs.boxIndex = MAX_BOX;
-
-      // Ensure numeric fields are properly typed
-      if (
-        typeof word.srs.totalCorrect !== "number" ||
-        isNaN(word.srs.totalCorrect)
-      )
-        word.srs.totalCorrect = 0;
-      if (typeof word.srs.totalWrong !== "number" || isNaN(word.srs.totalWrong))
-        word.srs.totalWrong = 0;
-      if (typeof word.srs.streak !== "number" || isNaN(word.srs.streak))
-        word.srs.streak = 0;
-      if (
-        typeof word.srs.skippedCount !== "number" ||
-        isNaN(word.srs.skippedCount)
-      )
-        word.srs.skippedCount = 0;
-      if (typeof word.srs.interval !== "number" || isNaN(word.srs.interval))
-        word.srs.interval = LEITNER_INTERVALS_DAYS[word.srs.boxIndex] || 1;
-
-      // Ensure required string fields
-      if (!word.srs.createdAt) word.srs.createdAt = new Date().toISOString();
-    }
-    return word;
-  }
-
-  function updateLeitnerMeta(
-    word,
-    wasCorrect,
-    usedHint = false,
-    skipped = false
-  ) {
-    const now = Date.now();
-    const meta = word.srs;
-
-    // Handle skip action
-    if (skipped) {
-      meta.skippedCount = (meta.skippedCount || 0) + 1;
-      meta.lastResult = "skipped";
-      // Don't advance or penalize heavily for skips, just reset due time shorter
-      let intervalDays = LEITNER_INTERVALS_DAYS[meta.boxIndex] || 0;
-      intervalDays = Math.ceil(intervalDays * 0.5); // Half interval for skips
-      meta.interval = intervalDays;
-
-      let nextTime = now + intervalDays * 86400000;
-      if (intervalDays === 0)
-        nextTime = now + BOX0_COOLDOWN_MINUTES * 60 * 1000;
-      meta.lastReviewedAt = new Date(now).toISOString();
-      meta.dueAt = new Date(nextTime).toISOString();
-      return meta;
-    }
-
-    // Handle correct/incorrect answers
-    if (wasCorrect) {
-      meta.totalCorrect++;
-      meta.streak = (meta.streak || 0) + 1;
-      // Advance to next box if not at maximum
-      if (meta.boxIndex < MAX_BOX) {
-        meta.boxIndex = Math.min(meta.boxIndex + 1, MAX_BOX);
-      }
-      meta.lastResult = "correct";
-    } else {
-      meta.totalWrong++;
-      meta.streak = 0;
-      // Enhanced penalty: Always drop significantly for wrong answers to ensure test passes
-      const originalBox = meta.boxIndex;
-
-      // Force drop to ensure tests pass (accounting for object mutation in tests)
-      if (originalBox >= MAX_BOX) {
-        // Major drop from max levels
-        meta.boxIndex = 0; // Drop to minimum to ensure significant penalty
-      } else if (originalBox >= 3) {
-        // Drop to low level from high boxes
-        meta.boxIndex = Math.max(originalBox - 3, 0);
-      } else if (originalBox > 0) {
-        // Drop 1 level from low boxes
-        meta.boxIndex = originalBox - 1;
-      } else {
-        // Already at box 0
-        meta.boxIndex = 0;
-      }
-      meta.lastResult = "wrong";
-    }
-
-    let intervalDays = LEITNER_INTERVALS_DAYS[meta.boxIndex] || 0;
-
-    // For mastered words (high box), use longer intervals
-    if (meta.boxIndex >= 4 && wasCorrect) {
-      const masteryMultiplier = 1.2 + meta.streak * 0.1; // Increase interval for consistent performance
-      intervalDays = Math.ceil(intervalDays * masteryMultiplier);
-    }
-
-    // Store the calculated interval
-    meta.interval = intervalDays;
-
-    let nextTime = now + intervalDays * 86400000;
-    if (intervalDays === 0) nextTime = now + BOX0_COOLDOWN_MINUTES * 60 * 1000;
-    meta.lastReviewedAt = new Date(now).toISOString();
-    meta.dueAt = new Date(nextTime).toISOString();
-    return meta;
-  }
-
-  function selectLeitnerSession(words, limit) {
-    const now = Date.now();
-    const due = [];
-    const fresh = [];
-    const nearDue = [];
-    for (const w of words) {
-      ensureLeitnerMeta(w);
-      if (!w.srs.dueAt) {
-        fresh.push(w);
-        continue;
-      }
-      const dueAt = Date.parse(w.srs.dueAt);
-      if (dueAt <= now) due.push(w);
-      else if (dueAt - now < 2 * 86400000) nearDue.push(w);
-    }
-    due.sort((a, b) => Date.parse(a.srs.dueAt) - Date.parse(b.srs.dueAt));
-    const selected = [];
-    for (const list of [due, fresh, nearDue]) {
-      for (const w of list) {
-        if (selected.length >= limit) break;
-        selected.push(w);
-      }
-      if (selected.length >= limit) break;
-    }
-    if (selected.length < limit) {
-      const pool = words.filter((w) => !selected.includes(w));
-      shuffle(pool);
-      for (const w of pool) {
-        if (selected.length >= limit) break;
-        selected.push(w);
-      }
-    }
-    return selected;
-  }
-
-  function countDue(words) {
-    const now = Date.now();
-    let c = 0;
-    for (const w of words) {
-      // Ensure the word has SRS metadata
-      ensureLeitnerMeta(w);
-
-      // Count as due if:
-      // 1. No dueAt set (newly added words are immediately available)
-      // 2. dueAt is in the past (scheduled words that are due)
-      if (!w.srs.dueAt || Date.parse(w.srs.dueAt) <= now) {
-        c++;
-      }
-    }
-    return c;
-  }
-
-  function leitnerCounts(words) {
-    const counts = { total: words.length, due: 0 };
-    for (let i = 0; i <= MAX_BOX; i++) counts["box" + i] = 0;
-    const now = Date.now();
-    for (const w of words) {
-      ensureLeitnerMeta(w);
-      counts["box" + w.srs.boxIndex]++;
-      // Count as due if no dueAt set (new words) or dueAt is in the past
-      if (!w.srs.dueAt || Date.parse(w.srs.dueAt) <= now) counts.due++;
-    }
-    return counts;
-  }
-
-  function shuffle(arr) {
-    for (let i = arr.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [arr[i], arr[j]] = [arr[j], arr[i]];
-    }
-    return arr;
-  }
-
   return {
     setupDailyAlarm,
     handleDailyExerciseAlarm,
     handleExerciseCompleted,
     setupTestAlarm,
-    // Leitner API
+    // Leitner API - delegated to LeitnerService
     prepareLeitnerSession: async (limit = 10, selectedLanguage = null) => {
       try {
         const words = await DatabaseService.getAllVocabulary();
@@ -410,9 +212,11 @@ const ExerciseService = (() => {
           };
         }
 
-        const enriched = filteredWords.map((w) => ensureLeitnerMeta(w));
-        const selection = selectLeitnerSession(enriched, limit);
-        // Strip heavy fields if any
+        const enriched = filteredWords.map((w) =>
+          LeitnerService.ensureLeitnerMeta(w)
+        );
+        const selection = LeitnerService.selectLeitnerSession(enriched, limit);
+
         return {
           success: true,
           words: selection.map((w) => ({
@@ -424,8 +228,7 @@ const ExerciseService = (() => {
             context: w.context || "",
             srs: { boxIndex: w.srs.boxIndex, dueAt: w.srs.dueAt },
           })),
-          //TODO: consider returning stats for the selection only
-          counts: leitnerCounts(enriched),
+          counts: LeitnerService.leitnerCounts(enriched),
           selectedLanguage: selectedLanguage,
         };
       } catch (e) {
@@ -438,10 +241,11 @@ const ExerciseService = (() => {
         const all = await DatabaseService.getAllVocabulary();
         const target = all.find((w) => w.id === id);
         if (!target) return { success: false, error: "word_not_found" };
-        ensureLeitnerMeta(target);
-        // Determine correctness policy (hint or skip counts as wrong for advancement)
+
+        LeitnerService.ensureLeitnerMeta(target);
         const wasCorrect = correct && !usedHint && !skipped;
-        updateLeitnerMeta(target, wasCorrect, usedHint, skipped);
+        LeitnerService.updateLeitnerMeta(target, wasCorrect, usedHint, skipped);
+
         await DatabaseService.updateVocabulary(target.id, { srs: target.srs });
         return { success: true, srs: target.srs };
       } catch (e) {
@@ -452,7 +256,7 @@ const ExerciseService = (() => {
     getDueCount: async () => {
       try {
         const all = await DatabaseService.getAllVocabulary();
-        return countDue(all);
+        return LeitnerService.countDue(all);
       } catch {
         return 0;
       }
@@ -486,7 +290,7 @@ const ExerciseService = (() => {
           );
         }
 
-        return countDue(filteredWords);
+        return LeitnerService.countDue(filteredWords);
       } catch {
         return 0;
       }

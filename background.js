@@ -3,6 +3,7 @@
 // Import all service modules using importScripts
 importScripts("./service/logger.service.js");
 importScripts("./service/database.service.js");
+importScripts("./service/leitner.service.js");
 importScripts("./service/exercise.service.js");
 importScripts("./service/stats.service.js");
 importScripts("./service/notification.service.js");

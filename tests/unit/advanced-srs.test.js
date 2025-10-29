@@ -18,6 +18,9 @@ global.DatabaseService = {
 // Import logger service first (required by exercise.service.js)
 require("../../service/logger.service.js");
 
+// Import leitner service (required by exercise.service.js)
+require("../../service/leitner.service.js");
+
 // Import the service
 require("../../service/exercise.service.js");
 
