@@ -22,38 +22,6 @@ export function createElement(templateString, container = null) {
 }
 
 /**
- * Update an existing element's content or attributes
- * @param {Element} element - The element to update
- * @param {object} updates - Object with properties to update (textContent, className, etc.)
- */
-export function updateElement(element, updates) {
-  if (!element) return;
-
-  Object.entries(updates).forEach(([key, value]) => {
-    if (key === "textContent" || key === "innerHTML") {
-      element[key] = value;
-    } else if (key === "className") {
-      element.className = value;
-    } else if (key === "style" && typeof value === "object") {
-      Object.assign(element.style, value);
-    } else {
-      element.setAttribute(key, value);
-    }
-  });
-}
-
-/**
- * Remove all child nodes from an element
- * @param {Element} element - The element to clear
- */
-export function clearElement(element) {
-  if (!element) return;
-  while (element.firstChild) {
-    element.removeChild(element.firstChild);
-  }
-}
-
-/**
  * Inject CSS styles into the document
  * @param {string} cssText - CSS text to inject
  * @param {string} id - Optional ID for the style element (for deduplication)

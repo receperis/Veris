@@ -6,7 +6,6 @@
 // Import shared DOM utilities to avoid duplication
 import {
   createElement as domCreateElement,
-  updateElement as domUpdateElement,
   injectCSS as domInjectCSS,
 } from "../src/shared/dom-utils.js";
 
@@ -29,13 +28,6 @@ export const TemplateUtils = {
   // Create DOM element from template string (uses shared implementation)
   createElement: domCreateElement,
 
-  // Replace element content with template
-  updateElement: (element, templateString) => {
-    if (!element) return null;
-    element.innerHTML = templateString;
-    return element;
-  },
-
   // Common HTML escape function (uses shared implementation)
   escapeHtml: sharedEscapeHtml,
 
@@ -47,5 +39,4 @@ export const TemplateUtils = {
 };
 
 // Export commonly used utilities at module level for backward compatibility
-export const { escapeHtml, createElement, updateElement, injectCSS } =
-  TemplateUtils;
+export const { escapeHtml, createElement, injectCSS } = TemplateUtils;
