@@ -331,20 +331,6 @@ npm run test:coverage     # Generate coverage report
 npm run test:debug        # Debug tests with Node inspector
 ```
 
-### Test Coverage
-
-- **Lines**: 70%+ (targeting 85%+)
-- **Functions**: 70%+ (targeting 80%+)
-- **Branches**: 70%+ (targeting 75%+)
-- **Statements**: 70%+ (targeting 85%+)
-
-Critical components have higher coverage:
-
-- Translation flow: 95%
-- Data persistence: 90%
-- SRS algorithm: 85%
-- User interface: 80%
-
 ### Testing Infrastructure
 
 - **Jest**: Test framework with JSDOM environment
@@ -352,8 +338,6 @@ Critical components have higher coverage:
 - **Fake-IndexedDB**: Realistic database mocking
 - **Chrome API Mocks**: Complete extension API simulation
 - **Sinon**: Spies, stubs, and mocks for complex scenarios
-
-See [TESTING.md](TESTING.md) for detailed testing documentation.
 
 ## 🔧 Development
 
@@ -421,7 +405,6 @@ npm run test:watch
 ### Popup Not Appearing
 
 - **Text Selection**: Make sure you're selecting text (not just clicking)
-- **Minimum Length**: Try selecting longer text (at least 2-3 characters)
 - **Extension Enabled**: Check that the extension toggle is on in the options
 - **Page Compatibility**: Some pages (chrome://, about:, file://) block content scripts
 - **Clear Bubble**: Press `Esc` to clear any stuck bubbles
@@ -451,114 +434,10 @@ npm run test:watch
 - **Clean Install**: Delete `node_modules` and run `npm install` again
 - **Clear Dist**: Delete the `dist` folder and rebuild
 
-For more help, check the [GitHub Issues](https://github.com/receperis/SRS-Training/issues) or create a new issue.
-
-## 🤝 Contributing
-
-Contributions are welcome! Whether it's bug fixes, new features, documentation improvements, or translations, your help is appreciated.
-
-### How to Contribute
-
-1. **Fork the repository**
-2. **Create a feature branch** (`git checkout -b feature/amazing-feature`)
-3. **Make your changes**
-4. **Write/update tests** for your changes
-5. **Ensure tests pass** (`npm test`)
-6. **Commit your changes** (`git commit -m 'Add amazing feature'`)
-7. **Push to the branch** (`git push origin feature/amazing-feature`)
-8. **Open a Pull Request**
-
-### Development Guidelines
-
-- Follow existing code style and conventions
-- Write clear, descriptive commit messages
-- Add tests for new features or bug fixes
-- Update documentation as needed
-- Keep changes focused and atomic
-- Test across different websites and scenarios
-
-### Ideas for Contributions
-
-#### Features
-
-- [ ] Additional language pair support
-- [ ] Keyboard shortcuts customization
-- [ ] Flashcard export formats (Anki, Quizlet)
-- [ ] Custom SRS interval configurations
-- [ ] Audio pronunciation support
-- [ ] Image context for vocabulary
-- [ ] Browser sync across devices
-- [ ] Advanced statistics visualizations
-- [ ] Gamification elements (streaks, achievements)
-
-#### Improvements
-
-- [ ] Performance optimizations for large vocabularies
-- [ ] Better error messages and user feedback
-- [ ] Accessibility enhancements
-- [ ] Mobile browser support
-- [ ] Internationalization (UI translations)
-- [ ] Dark mode refinements
-- [ ] Export/import formats (CSV, Excel)
-
-#### Bug Fixes
-
-- Check [GitHub Issues](https://github.com/receperis/SRS-Training/issues) for reported bugs
-- Test edge cases and unusual scenarios
-- Improve error handling
-
-### Code of Conduct
-
-- Be respectful and inclusive
-- Provide constructive feedback
-- Focus on the code, not the person
-- Help newcomers learn and grow
-
-## 📜 License
-
-This project is open source and available under the MIT License. Feel free to use, modify, and distribute as needed.
-
-## 💬 Support & Community
-
-### Getting Help
-
-- **Documentation**: Read this README and [TESTING.md](TESTING.md)
-- **Issues**: Check [existing issues](https://github.com/receperis/SRS-Training/issues) or create a new one
-- **Discussions**: Share ideas and ask questions in GitHub Discussions
-
-### Reporting Issues
-
-When reporting bugs, please include:
-
-- Chrome version
-- Extension version
-- Steps to reproduce
-- Expected vs actual behavior
-- Console errors (if any)
-- Screenshots (if relevant)
-
-### Feature Requests
-
-Have an idea? Open an issue with:
-
-- Clear description of the feature
-- Use cases and benefits
-- Potential implementation approach (optional)
-
 ## 🌟 Acknowledgments
 
 - Chrome Translation API for enabling offline translation
 - The Leitner System for scientific spaced repetition methodology
-- Open source community for inspiration and tools
-
-## 📊 Project Status
-
-- **Version**: 1.1.11
-- **Status**: Active Development
-- **Manifest Version**: 3
-- **Chrome Version Required**: 120+
-- **Tests**: 145+ passing
-- **Coverage**: 70%+
 
 ## 🔗 Links
 
