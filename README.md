@@ -157,6 +157,14 @@ This watches for file changes and rebuilds automatically. You'll need to reload 
 
 ## 📖 Usage Guide
 
+<iframe width="560" height="315"
+  src="https://www.youtube.com/embed/pT1VbMUTuhs"
+  title="YouTube video player"
+  frameborder="0"
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+  allowfullscreen>
+</iframe>
+
 [![Watch the video](https://img.youtube.com/vi/pT1VbMUTuhs/maxresdefault.jpg)](https://www.youtube.com/watch?v=pT1VbMUTuhs)
 
 ### 1. Translating Text
