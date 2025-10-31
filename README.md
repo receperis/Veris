@@ -123,8 +123,8 @@
 1. **Clone the repository**
 
    ```cmd
-   git clone https://github.com/receperis/SRS-Training.git
-   cd SRS-Training
+   git clonenhttps://github.com/receperis/Veris.git
+   cd Veris
    ```
 
 2. **Install dependencies**
