@@ -123,7 +123,7 @@
 1. **Clone the repository**
 
    ```cmd
-   git clonenhttps://github.com/receperis/Veris.git
+   git clone https://github.com/receperis/Veris.git
    cd Veris
    ```
 
