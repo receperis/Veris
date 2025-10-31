@@ -157,6 +157,8 @@ This watches for file changes and rebuilds automatically. You'll need to reload 
 
 ## 📖 Usage Guide
 
+[![Watch the video](https://img.youtube.com/vi/pT1VbMUTuhs/maxresdefault.jpg)](https://www.youtube.com/watch?v=pT1VbMUTuhs)
+
 ### 1. Translating Text
 
 1. Select text on any webpage
